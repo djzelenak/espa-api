@@ -3,14 +3,13 @@ import datetime
 from api.domain import sensor
 from api.domain.order import Order
 from api.domain.user import User
-from api.util.dbconnect import db_instance, DBConnectException
+from api.util.dbconnect import db_instance
 from api.util import julian_date_check
 from api.providers.ordering import ProviderInterfaceV0
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.providers.caching.caching_provider import CachingProvider
 
 import copy
-import json
 import yaml
 
 cache = CachingProvider()

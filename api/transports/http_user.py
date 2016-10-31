@@ -258,4 +258,3 @@ class ItemStatus(Resource):
     def get(version, orderid, itemnum='ALL'):
         user = flask.g.user
         return espa.item_status(orderid, itemnum, user.username)
-

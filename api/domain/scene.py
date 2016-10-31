@@ -416,3 +416,4 @@ class Scene(object):
                                  .format(e.message))
 
         return ret
+
