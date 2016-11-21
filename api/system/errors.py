@@ -260,7 +260,8 @@ class Errors(object):
         return self.__find_error(error_message, keys, status, reason)
 
     def node_space_errors(self, error_message):
-        keys = ['Error: write_raw_binary', 'Error writing the output']
+        keys = ['Error: write_raw_binary', 'Error writing the output', 'Failed to unpack data',
+                'No space left on device', 'Error encountered tar\'ing file']
         status = 'retry'
         reason = 'Error writing to disk on processing node, retrying'
         extras = self.__add_retry('node_space_errors')
