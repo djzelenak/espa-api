@@ -335,8 +335,8 @@ class Scene(object):
                 db.execute(sql, (db_extns.AsIs(att), val, self.id))
                 db.commit()
         except DBConnectException as e:
-            logger.debug('Error updating scene: {}\nSQL: {}'
-                         .format(e.message, log_sql))
+            raise SceneException('Error updating scene: {}\nSQL: {}'
+                                 .format(e.message, log_sql))
 
         self.__setattr__(att, val)
 
