@@ -5,7 +5,6 @@ Version 1.0.0
 This is an API for interacting with the ESPA ordering system.
 
 ## Related Pages
-* [ESPA System Overview] (docs/OVERVIEW.md)
 * [Available Products](docs/AVAILABLE-PRODUCTS.md)
 * [Abbreviations & Definitions](docs/TERMS.md)
 * [ESPA Customizations](docs/CUSTOMIZATION.md)
