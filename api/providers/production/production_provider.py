@@ -113,7 +113,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         try:
             scene.download_size = os.path.getsize(completed_file_location)
         except OSError, e:
-            raise ProductionProviderException('Could not find completed file location')
+            # seeing occasional delays in file availability after processing notifies the api of completion
+            # raise ProductionProviderException('Could not find completed file location')
+            logger.info("mark_product_complete could not find completed file location {}, marking it zero for now...".format(completed_file_location))
+            scene.download_size = 0
 
         if order_source == 'ee':
             # update EE
@@ -1034,6 +1037,20 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     raise e
         return True
 
+    def calc_scene_download_sizes(self):
+        """
+        Processing occasionally reports product completion before we're able to
+        see the download and retrieve its size
+        :return: True
+        """
+        scenes = Scene.where({'status': 'complete', 'download_size': 0})
+        for scene in scenes:
+            try:
+                scene.update('download_size', os.path.getsize(scene.product_distro_location))
+            except SceneException, e:
+                logger.debug("scene download size re-calcing failed, msg: {}".format(e.message))
+        return True
+
     def finalize_orders(self):
         """
         Checks all open orders in the system and marks them complete if all
@@ -1119,6 +1136,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         self.load_ee_orders()
         self.handle_failed_ee_updates()
         self.handle_submitted_products()
+        self.calc_scene_download_sizes()
         self.finalize_orders()
 
         cache_key = 'orders_last_purged'

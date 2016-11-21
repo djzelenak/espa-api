@@ -402,6 +402,14 @@ class TestProductionAPI(unittest.TestCase):
         self.assertTrue(production_provider.handle_submitted_plot_products())
         self.assertEqual(Scene.find(plot_id).status, "oncache")
 
+    @patch('os.path.getsize', lambda y: 999)
+    def test_production_calc_scene_download_sizes(self):
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        scenes = order.scenes()
+        Scene.bulk_update([s.id for s in scenes], {'status': 'complete', 'download_size': 0})
+        self.assertTrue(production_provider.calc_scene_download_sizes())
+        upscenes = Scene.where({'status': 'complete', 'download_size': 999})
+        self.assertEqual(len(upscenes), len(scenes))
 
     @patch('api.providers.production.production_provider.ProductionProvider.update_order_if_complete',
            mock_production_provider.respond_true)
