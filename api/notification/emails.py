@@ -6,6 +6,8 @@ Author: David V. Hill
 import datetime
 import re
 
+from api.notification import contact_footer
+
 from cStringIO import StringIO
 
 from email.mime.text import MIMEText
@@ -16,6 +18,7 @@ from api.domain.scene import Scene
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 
 config = ConfigurationProvider()
+
 
 class Emails(object):
 
@@ -143,6 +146,7 @@ class Emails(object):
                 name = "Plotting & Statistics"
             m.append("%s\n" % name)
 
+        m.append(contact_footer)
         email_msg = ''.join(m)
         subject = 'Processing order %s received' % order.orderid
 
@@ -179,6 +183,7 @@ class Emails(object):
 
             m.append("%s\n" % line)
 
+        m.append(contact_footer)
         body = ''.join(m)
         subject = 'Processing for %s complete.' % order.orderid
 
