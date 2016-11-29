@@ -176,6 +176,13 @@ curl --get --user username:password https://espa.cr.usgs.gov/api/v0/available-pr
 **POST /api/v0/available-products**
 
 Lists available products for the supplied inputs.  Also classifies the inputs by sensor or lists as 'not implemented' if the values cannot be ordered or determined.
+
+```
+POST requests using curl from MS Windows require json objects be wrapped in double quotes
+with internal strings wrapped in escaped double quotes
+"{\"inputs\":[\"LE70290302003123EDC00\", \"MOD09A1.A2000073.h12v11.005.2008238080250.hdf\", \"bad_scene_id\"]}"
+```
+
 ```json
 curl  --user username:password -d '{"inputs":["LE70290302003123EDC00",
                "MOD09A1.A2000073.h12v11.005.2008238080250.hdf", "bad_scene_id"]}' https://espa.cr.usgs.gov/api/v0/available-products
@@ -497,6 +504,14 @@ curl --user username:password https://espa.cr.usgs.gov/api/v0/item-status/produc
 **POST /api/v0/order**
 
 Accepts requests for process from an HTTP POST with a JSON body.  The body is validated and any errors are returned to the caller.  Otherwise, an orderid is returned.
+
+```
+POST requests using curl from MS Windows require json objects be wrapped in double quotes
+with internal strings wrapped in escaped double quotes
+For example:
+"{\"olitirs8\": {\"inputs\": [\"LC80270292015233LGN00\"],\"products\": [\"sr\"]},\"format\": \"gtiff\"}"
+```
+
 ```json
 
 curl --user username:password -d '{"olitirs8": {
