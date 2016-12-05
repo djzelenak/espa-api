@@ -74,7 +74,7 @@ def version_filter(func):
 
 @auth.error_handler
 def unauthorized():
-    return make_response(jsonify({'msg': 'Invalid username/password'}), 403)
+    return make_response(jsonify({'msg': 'Invalid username/password'}), 401)
 
 
 @auth.verify_password
