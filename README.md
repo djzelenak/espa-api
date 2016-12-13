@@ -18,6 +18,25 @@ The api host is https://espa.cr.usgs.gov .
 
 ### User API Operations
 
+HTTP Method	| URI	| Action
+---|---|---
+GET  |  `https://espa.cr.usgs.gov/api/`  |  Lists all available versions of the api.
+GET  |  `https://espa.cr.usgs.gov/api/v0`  |  Lists all available api operations.
+GET  |  `https://espa.cr.usgs.gov/api/v0/user`  |  Returns user information for the authenticated user.
+GET  |  `https://espa.cr.usgs.gov/api/v0/available-products/<product_id>`  |  Lists the available output products for the supplied input.
+POST  |  `https://espa.cr.usgs.gov/api/v0/available-products`  |  Lists available products for the supplied inputs. Also classifies the inputs by sensor or lists as 'not implemented' if the values cannot be ordered or determined.
+GET  |  `https://espa.cr.usgs.gov/api/v0/projections`  |  Lists and describes available projections. This is a dump of the schema defined that constrains projection info.
+GET  |  `https://espa.cr.usgs.gov/api/v0/formats`  |  Lists all available output formats
+GET  |  `https://espa.cr.usgs.gov/api/v0/resampling-methods`  |  Lists all available resampling methods
+GET  |  `https://espa.cr.usgs.gov/api/v0/list-orders`  |  List orders for the authenticated user.
+GET  |  `https://espa.cr.usgs.gov/api/v0/list-orders/<email>`  |  Lists orders for the supplied email. Necessary to support user collaboration.
+GET  |  `https://espa.cr.usgs.gov/api/v0/order-status/<ordernum>`  |  Retrieves a submitted orders status
+GET  |  `https://espa.cr.usgs.gov/api/v0/order/<ordernum>`  |  Retrieves details for a submitted order. Some information may be omitted from this response depending on access privileges.
+GET  |  `https://espa.cr.usgs.gov/api/v0/item-status/<ordernum>`  |  Retrieve the status and details for all products in an order.
+GET  |  `https://espa.cr.usgs.gov/api/v0/item-status/<ordernum>/<itemnum>`  |  Retrieve status and details for a particular product in an order
+POST  |  `https://espa.cr.usgs.gov/api/v0/order ` |  Accepts requests for process from an HTTP POST with a JSON body. The body is validated and any errors are returned to the caller. Otherwise, an orderid is returned.
+GET  |  `https://espa.cr.usgs.gov/api/v0/order-schema`  |  Retrieves order schema definition
+
 **GET /api**
 
 Lists all available versions of the api.
