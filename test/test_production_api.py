@@ -5,7 +5,7 @@ import unittest
 import os
 from api.domain.mocks.order import MockOrder
 from api.domain.mocks.user import MockUser
-from api.domain.order import Order
+from api.domain.order import Order, OptionsConversion
 from api.domain.scene import Scene
 from api.domain.user import User
 from api.external.mocks import lta, lpdaac, onlinecache, nlaps, hadoop
@@ -467,6 +467,94 @@ class TestProductionAPI(unittest.TestCase):
         self.assertTrue(response)
         for s in Scene.where({'order_id': order_id}):
             self.assertTrue(s.orphaned)
+
+    def test_convert_product_options(self):
+        """
+        Test the conversion procedure to make sure that the new format for orders converts
+        to the old format
+        """
+        scenes = ['LE70480272012076EDC00', 'LC80500272013196LGN00',
+                  'LT40480271983028PAC00', 'LT50490262009162PAC03']
+
+        includes = ['include_sr', 'include_sr_toa',
+                    'include_cfmask', 'include_sr_thermal']
+
+        new_format = {u'etm7': {u'inputs': [u'LE70480272012076EDC00'],
+                                u'products': [u'sr']},
+                      u'olitirs8': {u'inputs': [u'LC80500272013196LGN00'],
+                                    u'products': [u'toa']},
+                      u'tm4': {u'inputs': [u'LT40480271983028PAC00'],
+                               u'products': [u'cloud']},
+                      u'tm5': {u'inputs': [u'LT50490262009162PAC03'],
+                               u'products': [u'bt']},
+                      u'format': u'gtiff',
+                      u'image_extents': {u'east': -2265585.0,
+                                         u'north': 3164805.0,
+                                         u'south': 3014805.0,
+                                         u'units': u'meters',
+                                         u'west': -2415585.0},
+                      u'note': u'CONUS_h1v1',
+
+                      u'projection': {u'aea': {u'central_meridian': -96,
+                                               u'datum': u'nad83',
+                                               u'false_easting': 0,
+                                               u'false_northing': 0,
+                                               u'latitude_of_origin': 23,
+                                               u'standard_parallel_1': 29.5,
+                                               u'standard_parallel_2': 45.5}},
+                      u'resampling_method': u'cc'}
+
+        ruberic = {'central_meridian': -96,
+                   'datum': u'nad83',
+                   'false_easting': 0,
+                   'false_northing': 0,
+                   'image_extents': True,
+                   'image_extents_units': u'meters',
+                   'include_cfmask': False,
+                   'include_customized_source_data': False,
+                   'include_dswe': False,
+                   'include_lst': False,
+                   'include_solr_index': False,
+                   'include_source_data': False,
+                   'include_source_metadata': False,
+                   'include_sr': False,
+                   'include_sr_browse': False,
+                   'include_sr_evi': False,
+                   'include_sr_msavi': False,
+                   'include_sr_nbr': False,
+                   'include_sr_nbr2': False,
+                   'include_sr_ndmi': False,
+                   'include_sr_ndvi': False,
+                   'include_sr_savi': False,
+                   'include_sr_thermal': False,
+                   'include_sr_toa': False,
+                   'include_statistics': False,
+                   'latitude_true_scale': None,
+                   'longitude_pole': None,
+                   'maxx': -2265585.0,
+                   'maxy': 3164805.0,
+                   'minx': -2415585.0,
+                   'miny': 3014805.0,
+                   'origin_lat': 23,
+                   'output_format': u'gtiff',
+                   'pixel_size': None,
+                   'pixel_size_units': None,
+                   'reproject': True,
+                   'resample_method': 'cubic',
+                   'resize': False,
+                   'std_parallel_1': 29.5,
+                   'std_parallel_2': 45.5,
+                   'target_projection': u'aea',
+                   'utm_north_south': None,
+                   'utm_zone': None}
+
+        for scene, include in zip(scenes, includes):
+            ruberic[include] = True
+            old_format = OptionsConversion.convert(new=new_format, scenes=[scene])
+
+            self.assertDictEqual(ruberic, old_format)
+
+            ruberic[include] = False
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
