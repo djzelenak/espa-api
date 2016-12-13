@@ -738,6 +738,12 @@ class OptionsConversion(object):
             if sen in opts and sen != short:
                 opts.pop(sen)
 
+        if 'resampling_method' in opts.keys():
+            for resample_opts in cls.resample_map:
+                if opts['resampling_method'] == resample_opts[1]:
+                    ret['resample_method'] = resample_opts[0]
+                    break
+
         ret.update(cls._flatten(opts, cls.keywords_map))
 
         return ret
