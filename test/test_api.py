@@ -224,7 +224,7 @@ class TestValidation(unittest.TestCase):
 class TestInventory(unittest.TestCase):
     def setUp(self):
         os.environ['espa_api_testing'] = 'True'
-        self.lta_prod_good = u'LE70290302001200EDC00'
+        self.lta_prod_good = u'LT50300372011275PAC01'
         self.lta_prod_bad = u'LE70290302001200EDC01'
         self.lpdaac_prod_good = u'MOD09A1.A2001209.h10v04.005.2007042201314'
         self.lpdaac_prod_bad = u'MOD09A1.A2001209.h10v04.005.2007042201315'

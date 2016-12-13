@@ -17,6 +17,12 @@ from api.system.logger import ilogger as logger
 
 config = ConfigurationProvider()
 
+if config.mode in ('dev', 'tst'):
+    import logging
+    logging.basicConfig(level=logging.INFO)
+    logging.getLogger('suds.client').setLevel(logging.DEBUG)
+
+
 class LTAService(object):
     ''' Abstract service client for all of LTA services '''
 
@@ -25,6 +31,7 @@ class LTAService(object):
     def __init__(self):
         self.xml_header = "<?xml version ='1.0' encoding='UTF-8' ?>"
         self.url = config.url_for(self.service_name)
+        self.location = self.url.split('?')[0]
 
     def __repr__(self):
         return "LTAService:{0}".format(self.__dict__)
@@ -36,7 +43,7 @@ class LTASoapService(LTAService):
     def __init__(self, *args, **kwargs):
         super(LTASoapService, self).__init__(*args, **kwargs)
         logger.info('Building SoapClient for:{0}'.format(self.url))
-        self.client = SoapClient(self.url, cache=self.build_object_cache())
+        self.client = SoapClient(self.url, location=self.location, cache=self.build_object_cache())
 
     def build_object_cache(self):
         cache = ObjectCache()
@@ -51,46 +58,6 @@ class RegistrationServiceClient(LTASoapService):
 
     def __init__(self, *args, **kwargs):
         super(RegistrationServiceClient, self).__init__(*args, **kwargs)
-
-    def login_user(self, username, password):
-        '''Authenticates a username/password against the EE Registration
-        Service
-
-        Keyword args:
-        username EE username
-        password EE password
-
-        Returns:
-        EE contactId if login is successful
-        Exception if unsuccessful with reason
-        '''
-
-        return repr(self.client.service.loginUser(username, password))
-
-    def get_user_info(self, username, pw):
-        '''Retrieves the email address on file for the supplied credentials
-
-        Keyword args:
-        username EE username
-        pw       EE password
-
-        Returns:
-        Email address on file for the user.
-        Exception if the username/password is invalid
-        None if there is no email on file.
-        '''
-
-        # build a named tuple for the return value
-        userinfo = collections.namedtuple('UserInfo',
-                                          ['email', 'first_name', 'last_name'])
-
-        info = self.client.service.getUserInfo(username, pw).contactAddress
-
-        userinfo.email = info.email
-        userinfo.first_name = info.firstName
-        userinfo.last_name = info.lastName
-
-        return userinfo
 
     def get_username(self, contactid):
         '''Retrieves the users EE username given their contactid
@@ -149,11 +116,11 @@ class OrderWrapperServiceClient(LTAService):
         sb.write(self.xml_header)
 
         head = ("<sceneList "
-                "xmlns='http://earthexplorer.usgs.gov/schema/sceneList' "
+                "xmlns='https://earthexplorer.usgs.gov/schema/sceneList' "
                 "xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' "
                 "xsi:schemaLocation="
-                "'http://earthexplorer.usgs.gov/schema/sceneList "
-                "http://earthexplorer.usgs.gov/EE/sceneList.xsd'>")
+                "'https://earthexplorer.usgs.gov/schema/sceneList "
+                "https://earthexplorer.usgs.gov/EE/sceneList.xsd'>")
 
         sb.write(head)
 
@@ -172,7 +139,9 @@ class OrderWrapperServiceClient(LTAService):
         headers['Content-Length'] = len(request_body)
 
         #send the request and check return status
-        #request = urllib2.Request(request_url, request_body, headers)
+        #print "*** request_url: ", request_url
+        #print "*** request_body: ", request_body
+        #print "*** headers: ", headers
         __response = requests.post(request_url,
                                    data=request_body,
                                    headers=headers)
@@ -259,11 +228,11 @@ class OrderWrapperServiceClient(LTAService):
 
             head = ("<orderParameters "
                     "xmlns="
-                    "'http://earthexplorer.usgs.gov/schema/orderParameters' "
+                    "'https://earthexplorer.usgs.gov/schema/orderParameters' "
                     "xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' "
                     "xsi:schemaLocation="
-                    "'http://earthexplorer.usgs.gov/schema/orderParameters "
-                    "http://earthexplorer.usgs.gov/EE/orderParameters.xsd'>")
+                    "'https://earthexplorer.usgs.gov/schema/orderParameters "
+                    "https://earthexplorer.usgs.gov/EE/orderParameters.xsd'>")
 
             sb.write(head)
             sb.write('<contactId>{0}</contactId>'.format(contact_id))
@@ -440,11 +409,11 @@ class OrderWrapperServiceClient(LTAService):
             sb.write(self.xml_header)
             head = ("<downloadSceneList "
                     "xmlns="
-                    "'http://earthexplorer.usgs.gov/schema/downloadSceneList' "
+                    "'https://earthexplorer.usgs.gov/schema/downloadSceneList' "
                     "xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' "
                     "xsi:schemaLocation="
-                    "'http://earthexplorer.usgs.gov/schema/downloadSceneList "
-                    "http://earthexplorer.usgs.gov/EE/downloadSceneList.xsd'>")
+                    "'https://earthexplorer.usgs.gov/schema/downloadSceneList "
+                    "https://earthexplorer.usgs.gov/EE/downloadSceneList.xsd'>")
 
             sb.write(head)
 
@@ -580,7 +549,7 @@ class OrderUpdateServiceClient(LTASoapService):
 
         retval = dict()
 
-        resp = self.client.factory.create("getOrderStatusResponse")
+        # resp = self.client.factory.create("getOrderStatusResponse")
         resp = self.client.service.getOrderStatus(order_number)
 
         if resp is None:
@@ -618,7 +587,7 @@ class OrderUpdateServiceClient(LTASoapService):
         returnval = collections.namedtuple('UpdateOrderResponse',
                                            ['success', 'message', 'status'])
 
-        resp = self.client.factory.create('StatusOrderReturn')
+        # resp = self.client.factory.create('StatusOrderReturn')
 
         try:
             unit_number = int(unit_number)
@@ -660,7 +629,7 @@ class OrderDeliveryServiceClient(LTASoapService):
         ]
         '''
         rtn = dict()
-        resp = self.client.factory.create("getAvailableOrdersResponse")
+        # resp = self.client.factory.create("getAvailableOrdersResponse")
 
         try:
             resp = self.client.service.getAvailableOrders("ESPA")
@@ -748,14 +717,6 @@ class OrderDeliveryServiceClient(LTASoapService):
 
 ''' This is the public interface that calling code should use to interact
     with this module'''
-
-
-def login_user(username, password):
-    return RegistrationServiceClient().login_user(username, password)
-
-
-def get_user_info(username, password):
-    return RegistrationServiceClient().get_user_info(username, password)
 
 
 def get_user_name(contactid):
