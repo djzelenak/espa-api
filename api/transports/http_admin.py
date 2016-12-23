@@ -44,7 +44,7 @@ def whitelist(func):
     return decorated
 
 
-def prod_filter(func):
+def stats_whitelist(func):
     """
     Provide a decorator to whitelist hosts accessing stats
     """
@@ -131,8 +131,9 @@ class Reports(Resource):
             else:
                 return espa.available_stats()
 
-class ProdStats(Resource):
-    decorators = [version_filter, prod_filter]
+
+class ProductionStats(Resource):
+    decorators = [version_filter, stats_whitelist]
 
     @staticmethod
     def get(version, name):
