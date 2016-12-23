@@ -9,6 +9,7 @@ from api.domain import default_error_message, admin_api_operations
 from api.interfaces.admin.version1 import API as APIv1
 from api.system.logger import ilogger as logger
 from api.domain.user import User
+from api.util import api_cfg
 
 from flask import jsonify
 from flask import make_response
@@ -30,7 +31,25 @@ def whitelist(func):
     and http://github.com/mattupsate/flask-security
     """
     def decorated(*args, **kwargs):
-        white_ls = espa.get_admin_whitelist()
+        white_ls = api_cfg().get('admin_whitelist')
+        if 'X-Forwarded-For' in request.headers:
+            remote_addr = request.headers.getlist('X-Forwarded-For')[0].rpartition(' ')[-1]
+        else:
+            remote_addr = request.remote_addr or 'untrackable'
+
+        if remote_addr in white_ls:
+            return func(*args, **kwargs)
+        else:
+            return make_response(jsonify({'msg': 'Access Denied'}), 403)
+    return decorated
+
+
+def prod_filter(func):
+    """
+    Provide a decorator to whitelist hosts accessing stats
+    """
+    def decorated(*args, **kwargs):
+        white_ls = api_cfg().get('admin_statlist')
         if 'X-Forwarded-For' in request.headers:
             remote_addr = request.headers.getlist('X-Forwarded-For')[0].rpartition(' ')[-1]
         else:
@@ -111,6 +130,13 @@ class Reports(Resource):
                 return espa.get_stat(name)
             else:
                 return espa.available_stats()
+
+class ProdStats(Resource):
+    decorators = [version_filter, prod_filter]
+
+    @staticmethod
+    def get(version, name):
+        return espa.get_stat(name)
 
 
 class SystemStatus(Resource):

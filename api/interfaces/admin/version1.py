@@ -164,18 +164,6 @@ class API(object):
             response = default_error_message
         return response
 
-    def get_admin_whitelist(self):
-        """
-        Returns list of ip addresses in hadoop cluster
-        :return: list of strings
-        """
-        try:
-            response = self.admin.admin_whitelist()
-        except:
-            logger.debug("ERR failure to generate production whitelist\ntrace: {}".format(traceback.format_exc()))
-            response = default_error_message
-        return response
-
     def error_to(self, orderid, state):
         """
         flip scenes in error for given order to provided state
