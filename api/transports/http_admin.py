@@ -9,7 +9,6 @@ from api.domain import default_error_message, admin_api_operations
 from api.interfaces.admin.version1 import API as APIv1
 from api.system.logger import ilogger as logger
 from api.domain.user import User
-from api.util import api_cfg
 
 from flask import jsonify
 from flask import make_response
@@ -31,7 +30,7 @@ def whitelist(func):
     and http://github.com/mattupsate/flask-security
     """
     def decorated(*args, **kwargs):
-        white_ls = api_cfg().get('admin_whitelist')
+        white_ls = espa.get_admin_whitelist()
         if 'X-Forwarded-For' in request.headers:
             remote_addr = request.headers.getlist('X-Forwarded-For')[0].rpartition(' ')[-1]
         else:
@@ -49,7 +48,7 @@ def stats_whitelist(func):
     Provide a decorator to whitelist hosts accessing stats
     """
     def decorated(*args, **kwargs):
-        white_ls = api_cfg().get('admin_statlist')
+        white_ls = espa.get_stat_whitelist()
         if 'X-Forwarded-For' in request.headers:
             remote_addr = request.headers.getlist('X-Forwarded-For')[0].rpartition(' ')[-1]
         else:
