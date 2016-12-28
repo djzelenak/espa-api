@@ -170,3 +170,10 @@ class ProductionTransportTestCase(unittest.TestCase):
         response = self.app.get(url, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         response_data = json.loads(response.get_data())
         assert response_data.keys() == ['system_message_title']
+
+    @patch('api.interfaces.admin.version1.API.get_stat_whitelist', api.get_stat_whitelist)
+    def test_get_production_api_stat_products_complete_24_hrs(self):
+        url = "/production-api/v1/statistics/stat_products_complete_24_hrs"
+        response = self.app.get(url, environ_base={'REMOTE_ADDR': '127.0.0.1'})
+        response_data = json.loads(response.get_data())
+        assert response_data == 0
