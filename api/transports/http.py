@@ -13,7 +13,7 @@ from http_user import Index, VersionInfo, AvailableProducts, ValidationInfo,\
 
 from http_production import ProductionVersion, ProductionConfiguration, ProductionOperations, ProductionManagement
 
-from http_admin import Reports, SystemStatus, OrderResets
+from http_admin import Reports, SystemStatus, OrderResets, ProductionStats
 
 config = ConfigurationProvider()
 
@@ -94,6 +94,9 @@ transport_api.add_resource(ProductionOperations,
                            '/production-api/v<version>/<action>',
                            '/production-api/v<version>/handle-orders',
                            '/production-api/v<version>/queue-products')
+
+transport_api.add_resource(ProductionStats,
+                           '/production-api/v<version>/statistics/<name>')
 
 transport_api.add_resource(ProductionManagement,
                            '/production-api/v<version>/handle-orphans')

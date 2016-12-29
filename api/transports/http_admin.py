@@ -43,6 +43,24 @@ def whitelist(func):
     return decorated
 
 
+def stats_whitelist(func):
+    """
+    Provide a decorator to whitelist hosts accessing stats
+    """
+    def decorated(*args, **kwargs):
+        white_ls = espa.get_stat_whitelist()
+        if 'X-Forwarded-For' in request.headers:
+            remote_addr = request.headers.getlist('X-Forwarded-For')[0].rpartition(' ')[-1]
+        else:
+            remote_addr = request.remote_addr or 'untrackable'
+
+        if remote_addr in white_ls:
+            return func(*args, **kwargs)
+        else:
+            return make_response(jsonify({'msg': 'Access Denied'}), 403)
+    return decorated
+
+
 def version_filter(func):
     """
     Provide a decorator to enact a version filter on all endpoints
@@ -111,6 +129,14 @@ class Reports(Resource):
                 return espa.get_stat(name)
             else:
                 return espa.available_stats()
+
+
+class ProductionStats(Resource):
+    decorators = [version_filter, stats_whitelist]
+
+    @staticmethod
+    def get(version, name):
+        return espa.get_stat(name)
 
 
 class SystemStatus(Resource):

@@ -10,6 +10,7 @@ from api.util.dbconnect import db_instance
 from api.util.dbconnect import DBConnectException
 from api.domain.order import Order
 from api.domain.scene import SceneException
+from api.util import api_cfg
 
 
 class AdministrationProvider(AdminProviderInterfaceV0):
@@ -126,4 +127,8 @@ class AdministrationProvider(AdminProviderInterfaceV0):
 
     @staticmethod
     def admin_whitelist():
-        return ['127.0.0.1']
+        return api_cfg()['admin_whitelist']
+
+    @staticmethod
+    def stat_whitelist():
+        return api_cfg()['stat_whitelist']
