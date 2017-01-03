@@ -114,6 +114,13 @@ def date_from_doy(year, doy):
         return d
 
 
+def julian_from_date(year, month, day):
+    '''Returns a string representation of a julian date for a given year, month, day'''
+    dt = datetime.datetime.strptime('.'.join([year, month, day]), '%Y.%m.%d')
+    tt = dt.timetuple()
+    return str(tt.tm_yday)
+
+
 def chunkify(lst, n):
     """Divides your list into "n" parts
     :param lst: list of objects to be divided
