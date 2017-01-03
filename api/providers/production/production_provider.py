@@ -654,6 +654,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 status = 'unavailable'
                 note = 'auxiliary data unavailable for' \
                        'this scenes acquisition date'
+                logger.info('check ee unavailable: {}'.format(product.__dict__))
 
             scene_dict = {'name': product.product_id,
                           'sensor_type': sensor_type,
@@ -661,6 +662,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                           'status': status,
                           'note': note,
                           'ee_unit_id': s['unit_num']}
+            logger.info('check ee processing: {}'.format(scene_dict))
 
             bulk_ls.append(scene_dict)
         return bulk_ls

@@ -15,6 +15,7 @@ class MockAPI(object):
     def get_production_whitelist(self):
         return ['127.0.0.1']
 
-
+    def get_stat_whitelist(self):
+        return ['127.0.0.1']
 
 
