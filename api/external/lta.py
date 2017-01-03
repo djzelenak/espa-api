@@ -644,7 +644,7 @@ class OrderDeliveryServiceClient(LTASoapService):
         for u in resp.units.unit:
 
             #ignore anything that is not for us
-            if str(u.productCode).lower() not in ('sr01', 'sr02', 'sr03'):
+            if str(u.productCode).lower() not in ('sr01', 'sr02', 'sr03', 'sr04', 'sr05'):
 
                 logger.warn('{0} is not an ESPA product. Order[{1}] Unit[{2}]'
                             'Product code[{3}]... ignoring'
