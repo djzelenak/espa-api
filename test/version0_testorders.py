@@ -94,14 +94,10 @@ def build_base_order():
                        'pixel_size_units': 'dd'},
             'plot_statistics': True}
 
-    sensor_acqids = {'.A2016305.h11v04.006.2016314200836': (['MOD09A1', 'MOD09GA', 'MOD09GQ', 'MOD09Q1',
-                                                             'MYD09A1', 'MYD09GA', 'MYD09GQ', 'MYD09Q1',
-                                                             'MOD13A1', 'MOD13A2', 'MOD13A3', 'MOD13Q1',
-                                                             'MYD13A1', 'MYD13A2', 'MYD13A3', 'MYD13Q1'],
-                                                            ['mod09a1', 'mod09ga', 'mod09gq', 'mod09q1',
-                                                             'myd09a1', 'myd09ga', 'myd09gq', 'myd09q1',
-                                                             'mod13a1', 'mod13a2', 'mod13a3', 'mod13q1',
-                                                             'myd13a1', 'myd13a2', 'myd13a3', 'myd13q1']),
+    sensor_acqids = {'.A2000072.h02v09.005.2008237032813': (['MOD09A1', 'MOD09Q1', 'MYD13A1', 'MYD13Q1'],
+                                                            ['mod09a1', 'mod09q1', 'myd13a1', 'myd13q1']),
+                     '.A2016305.h11v04.006.2016314200836': (['MOD09GA', 'MOD09GQ', 'MYD13A2', 'MYD13A3'],
+                                                            ['mod09ga', 'mod09gq', 'myd13a2', 'myd13a3']),
                      '2181092013069PFS00': (['LT4', 'LT5', 'LE7', 'LO8', 'LC8'],
                                             ['tm4', 'tm5', 'etm7', 'oli8', 'olitirs8'])}
 
