@@ -1047,8 +1047,12 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         for scene in scenes:
             try:
                 scene.update('download_size', os.path.getsize(scene.product_distro_location))
-            except SceneException, e:
+            except OSError, e:
+                scene.status = 'error'
+                scene.note = 'product download not found'
+                scene.save()
                 logger.debug("scene download size re-calcing failed, msg: {}".format(e.message))
+
         return True
 
     def finalize_orders(self):
