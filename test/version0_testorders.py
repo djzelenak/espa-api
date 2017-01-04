@@ -103,7 +103,9 @@ def build_base_order():
                                                              'mod13a1', 'mod13a2', 'mod13a3', 'mod13q1',
                                                              'myd13a1', 'myd13a2', 'myd13a3', 'myd13q1']),
                      '2181092013069PFS00': (['LT4', 'LT5', 'LE7', 'LO8', 'LC8'],
-                                            ['tm4', 'tm5', 'etm7', 'oli8', 'olitirs8'])}
+                                            ['tm4', 'tm5', 'etm7', 'oli8', 'olitirs8']),
+                     'L1TP_044030_19851028_20161004_01_T1': (['LT05_'],
+                                                             ['tm5_collection'])}
 
     for acq in sensor_acqids:
         for prefix, label in zip(sensor_acqids[acq][0], sensor_acqids[acq][1]):

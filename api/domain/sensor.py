@@ -259,23 +259,26 @@ class Landsat(SensorProduct):
         product_id = product_id.strip()
         super(Landsat, self).__init__(product_id)
 
-        self.path = product_id[3:6].lstrip('0')
-        self.row = product_id[6:9].lstrip('0')
-
         # only the collections product ids include underscores
         if '_' in product_id:
             # lt05_l1tp_042034_20011103_20160706_01_a1
-            _pacq = product_id.split('_')[3]
-            self.year = _pacq[:4]
-            self.doy = julian_from_date(_pacq[:4], _pacq[4:6], _pacq[6:8])
+            _idlist = product_id.split('_')
+            self.year = _idlist[3][:4]
+            self.doy = julian_from_date(_idlist[3][:4], _idlist[3][4:6], _idlist[3][6:8])
             self.julian = self.year + self.doy
+            self.path = _idlist[2][:3].lstrip('0')
+            self.row = _idlist[2][3:].lstrip('0')
+            self.correction_level = _idlist[1]
+            self.collection_number = _idlist[-2]
+            self.collection_category = _idlist[-1]
         else:
+            self.path = product_id[3:6].lstrip('0')
+            self.row = product_id[6:9].lstrip('0')
             self.year = product_id[9:13]
             self.doy = product_id[13:16]
             self.julian = product_id[9:16]
-
-        self.station = product_id[16:19]
-        self.version = product_id[19:21]
+            self.station = product_id[16:19]
+            self.version = product_id[19:21]
 
     # SR based products are not available for those
     # dates where we are missing auxiliary data
