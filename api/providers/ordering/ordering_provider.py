@@ -57,7 +57,7 @@ class OrderingProvider(ProviderInterfaceV0):
             if sensor_type == 'not_implemented':
                 continue
 
-            # saves us from adding sensor types in sensor.py
+            # saves us from adding sensor types in restricted.yaml
             if '_collection' in sensor_type:
                 sensor_type.replace('_collection','')
 
