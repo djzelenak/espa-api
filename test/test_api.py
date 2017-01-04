@@ -162,7 +162,7 @@ class TestValidation(unittest.TestCase):
         """
         Most common issue of orders resizing MODIS to 30m pixels, without setting the extents
         """
-        modis_order = {'mod09a1': {'inputs': 'mod09a1.a2000072.h02v09.005.2008237032813',
+        modis_order = {'mod09a1': {'inputs': 'mod09a1.a2016305.h11v04.006.2016314200836',
                                    'products': ['l1']},
                        'resampling_method': 'cc',
                        'resize': {'pixel_size': 30,
@@ -226,8 +226,8 @@ class TestInventory(unittest.TestCase):
         os.environ['espa_api_testing'] = 'True'
         self.lta_prod_good = u'LT50300372011275PAC01'
         self.lta_prod_bad = u'LE70290302001200EDC01'
-        self.lpdaac_prod_good = u'MOD09A1.A2001209.h10v04.005.2007042201314'
-        self.lpdaac_prod_bad = u'MOD09A1.A2001209.h10v04.005.2007042201315'
+        self.lpdaac_prod_good = u'MOD09A1.A2016305.h11v04.006.2016314200836'
+        self.lpdaac_prod_bad = u'MOD09A1.A2016305.h11v04.006.9999999999999'
 
         self.lta_order_good = {'olitirs8': {'inputs': [self.lta_prod_good]}}
         self.lta_order_bad = {'olitirs8': {'inputs': [self.lta_prod_bad]}}
