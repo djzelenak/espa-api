@@ -57,10 +57,6 @@ class OrderingProvider(ProviderInterfaceV0):
             if sensor_type == 'not_implemented':
                 continue
 
-            # saves us from adding sensor types in restricted.yaml
-            if '_collection' in sensor_type:
-                sensor_type.replace('_collection','')
-
             sensor_restr = restricted.get(sensor_type, {})
             role_restr = sensor_restr.get('role', []) + all_role
             by_date_restr = sensor_restr.get('by_date', {})
