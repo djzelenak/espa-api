@@ -535,7 +535,7 @@ def instance(product_id):
     for key in instances.iterkeys():
         if re.match(instances[key][0], _id):
             inst = instances[key][1](product_id.strip())
-            inst.shortname = key.replace('_collection', '')
+            inst.shortname = key
             return inst
 
     msg = u"[{0:s}] is not a supported sensor product".format(product_id)
