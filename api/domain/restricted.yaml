@@ -1,6 +1,7 @@
 ---
 all:
     role:
+        - lst
         - swe
         - restricted_prod
 
