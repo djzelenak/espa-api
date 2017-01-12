@@ -8,6 +8,16 @@ from api.external import lta
 from api.external.mocks import lta as mocklta
 from api.external.hadoop import HadoopHandler
 
+from api.external import lpdaac
+
+class TestLPDAAC(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+
 
 class TestLTA(unittest.TestCase):
     def setUp(self):

@@ -6,7 +6,7 @@ Author: David V. Hill
 
 import re
 from api import ProductNotImplemented
-from api.util import julian_date_check
+from api.util import julian_date_check, julian_from_date
 import yaml
 
 # Grab details on product restrictions
@@ -259,13 +259,26 @@ class Landsat(SensorProduct):
         product_id = product_id.strip()
         super(Landsat, self).__init__(product_id)
 
-        self.path = product_id[3:6].lstrip('0')
-        self.row = product_id[6:9].lstrip('0')
-        self.year = product_id[9:13]
-        self.doy = product_id[13:16]
-        self.julian = product_id[9:16]
-        self.station = product_id[16:19]
-        self.version = product_id[19:21]
+        # only the collections product ids include underscores
+        if '_' in product_id:
+            # lt05_l1tp_042034_20011103_20160706_01_a1
+            _idlist = product_id.split('_')
+            self.year = _idlist[3][:4]
+            self.doy = julian_from_date(_idlist[3][:4], _idlist[3][4:6], _idlist[3][6:8])
+            self.julian = self.year + self.doy
+            self.path = _idlist[2][:3].lstrip('0')
+            self.row = _idlist[2][3:].lstrip('0')
+            self.correction_level = _idlist[1]
+            self.collection_number = _idlist[-2]
+            self.collection_category = _idlist[-1]
+        else:
+            self.path = product_id[3:6].lstrip('0')
+            self.row = product_id[6:9].lstrip('0')
+            self.year = product_id[9:13]
+            self.doy = product_id[13:16]
+            self.julian = product_id[9:16]
+            self.station = product_id[16:19]
+            self.version = product_id[19:21]
 
     # SR based products are not available for those
     # dates where we are missing auxiliary data
@@ -412,28 +425,28 @@ class SensorCONST(object):
     instances = {
         'tm4': (r'^lt4\d{3}\d{3}\d{4}\d{3}[a-z]{3}[a-z0-9]{2}$', Landsat4TM, 'LT42181092013069PFS00'),
 
-        #'tm4_collection': (r'^lt04_{1}\w{4}_{1}[0-9]{6}_{1}[0-9]{8}_{1}[0-9]{8}_{1}[0-9]{2}_{1}\w{2}$',
-        #                   Landsat4TM, 'lt04_l1tp_042034_20011103_20160706_01_a1'),
+        'tm4_collection': (r'^lt04_{1}\w{4}_{1}[0-9]{6}_{1}[0-9]{8}_{1}[0-9]{8}_{1}[0-9]{2}_{1}\w{2}$',
+                           Landsat4TM, 'lt04_l1tp_042034_20011103_20160706_01_a1'),
 
         'tm5': (r'^lt5\d{3}\d{3}\d{4}\d{3}[a-z]{3}[a-z0-9]{2}$', Landsat5TM, 'LT52181092013069PFS00'),
 
-        #'tm5_collection': (r'^lt05_{1}\w{4}_{1}[0-9]{6}_{1}[0-9]{8}_{1}[0-9]{8}_{1}[0-9]{2}_{1}\w{2}$',
-        #                   Landsat5TM, 'lt05_l1tp_042034_20011103_20160706_01_a1'),
+        'tm5_collection': (r'^lt05_{1}\w{4}_{1}[0-9]{6}_{1}[0-9]{8}_{1}[0-9]{8}_{1}[0-9]{2}_{1}\w{2}$',
+                           Landsat5TM, 'lt05_l1tp_042034_20011103_20160706_01_a1'),
 
         'etm7': (r'^le7\d{3}\d{3}\d{4}\d{3}\w{3}.{2}$', Landsat7ETM, 'LE72181092013069PFS00'),
 
-        #'etm7_collection': (r'^le07_{1}\w{4}_{1}[0-9]{6}_{1}[0-9]{8}_{1}[0-9]{8}_{1}[0-9]{2}_{1}\w{2}$',
-        #                    Landsat7ETM, 'le07_l1tp_042034_20011103_20160706_01_a1'),
+        'etm7_collection': (r'^le07_{1}\w{4}_{1}[0-9]{6}_{1}[0-9]{8}_{1}[0-9]{8}_{1}[0-9]{2}_{1}\w{2}$',
+                            Landsat7ETM, 'le07_l1tp_042034_20011103_20160706_01_a1'),
 
         'olitirs8': (r'^lc8\d{3}\d{3}\d{4}\d{3}\w{3}.{2}$', Landsat8OLITIRS, 'LC82181092013069PFS00'),
 
-        #'olitirs8_collection': (r'^lc08_{1}\w{4}_{1}[0-9]{6}_{1}[0-9]{8}_{1}[0-9]{8}_{1}[0-9]{2}_{1}\w{2}$',
-        #                        Landsat8OLITIRS, 'lc08_l1tp_042034_20011103_20160706_01_a1'),
+        'olitirs8_collection': (r'^lc08_{1}\w{4}_{1}[0-9]{6}_{1}[0-9]{8}_{1}[0-9]{8}_{1}[0-9]{2}_{1}\w{2}$',
+                                Landsat8OLITIRS, 'lc08_l1tp_042034_20011103_20160706_01_a1'),
 
         'oli8': (r'^lo8\d{3}\d{3}\d{4}\d{3}\w{3}.{2}$', Landsat8OLI, 'LO82181092013069PFS00'),
 
-        #'oli8_collection': (r'^lo08_{1}\w{4}_{1}[0-9]{6}_{1}[0-9]{8}_{1}[0-9]{8}_{1}[0-9]{2}_{1}\w{2}$',
-        #                    Landsat8OLI, 'lo08_l1tp_042034_20011103_20160706_01_a1'),
+        'oli8_collection': (r'^lo08_{1}\w{4}_{1}[0-9]{6}_{1}[0-9]{8}_{1}[0-9]{8}_{1}[0-9]{2}_{1}\w{2}$',
+                            Landsat8OLI, 'lo08_l1tp_042034_20011103_20160706_01_a1'),
 
         'mod09a1': (r'^mod09a1\.a\d{7}\.h\d{2}v\d{2}\.00[5-6]\.\d{13}$',
                     ModisTerra09A1, 'mod09a1.A2000072.h02v09.005.2008237032813'),

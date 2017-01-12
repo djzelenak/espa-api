@@ -99,7 +99,9 @@ def build_base_order():
                      '.A2016305.h11v04.006.2016314200836': (['MOD09GA', 'MOD09GQ', 'MYD13A2', 'MYD13A3'],
                                                             ['mod09ga', 'mod09gq', 'myd13a2', 'myd13a3']),
                      '2181092013069PFS00': (['LT4', 'LT5', 'LE7', 'LO8', 'LC8'],
-                                            ['tm4', 'tm5', 'etm7', 'oli8', 'olitirs8'])}
+                                            ['tm4', 'tm5', 'etm7', 'oli8', 'olitirs8']),
+                     'L1TP_044030_19851028_20161004_01_T1': (['LT05_'],
+                                                             ['tm5_collection'])}
 
     for acq in sensor_acqids:
         for prefix, label in zip(sensor_acqids[acq][0], sensor_acqids[acq][1]):
