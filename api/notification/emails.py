@@ -148,7 +148,7 @@ class Emails(object):
 
         m.append(contact_footer)
         email_msg = ''.join(m)
-        subject = 'Processing order %s received' % order.orderid
+        subject = 'USGS ESPA Processing order %s received' % order.orderid
 
         return self.__send(recipient=email, subject=subject, body=email_msg)
 
@@ -185,7 +185,7 @@ class Emails(object):
 
         m.append(contact_footer)
         body = ''.join(m)
-        subject = 'Processing for %s complete.' % order.orderid
+        subject = 'USGS ESPA Processing for %s complete' % order.orderid
 
         return self.__send(recipient=email, subject=subject, body=body)
 
