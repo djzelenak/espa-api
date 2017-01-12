@@ -1,6 +1,6 @@
 # espa-api
 
-Version 1.0.0
+Version 1.10.0
 =============
 This is an API for interacting with the ESPA ordering system.
 
