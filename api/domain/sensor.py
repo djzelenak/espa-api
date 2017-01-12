@@ -315,8 +315,9 @@ class LandsatETM(Landsat):
 
 class LandsatOLITIRS(Landsat):
     """Models Landsat OLI/TIRS only products"""
-    products = ["source_metadata", "l1", "toa", "bt", "cloud", "sr", "sr_ndvi", "sr_evi",
-                "sr_savi", "sr_msavi", "sr_ndmi", "sr_nbr", "sr_nbr2", "stats", "swe"]
+    products = ["source_metadata", "l1", "toa", "bt", "cloud", "sr", "lst", "swe",
+                "sr_ndvi", "sr_evi", "sr_savi", "sr_msavi", "sr_ndmi", "sr_nbr",
+                "sr_nbr2", "stats"]
     lta_name = 'LANDSAT_8'
     sensor_name = 'olitirs'
 
@@ -356,7 +357,6 @@ class Landsat4TM(LandsatTM, Landsat4):
 
     def __init__(self, product_id):
         super(Landsat4TM, self).__init__(product_id)
-        Landsat4TM.products = [i for i in self.products if i != 'lst']
 
 
 class Landsat5(Landsat):

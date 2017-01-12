@@ -1,6 +1,6 @@
 # espa-api
 
-Version 1.0.0
+Version 1.10.0
 =============
 This is an API for interacting with the ESPA ordering system.
 
@@ -8,6 +8,7 @@ This is an API for interacting with the ESPA ordering system.
 * [Available Products](docs/AVAILABLE-PRODUCTS.md)
 * [Abbreviations & Definitions](docs/TERMS.md)
 * [ESPA Customizations](docs/CUSTOMIZATION.md)
+* [USGS/EROS Inventory Service](https://earthexplorer.usgs.gov/inventory/documentation)
 
 ## User API
 The User API is public facing and available for anyone to code and interact with.  Version 1 provides the minimum functionality necessary to place orders, view order status, and determine available products from a list of inputs. There are endpoints for providing available projections, resampling methods, and output formats.
@@ -36,6 +37,17 @@ HTTP Method	| URI	| Action
 [GET](#apiProdStats)  |  `https://espa.cr.usgs.gov/api/v0/item-status/<ordernum>/<itemnum>`  |  Retrieve status and details for a particular product in an order
 [POST](#apiSubmitOrder)  |  `https://espa.cr.usgs.gov/api/v0/order ` |  Accepts requests for process from an HTTP POST with a JSON body. The body is validated and any errors are returned to the caller. Otherwise, an orderid is returned.
 [GET](#apiOrderSchema)  |  `https://espa.cr.usgs.gov/api/v0/order-schema`  |  Retrieves order schema definition
+
+<details>
+<summary>_Need help finding available scenes?_</summary>
+
+The USGS EROS offers two resources for finding valid scene acquisitions:
+
+1. [USGS/EROS Inventory Service API](https://earthexplorer.usgs.gov/inventory/documentation)
+
+2. [Entire Collection of Metadata](https://landsat.usgs.gov/download-entire-collection-metadata)
+
+</details>
 
 **GET /api**<a id="api"></a>
 
