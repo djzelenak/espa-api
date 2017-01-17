@@ -176,7 +176,7 @@ curl --user username:password https://espa.cr.usgs.gov/api/v0/user
 
 Lists the available output products for the supplied input.
 ```json
-curl --get --user username:password https://espa.cr.usgs.gov/api/v0/available-products/LE70290302003123EDC00
+curl --user username:password https://espa.cr.usgs.gov/api/v0/available-products/LE70290302003123EDC00
 {
     "etm7": {
         "inputs": [
@@ -260,7 +260,7 @@ curl  --user username:password -d '{"inputs":["LE70290302003123EDC00",
 
 Lists and describes available projections.  This is a dump of the schema defined that constrains projection info.
 ```json
-curl --get --user username:password https://espa.cr.usgs.gov/api/v0/projections
+curl --user username:password https://espa.cr.usgs.gov/api/v0/projections
 {
     "aea": {
         "properties": {
