@@ -36,6 +36,7 @@ transport_api.add_resource(VersionInfo,
 
 transport_api.add_resource(AvailableProducts,
                            '/api/v<version>/available-products/<prod_id>',
+                           '/api/v<version>/available-products/',
                            '/api/v<version>/available-products')
 
 transport_api.add_resource(ValidationInfo,
