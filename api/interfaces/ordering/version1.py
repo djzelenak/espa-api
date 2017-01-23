@@ -41,7 +41,8 @@ class API(object):
         """
         resp = dict()
         for version in user_api_operations:
-            resp[version] = user_api_operations[version]['description']
+            resp_ver = 'v{}'.format(version)
+            resp[resp_ver] = user_api_operations[version]['description']
         return resp
 
     def available_products(self, product_id, username):
