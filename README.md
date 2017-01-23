@@ -57,7 +57,7 @@ curl --user username:password https://espa.cr.usgs.gov/api
 
 {
     "versions": {
-        "0": {
+        "v0": {
             "description": "First release of the ESPA API"
         }
     }
@@ -122,14 +122,14 @@ curl --user username:password https://espa.cr.usgs.gov/api/v0
                 "GET"
             ]
         },
-        "/api/v0/orders": {
+        "/api/v0/list-orders": {
             "function": "list orders for authenticated user",
             "methods": [
                 "HEAD",
                 "GET"
             ]
         },
-        "/api/v0/orders/<email>": {
+        "/api/v0/list-orders/<email>": {
             "function": "list orders for supplied email, for user collaboration",
             "methods": [
                 "HEAD",
@@ -152,6 +152,7 @@ curl --user username:password https://espa.cr.usgs.gov/api/v0
         }
     }
 }
+
 ```
 
 **GET /api/v0/user**<a id="apiUser"></a>
