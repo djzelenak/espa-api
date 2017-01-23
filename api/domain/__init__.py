@@ -74,13 +74,6 @@ user_api_operations = {
                     "GET"
                 ]
             },
-            "/api/v0/request/<ordernum>": {
-                'function': "retrieve order sent to server",
-                'methods': [
-                    "HEAD",
-                    "GET"
-                ]
-            },
             "/api/v0/order": {
                 'function': "point for accepting processing requests via HTTP POST with JSON body. Errors are returned to user, successful validation returns an orderid",
                 'methods': [
@@ -159,13 +152,6 @@ user_api_operations = {
             },
             "/api/v1/order/<ordernum>": {
                 'function': "retrieves a submitted order",
-                'methods': [
-                    "HEAD",
-                    "GET"
-                ]
-            },
-            "/api/v1/request/<ordernum>": {
-                'function': "retrieve order sent to server",
                 'methods': [
                     "HEAD",
                     "GET"
