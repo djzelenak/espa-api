@@ -53,14 +53,14 @@ user_api_operations = {
                     "GET"
                 ]
             },
-            "/api/v0/orders": {
+            "/api/v0/list-orders": {
                 'function': "list orders for authenticated user",
                 'methods': [
                     "HEAD",
                     "GET"
                 ]
             },
-            "/api/v0/orders/<email>": {
+            "/api/v0/list-orders/<email>": {
                 'function': "list orders for supplied email, for user collaboration",
                 'methods': [
                     "HEAD",
@@ -143,14 +143,14 @@ user_api_operations = {
                     "GET"
                 ]
             },
-            "/api/v1/orders": {
+            "/api/v1/list-orders": {
                 'function': "list orders for authenticated user",
                 'methods': [
                     "HEAD",
                     "GET"
                 ]
             },
-            "/api/v1/orders/<email>": {
+            "/api/v1/list-orders/<email>": {
                 'function': "list orders for supplied email, for user collaboration",
                 'methods': [
                     "HEAD",
