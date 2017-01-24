@@ -23,13 +23,13 @@ class TestLTA(unittest.TestCase):
     def setUp(self):
         pass
 
+    @patch('requests.post', mocklta.get_verify_scenes_response)
     def test_verify_scenes(self):
-        pass
-        #product_list = ['LT50300372011275PAC01','LE70280312004362EDC00']
-        #resp = lta.verify_scenes(product_list)
-        #for item in product_list:
-        #    self.assertTrue(item in resp.keys())
-        #    self.assertTrue(resp[item])
+        product_list = ['LT50300372011275PAC01','LE70280312004362EDC00']
+        resp = lta.verify_scenes(product_list)
+        for item in product_list:
+           self.assertTrue(item in resp.keys())
+           self.assertTrue(resp[item])
 
     @patch('api.external.lta.OrderUpdateServiceClient.update_order', mocklta.return_update_order_resp)
     #@patch('api.external.lta.SoapClient.getAvailableOrders', mocklta.get_available_orders)
