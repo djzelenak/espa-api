@@ -147,8 +147,13 @@ class AvailableProducts(Resource):
         return espa.available_products(prod_list, auth.username())
 
     @staticmethod
-    def get(version, prod_id):
-        return espa.available_products(prod_id, auth.username())
+    def get(version, prod_id=None):
+        if prod_id:
+            return espa.available_products(prod_id, auth.username())
+        else:
+            response = {"status": 404, "message": ("Must supply a product id to {}/<prod_id>"
+                                                   .format(request.url.strip('/')))}
+            return response, response['status']
 
 
 class ListOrders(Resource):
