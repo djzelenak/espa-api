@@ -123,3 +123,16 @@ def get_verify_scenes_response(url, data, headers):
     response.status_code = 200
     response.reason = 'OK'
     return response
+
+
+class get_available_orders_response(object):
+    # resp = self.client.service.getAvailableOrders("ESPA")
+    def __init__(self, *args, **kwargs):
+        pass
+
+    class service(object):
+        def getAvailableOrders(self, sensor):
+            self.units = []
+            return self
+
+    service = service()
