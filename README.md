@@ -31,6 +31,7 @@ HTTP Method	| URI	| Action
 [GET](#apiResamp)  |  `https://espa.cr.usgs.gov/api/v0/resampling-methods`  |  Lists all available resampling methods
 [GET](#apiOrders)  |  `https://espa.cr.usgs.gov/api/v0/list-orders`  |  List orders for the authenticated user.
 [GET](#apiOrdersEmail)  |  `https://espa.cr.usgs.gov/api/v0/list-orders/<email>`  |  Lists orders for the supplied email. Necessary to support user collaboration.
+[GET](#apiOrdersExt)  |  `https://espa.cr.usgs.gov/api/v0/list-orders-ext/<email>`  |  List extended information about users orders and their statuses. Accepts JSON filters.
 [GET](#apiStatus)  |  `https://espa.cr.usgs.gov/api/v0/order-status/<ordernum>`  |  Retrieves a submitted orders status
 [GET](#apiOrderDetails)  |  `https://espa.cr.usgs.gov/api/v0/order/<ordernum>`  |  Retrieves details for a submitted order. Some information may be omitted from this response depending on access privileges.
 [GET](#apiItemStats)  |  `https://espa.cr.usgs.gov/api/v0/item-status/<ordernum>`  |  Retrieve the status and details for all products in an order.
@@ -131,6 +132,13 @@ curl --user username:password https://espa.cr.usgs.gov/api/v0
         },
         "/api/v0/list-orders/<email>": {
             "function": "list orders for supplied email, for user collaboration",
+            "methods": [
+                "HEAD",
+                "GET"
+            ]
+        },
+        "/api/v0/list-orders-ext/<email>": {
+            "function": "List extended information about users orders and their statuses. Accepts JSON filters.",
             "methods": [
                 "HEAD",
                 "GET"
@@ -436,6 +444,24 @@ curl --user username:password https://espa.cr.usgs.gov/api/v0/list-orders/produc
     "production@email.com-101115143201-00132"
   ]
 }
+```
+
+**GET /api/v0/list-orders-ext/\<email\>**<a id="apiOrdersExt"></a>
+
+List extended information about users orders and their statuses. Accepts JSON filters. 
+```json
+curl --user username:password -XGET -d '{"status": ["complete"]}' https://espa.cr.usgs.gov/api/v0/list-orders-ext/production@email.com
+
+[
+    {
+        "order_note": "",
+        "order_status": "complete",
+        "orderid": "production@email.com-101015143201-00132",
+        "products_complete": 1,
+        "products_error": 0,
+        "products_ordered": 1
+    }
+]
 ```
 
 **GET /api/v0/order-status/\<ordernum\>**<a id="apiStatus"></a>
