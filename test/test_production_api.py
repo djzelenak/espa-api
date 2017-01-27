@@ -185,6 +185,36 @@ class TestProductionAPI(unittest.TestCase):
 
         self.assertTrue('complete' == Scene.get('ordering_scene.status', scene.name, order.orderid))
 
+    def test_production_set_product_error_unavailable_night(self):
+        """
+        Move a scene status from error to unavailable based on the solar zenith
+        error message
+        """
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        scene = order.scenes({'name !=': 'plot'})[0]
+        production_provider.set_product_error(name=scene.name,
+                                              orderid=order.orderid,
+                                              processing_loc='L8SRLEXAMPLE',
+                                              error='solar zenith angle out of range')
+        scene = Scene.by_name_orderid(name=scene.name, order_id=order.id)
+        self.assertTrue('unavailable' == scene.status)
+        self.assertTrue('cannot be processed due to the extreme solar zenith angle' in scene.note)
+
+    def test_production_set_product_error_unavailable_almost_night(self):
+        """
+        Move a scene status from error to unavailable based on the solar zenith
+        error message
+        """
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        scene = order.scenes({'name !=': 'plot'})[0]
+        production_provider.set_product_error(name=scene.name,
+                                              orderid=order.orderid,
+                                              processing_loc='L8SRLEXAMPLE',
+                                              error='Solar zenith angle is too large')
+        scene = Scene.by_name_orderid(name=scene.name, order_id=order.id)
+        self.assertTrue('unavailable' == scene.status)
+        self.assertTrue('cannot be processed to surface reflectance' in scene.note)
+
     @patch('api.external.lta.update_order_status', lta.update_order_status_fail)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
     @patch('os.path.getsize', lambda y: 999)
