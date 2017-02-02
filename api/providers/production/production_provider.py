@@ -964,12 +964,13 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             # if there is only 1 product left that is not done, it must be
             # the plot product. Will verify this in next step.  Plotting
             # cannot run unless everything else is done.
-            log_msg = "plot product_count = {}\nplot unavailable count = {}\nplot complete count{}"
+            log_msg = "plot product_count = {}\nplot unavailable count = {}\nplot complete count = {}"
             logger.info(log_msg.format(product_count, unavailable_count, complete_count))
 
             if product_count - (unavailable_count + complete_count) == 1:
-                if len(plot_scenes) >= 1:
-                    for p in plot_scenes:
+                plots_in_order = order.scenes({'sensor_type': 'plot'})
+                if len(plots_in_order) == 1:
+                    for p in plots_in_order:
                         if complete_count == 0:
                             p.status = 'unavailable'
                             p.note = 'No input products were available for plotting and statistics'
@@ -980,6 +981,9 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                             p.note = ''
                             logger.info("{0} plot is on cache".format(order.orderid))
                         p.save()
+                else:
+                    logger.debug('{}'.format(plots_in_order))
+                    raise ValueError('Too many ({n}) plots in order {oid}'.format(n=len(plots_in_order), oid=order.id))
         return True
 
     def handle_submitted_products(self):
