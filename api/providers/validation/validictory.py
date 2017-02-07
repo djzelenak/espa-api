@@ -272,8 +272,13 @@ class OrderValidatorV0(validictory.SchemaValidator):
                     date_restricted.pop(key, None)
 
             if date_restricted:
-                self._error('Requested products are restricted by date',
-                            date_restricted, fieldname, path=path)
+                if 'response-readable' in self.data_source:
+                    for product_type in date_restricted:
+                        self._errors.append("Requested {} products are restricted by date. Remove: {}"
+                                            .format(product_type, [x.upper() for x in date_restricted[product_type]]))
+                else:
+                    self._error('Requested products are restricted by date',
+                                date_restricted, fieldname, path=path)
 
         prods = []
         for key in avail_prods:
