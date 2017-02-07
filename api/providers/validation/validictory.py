@@ -295,8 +295,13 @@ class OrderValidatorV0(validictory.SchemaValidator):
                     dif.remove(d)
 
         if dif:
-            self._error('Requested products are not available',
-                        dif, fieldname, path=path)
+            if 'response-readable' in self.data_source:
+                for d in dif:
+                    self._errors.append("Requested {} products are not available. Remove: {}"
+                                        .format(d, [s.upper() for s in x['inputs']]))
+            else:
+                self._error('Requested products are not available',
+                            dif, fieldname, path=path)
 
     def validate_oneormoreobjects(self, x, fieldname, schema, path, key_list):
         """Validates that at least one value is present from the list"""
