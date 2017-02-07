@@ -169,6 +169,24 @@ class OrderValidatorV0(validictory.SchemaValidator):
                     self._error(': field only accepts one object',
                                 len(value), fieldname, path=path)
 
+    def validate_enum(self, x, fieldname, schema, path, options=None):
+        '''
+        Validates that the value of the field is equal to one of the specified option values
+        '''
+        value = x.get(fieldname)
+        if value is not None:
+            if callable(options):
+                options = options(x)
+            if value not in options:
+                if not (value == '' and schema.get('blank', self.blank_by_default)):
+                    if 'response-readable' in self.data_source:
+                        self._errors.append("Not available: {} products for {} scenes. "
+                                            "Please choose from available products: {}"
+                                            .format(value, path.split('.products')[0], options))
+                    else:
+                        self._error("is not in the enumeration: {options!r}", value, fieldname,
+                                    options=options, path=path)
+
     def validate_enum_keys(self, x, fieldname, schema, path, valid_list):
         """Validates the keys in the given object match expected keys"""
         value = x.get(fieldname)
