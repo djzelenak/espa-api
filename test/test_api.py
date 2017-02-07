@@ -59,7 +59,7 @@ class TestAPI(unittest.TestCase):
         os.environ['espa_api_testing'] = ''
 
     def test_api_versions_key_val(self):
-        self.assertEqual(set(api.api_versions().keys()), set(['0', '1']))
+        self.assertEqual(set(api.api_versions().keys()), set(['v0', 'v1']))
 
     def test_get_available_products_key_val(self):
         self.assertEqual(api.available_products(self.product_id, self.user.username).keys()[0], "tm5")
