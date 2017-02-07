@@ -220,6 +220,17 @@ class TestValidation(unittest.TestCase):
                                   '\nUsing test: {}'.format(exc_type, str(exc), test))
         #print c  # For initial debugging
 
+    def test_validate_allow_human_readable(self):
+        """
+        Assert that adding response-readable to the JSON request is accepted
+        """
+        valid_order = copy.deepcopy(self.base_order)
+        valid_order['response-readable'] = True
+        try:
+            good = api.validation.validate(valid_order, self.staffuser.username)
+        except ValidationException as e:
+            self.fail('Raised ValidationException: {}'.format(e.message))
+
 
 class TestInventory(unittest.TestCase):
     def setUp(self):
