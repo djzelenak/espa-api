@@ -292,11 +292,11 @@ class OrderValidatorV0(validictory.SchemaValidator):
             if date_restricted:
                 if 'response-readable' in self.data_source:
                     for product_type in date_restricted:
-                        msg = (r'See <a href="https://landsat.usgs.gov/landsat-surface-reflectance-high-'
-                               r'level-data-products">Caveats and Constraints</a> for more details. ')
-                        self._errors.append("Requested {} products are restricted by date. {}Remove {} scenes: {}"
-                                            .format(product_type, msg, path.split('.products')[0],
-                                                    [x.upper() for x in date_restricted[product_type]]))
+                        msg = (r'<br>See <a href="https://landsat.usgs.gov/landsat-surface-reflectance-high-'
+                               r'level-data-products">Caveats and Constraints</a> for more details.')
+                        self._errors.append("Requested {} products are restricted by date. Remove {} scenes: {} {}"
+                                            .format(product_type, path.split('.products')[0],
+                                                    [x.upper() for x in date_restricted[product_type]], msg))
                 else:
                     self._error('Requested products are restricted by date',
                                 date_restricted, fieldname, path=path)
@@ -318,8 +318,10 @@ class OrderValidatorV0(validictory.SchemaValidator):
         if dif:
             if 'response-readable' in self.data_source:
                 for d in dif:
-                    self._errors.append("Requested {} products are not available. Remove {} scenes: {}"
-                                        .format(d, path.split('.products')[0], [s.upper() for s in x['inputs']]))
+                    if type(x) == dict:
+                        scene_ids = [s.upper() for s in x['inputs']]
+                        self._errors.append("Requested {} products are not available. Remove {} scenes: {}"
+                                            .format(d, path.split('.products')[0], scene_ids))
             else:
                 self._error('Requested products are not available',
                             dif, fieldname, path=path)
