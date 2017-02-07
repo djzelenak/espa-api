@@ -231,6 +231,43 @@ class TestValidation(unittest.TestCase):
         except ValidationException as e:
             self.fail('Raised ValidationException: {}'.format(e.message))
 
+    def test_validate_sr_restricted_human_readable(self):
+        """
+        Assert that a human readable response is returned for unavailable or date restricted products
+        """
+        exc_type = ValidationException
+        invalid_list = {'olitirs8': {'inputs': ['lc80310272016056lgn00'],
+                                     'products': ['sr'],
+                                     'err_msg': 'Requested {} products are restricted by date. '
+                                                'Remove <obj>.{} scenes: {}'},
+                        'oli8': {'inputs': ['lo80141122015030lgn00'],
+                                 'products': ['sr'],
+                                 'err_msg': 'Requested {} products are not available. '
+                                            'Remove <obj>.{} scenes: {}'}}
+
+        for stype in invalid_list:
+            invalid_order = copy.deepcopy(self.base_order)
+            invalid_order[stype]['inputs'] = invalid_list[stype]['inputs']
+            invalid_order[stype]['products'] = invalid_list[stype]['products']
+            invalid_order['response-readable'] = True
+            uppercase_products = map(str.upper, invalid_order[stype]['inputs'])
+            for p in invalid_order[stype]['products']:
+                err_message = invalid_list[stype]['err_msg'].format(p, stype, uppercase_products)
+                with self.assertRaises(exc_type):
+                    try:
+                        api.validation.validate(invalid_order, self.staffuser.username)
+                    except exc_type as e:
+                        if str(err_message) in str(e):
+                            raise
+                        else:
+                            self.fail('\n\nExpected in exception message:\n{}'
+                                      '\n\nException message raised:\n{}'
+                                      .format(str(err_message), str(e)))
+                    else:
+                        self.fail('\n{} Exception was not raised\n'
+                                  '\nExpected exception message:\n{}\n'
+                                  .format(exc_type, str(err_message)))
+
 
 class TestInventory(unittest.TestCase):
     def setUp(self):
