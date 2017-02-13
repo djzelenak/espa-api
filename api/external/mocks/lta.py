@@ -130,6 +130,42 @@ def get_verify_scenes_response(url, data, headers):
     return response
 
 
+def get_order_scenes_response_main(url, data, headers=None):
+    if 'submitOrder' in url:
+        return get_order_scenes_response(data)
+
+
+def get_order_scenes_response(data):
+    response = MockRequestsResponse()
+    response.content = ('<?xml version="1.0" encoding="UTF-8"?>\n<orderStatus xmlns="http://earthexplorer.usgs.gov/sche'
+                        'ma/orderStatus" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation'
+                        '="http://earthexplorer.usgs.gov/schema/orderStatus https://eedevmast.cr.usgs.gov/OrderWrapp'
+                        'erServicedevmast/orderStatus.xsd">\n')
+
+    root = xml.fromstring(data)
+    response_namespace = 'https://earthexplorer.usgs.gov/schema/orderParameters'
+    scenes = root.findall("ee:scene", namespaces={'ee': response_namespace})
+    for s in list(scenes):
+        response.content += ('<scene>\n')
+        name = s[0].text
+        response.content += ('<sceneId>{}</sceneId>\n'.format(name))
+        prodcode = 'Txxx'
+        response.content += ('<prodCode>{}</prodCode>\n'.format(prodcode))
+        sensor = s[1].text
+        response.content += ('<sensor>{}</sensor>\n'.format(sensor))
+        status = 'ordered'
+        orderno = '0621405213419'
+        response.content += ('<status>{}</status>\n'.format(status))
+        response.content += ('<orderNumber>{}</orderNumber>\n'.format(orderno))
+        response.content += ('</scene>\n')
+
+    response.content += '</orderStatus>\n'
+    response.ok = True
+    response.status_code = 200
+    response.reason = 'OK'
+    return response
+
+
 class get_available_orders_response(object):
     # resp = self.client.service.getAvailableOrders("ESPA")
     def __init__(self, *args, **kwargs):
