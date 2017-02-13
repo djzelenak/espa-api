@@ -1,3 +1,4 @@
+import os
 import unittest
 from mock import patch
 
@@ -21,7 +22,10 @@ class TestLPDAAC(unittest.TestCase):
 
 class TestLTA(unittest.TestCase):
     def setUp(self):
-        pass
+        os.environ['espa_api_testing'] = 'True'
+
+    def tearDown(self):
+        os.environ['espa_api_testing'] = ''
 
     @patch('requests.post', mocklta.get_verify_scenes_response)
     def test_verify_scenes(self):
