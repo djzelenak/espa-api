@@ -1,6 +1,6 @@
 import os
 import unittest
-from mock import patch
+from mock import patch, MagicMock
 
 from test.version0_testorders import build_base_order
 from api.external.nlaps import products_are_nlaps
@@ -37,6 +37,13 @@ class TestLTA(unittest.TestCase):
         for item in self.scene_ids:
            self.assertTrue(item in resp.keys())
            self.assertTrue(resp[item])
+
+    @patch('api.external.lta.requests.post')
+    def test_verify_scenes_fail(self, mock_requests):
+        mock_requests.return_value = MagicMock(ok=False, reason='Testing Failure')
+        with self.assertRaises(Exception):
+            resp = lta.verify_scenes(self.scene_ids)
+
 
     #@patch('api.external.lta.OrderUpdateServiceClient.update_order', mocklta.return_update_order_resp)
     @patch('api.external.lta.SoapClient', mocklta.get_available_orders_response)
