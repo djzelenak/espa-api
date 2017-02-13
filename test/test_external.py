@@ -2,6 +2,7 @@ import os
 import unittest
 from mock import patch
 
+from test.version0_testorders import build_base_order
 from api.external.nlaps import products_are_nlaps
 from api.external import onlinecache
 from api.external.mocks import onlinecache as mockonlinecache
@@ -23,15 +24,17 @@ class TestLPDAAC(unittest.TestCase):
 class TestLTA(unittest.TestCase):
     def setUp(self):
         os.environ['espa_api_testing'] = 'True'
+        base_order = build_base_order()
+        self.scene_ids = [base_order[b].get('inputs', [None]).pop() for b in base_order if type(base_order[b]) == dict]
+        self.scene_ids = [s for s in self.scene_ids if s and (s.startswith('L'))]  # Landsat only
 
     def tearDown(self):
         os.environ['espa_api_testing'] = ''
 
-    @patch('requests.post', mocklta.get_verify_scenes_response)
+    @patch('api.external.lta.requests.post', mocklta.get_verify_scenes_response)
     def test_verify_scenes(self):
-        product_list = ['LT50300372011275PAC01','LE70280312004362EDC00']
-        resp = lta.verify_scenes(product_list)
-        for item in product_list:
+        resp = lta.verify_scenes(self.scene_ids)
+        for item in self.scene_ids:
            self.assertTrue(item in resp.keys())
            self.assertTrue(resp[item])
 
