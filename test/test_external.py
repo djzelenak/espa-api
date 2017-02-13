@@ -35,8 +35,8 @@ class TestLTA(unittest.TestCase):
     def test_verify_scenes(self):
         resp = lta.verify_scenes(self.scene_ids)
         for item in self.scene_ids:
-           self.assertTrue(item in resp.keys())
-           self.assertTrue(resp[item])
+            self.assertTrue(item in resp.keys())
+            self.assertTrue(resp[item])
 
     @patch('api.external.lta.requests.post')
     def test_verify_scenes_fail(self, mock_requests):
