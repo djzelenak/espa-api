@@ -44,6 +44,13 @@ class TestLTA(unittest.TestCase):
         with self.assertRaises(Exception):
             resp = lta.verify_scenes(self.scene_ids)
 
+    @patch('api.external.lta.requests.post', mocklta.get_order_scenes_response_main)
+    def test_order_scenes(self):
+        contact_id = 11111111
+        resp = lta.order_scenes(self.scene_ids, contact_id)
+        self.assertIn('ordered', resp)
+        self.assertEqual(len(self.scene_ids), len(resp['ordered']))
+
 
     #@patch('api.external.lta.OrderUpdateServiceClient.update_order', mocklta.return_update_order_resp)
     @patch('api.external.lta.SoapClient', mocklta.get_available_orders_response)
