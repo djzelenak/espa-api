@@ -101,12 +101,17 @@ def get_order_status(tramid):
     return response
 
 
-def get_verify_scenes_response(url, data, headers):
-    class response(object):
-        def close(self):
-            pass
+class MockRequestsResponse(object):
+    def close(self):
+        pass
+    ok = True
+    status_code = 200
+    content = b''
+    text = r''
 
-    response = response()
+
+def get_verify_scenes_response(url, data, headers):
+    response = MockRequestsResponse()
     response.content = ('<?xml version="1.0" encoding="UTF-8"?>\n<validSceneList xmlns="http://earthexplorer.usgs.gov/s'
                         'chema/validSceneList" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation'
                         '="http://earthexplorer.usgs.gov/schema/validSceneList https://eedevmast.cr.usgs.gov/OrderWrapp'
