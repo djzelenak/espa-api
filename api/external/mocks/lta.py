@@ -133,6 +133,39 @@ def get_verify_scenes_response(url, data, headers):
 def get_order_scenes_response_main(url, data, headers=None):
     if 'submitOrder' in url:
         return get_order_scenes_response(data)
+    elif 'getDownloadURL' in url:
+        return get_download_urls_response(data)
+
+
+def get_download_urls_response(data):
+    response = MockRequestsResponse()
+    response.text = ('<?xml version="1.0" encoding="UTF-8"?>\n<downloadList xmlns="http://earthexplorer.usgs.gov/sche'
+                        'ma/downloadList" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation'
+                        '="http://earthexplorer.usgs.gov/schema/downloadList https://eedevmast.cr.usgs.gov/OrderWrapp'
+                        'erServicedevmast/downloadList.xsd">\n')
+
+    root = xml.fromstring(data)
+    response_namespace = 'https://earthexplorer.usgs.gov/schema/downloadSceneList'
+    scenes = root.findall("0:scene", namespaces={'0': response_namespace})
+    for s in list(scenes):
+        response.text += ('<scene>\n')
+        name = s[0].text
+        response.text += ('<sceneId>{}</sceneId>\n'.format(name))
+        prodcode = 'Txxx'
+        response.text += ('<prodCode>{}</prodCode>\n'.format(prodcode))
+        sensor = s[1].text
+        response.text += ('<sensor>{}</sensor>\n'.format(sensor))
+        status = 'available'
+        download_url = 'http://one_time_use.tar.gz'
+        response.text += ('<status>{}</status>\n'.format(status))
+        response.text += ('<downloadURL>{}</downloadURL>\n'.format(download_url))
+        response.text += ('</scene>\n')
+
+    response.text += '</downloadList>\n'
+    response.ok = True
+    response.status_code = 200
+    response.reason = 'OK'
+    return response
 
 
 def get_order_scenes_response(data):
