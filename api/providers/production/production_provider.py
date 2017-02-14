@@ -125,9 +125,11 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             try:
                 lta.update_order_status(ee_order_id, ee_unit_id, 'C')
             except Exception, e:
-                # perhaps this doesn't need to be elevated to 'debug' status
-                # as its a fairly regular occurrence
-                logger.debug('Problem updating LTA order: {}'.format(e))
+                cache_key = 'lta.cannot.update'
+                lta_conn_failed_10mins = cache.get(cache_key)
+                if lta_conn_failed_10mins:
+                    logger.debug('Problem updating LTA order: {}'.format(e))
+                cache.set(cache_key, datetime.datetime.now())
                 scene.failed_lta_status_update = 'C'
 
         try:
@@ -169,9 +171,11 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             try:
                 lta.update_order_status(ee_order_id, ee_unit_id, 'R')
             except Exception, e:
-                # perhaps this doesn't need to be elevated to 'debug' status
-                # as its a fairly regular occurrence
-                logger.debug('Problem updating LTA order: {}'.format(e))
+                cache_key = 'lta.cannot.update'
+                lta_conn_failed_10mins = cache.get(cache_key)
+                if lta_conn_failed_10mins:
+                    logger.debug('Problem updating LTA order: {}'.format(e))
+                cache.set(cache_key, datetime.datetime.now())
                 scene.failed_lta_status_update = 'R'
 
         try:
@@ -729,7 +733,11 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 try:
                     lta.update_order_status(eeorder, s['unit_num'], status)
                 except Exception, e:
-                    logger.debug("Error updating lta for scene: {}\n{}".format(scene.id, e))
+                    cache_key = 'lta.cannot.update'
+                    lta_conn_failed_10mins = cache.get(cache_key)
+                    if lta_conn_failed_10mins:
+                        logger.debug("Error updating lta for scene: {}\n{}".format(scene.id, e))
+                    cache.set(cache_key, datetime.datetime.now())
                     scene.update('failed_lta_status_update', status)
             else:
                 # scene insertion was missed initially, add it now
