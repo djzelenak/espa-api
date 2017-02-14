@@ -200,14 +200,16 @@ def get_order_scenes_response(data):
 
 
 class MockLTAUnit(object):
-    processingParam = ('<email></email>'
-                       '<contactid></contactid>')
-    productCode = 'sr01'
-    orderingId = 6000
-    orderNbr = 100
-    unitNbr = 101
-    orderStatus = 'C'
-    unitStatus = 'C'
+
+    def __init__(self, order_number=100):
+        self.processingParam = ('<email></email>'
+                           '<contactid></contactid>')
+        self.productCode = 'sr01'
+        self.orderingId = 6000
+        self.orderNbr = order_number
+        self.unitNbr = 101
+        self.orderStatus = 'C'
+        self.unitStatus = 'C'
 
 
 class MockLTAService(object):
@@ -229,11 +231,15 @@ class MockSudsClient(object):
             return self
 
         def getOrderStatus(self, order_number):
-            self.order = MockLTAUnit()
+            self.order = MockLTAUnit(order_number)
             return self
 
         def setOrderStatus(self, orderNumber, systemId, newStatus, unitRangeBegin, unitRangeEnd):
-            self.status = 'Pass'
+            self.message = ''
+            if orderNumber == 'failure':
+                self.status = None
+            else:
+                self.status = 'Pass'
             return self
 
     service = service()

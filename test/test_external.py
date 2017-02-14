@@ -82,11 +82,17 @@ class TestLTA(unittest.TestCase):
     def test_get_order_status(self):
         resp = lta.get_order_status(self.lta_order_number)
         self.assertIn('order_status', resp)
+        self.assertEqual(resp['order_num'], str(self.lta_order_number))
 
     @patch('api.external.lta.SoapClient', mocklta.MockSudsClient)
     def test_update_order_complete(self):
         resp = lta.update_order_status(self.lta_order_number, self.lta_unit_number, 'C')
         self.assertTrue(resp.success)
+
+    @patch('api.external.lta.SoapClient', mocklta.MockSudsClient)
+    def test_update_order_incomplete(self):
+        resp = lta.update_order_status('failure', self.lta_unit_number, 'C')
+        self.assertFalse(resp.success)
 
 
 class TestNLAPS(unittest.TestCase):
