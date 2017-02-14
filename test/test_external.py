@@ -24,6 +24,7 @@ class TestLPDAAC(unittest.TestCase):
 class TestLTA(unittest.TestCase):
     def setUp(self):
         os.environ['espa_api_testing'] = 'True'
+        self.contact_id = 0
         base_order = build_base_order()
         self.scene_ids = [base_order[b].get('inputs', [None]).pop() for b in base_order if type(base_order[b]) == dict]
         self.scene_ids = [s for s in self.scene_ids if s and (s.startswith('L'))]  # Landsat only
@@ -46,8 +47,7 @@ class TestLTA(unittest.TestCase):
 
     @patch('api.external.lta.requests.post', mocklta.get_order_scenes_response_main)
     def test_order_scenes(self):
-        contact_id = 11111111
-        resp = lta.order_scenes(self.scene_ids, contact_id)
+        resp = lta.order_scenes(self.scene_ids, self.contact_id)
         self.assertIn('ordered', resp)
         self.assertEqual(len(self.scene_ids), len(resp['ordered']))
 
