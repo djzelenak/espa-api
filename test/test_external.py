@@ -25,6 +25,8 @@ class TestLTA(unittest.TestCase):
     def setUp(self):
         os.environ['espa_api_testing'] = 'True'
         self.contact_id = 0
+        self.lta_order_number = 0
+        self.lta_unit_number = 0
         base_order = build_base_order()
         self.scene_ids = [base_order[b].get('inputs', [None]).pop() for b in base_order if type(base_order[b]) == dict]
         self.scene_ids = [s for s in self.scene_ids if s and (s.startswith('L'))]  # Landsat only
@@ -71,10 +73,20 @@ class TestLTA(unittest.TestCase):
             resp = lta.get_download_urls(self.scene_ids, self.contact_id)
 
     #@patch('api.external.lta.OrderUpdateServiceClient.update_order', mocklta.return_update_order_resp)
-    @patch('api.external.lta.SoapClient', mocklta.get_available_orders_response)
+    @patch('api.external.lta.SoapClient', mocklta.MockSudsClient)
     def test_get_available_orders(self):
         resp = lta.get_available_orders()
-        self.assertTrue(len(resp) == 0)
+        self.assertEqual(len(resp[('100', '', '')]), 3)
+
+    @patch('api.external.lta.SoapClient', mocklta.MockSudsClient)
+    def test_get_order_status(self):
+        resp = lta.get_order_status(self.lta_order_number)
+        self.assertIn('order_status', resp)
+
+    @patch('api.external.lta.SoapClient', mocklta.MockSudsClient)
+    def test_update_order_complete(self):
+        resp = lta.update_order_status(self.lta_order_number, self.lta_unit_number, 'C')
+        self.assertTrue(resp.success)
 
 
 class TestNLAPS(unittest.TestCase):

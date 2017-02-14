@@ -199,14 +199,41 @@ def get_order_scenes_response(data):
     return response
 
 
-class get_available_orders_response(object):
-    # resp = self.client.service.getAvailableOrders("ESPA")
+class MockLTAUnit(object):
+    processingParam = ('<email></email>'
+                       '<contactid></contactid>')
+    productCode = 'sr01'
+    orderingId = 6000
+    orderNbr = 100
+    unitNbr = 101
+    orderStatus = 'C'
+    unitStatus = 'C'
+
+
+class MockLTAService(object):
+    unit = None
+    def __init__(self):
+        self.unit = [MockLTAUnit() for _ in range(3)]
+
+    def __len__(self):
+        return len(self.unit)
+
+
+class MockSudsClient(object):
     def __init__(self, *args, **kwargs):
         pass
 
     class service(object):
-        def getAvailableOrders(self, sensor):
-            self.units = []
+        def getAvailableOrders(self, requestor):
+            self.units = MockLTAService()
+            return self
+
+        def getOrderStatus(self, order_number):
+            self.order = MockLTAUnit()
+            return self
+
+        def setOrderStatus(self, orderNumber, systemId, newStatus, unitRangeBegin, unitRangeEnd):
+            self.status = 'Pass'
             return self
 
     service = service()
