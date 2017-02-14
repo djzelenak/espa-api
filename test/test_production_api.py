@@ -64,7 +64,7 @@ class TestProductionAPI(unittest.TestCase):
         order_id = self.mock_order.generate_testing_order(self.user_id)
         self.mock_order.update_scenes(order_id, 'status', ['complete'])
         order = Order.find(order_id)
-        plot_scene = order.scenes()[0]
+        plot_scene = order.scenes({'name': 'plot'})[0]
         plot_scene.name = 'plot'
         plot_scene.sensor_type = 'plot'
         plot_scene.status = 'submitted'

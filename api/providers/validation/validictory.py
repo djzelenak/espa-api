@@ -169,6 +169,24 @@ class OrderValidatorV0(validictory.SchemaValidator):
                     self._error(': field only accepts one object',
                                 len(value), fieldname, path=path)
 
+    def validate_enum(self, x, fieldname, schema, path, options=None):
+        '''
+        Validates that the value of the field is equal to one of the specified option values
+        '''
+        value = x.get(fieldname)
+        if value is not None:
+            if callable(options):
+                options = options(x)
+            if value not in options:
+                if not (value == '' and schema.get('blank', self.blank_by_default)):
+                    if 'response-readable' in self.data_source:
+                        self._errors.append("Not available: {} products for {} scenes. "
+                                            "Please choose from available products: {}"
+                                            .format(value, path.split('.products')[0], options))
+                    else:
+                        self._error("is not in the enumeration: {options!r}", value, fieldname,
+                                    options=options, path=path)
+
     def validate_enum_keys(self, x, fieldname, schema, path, valid_list):
         """Validates the keys in the given object match expected keys"""
         value = x.get(fieldname)
@@ -272,8 +290,16 @@ class OrderValidatorV0(validictory.SchemaValidator):
                     date_restricted.pop(key, None)
 
             if date_restricted:
-                self._error('Requested products are restricted by date',
-                            date_restricted, fieldname, path=path)
+                if 'response-readable' in self.data_source:
+                    for product_type in date_restricted:
+                        msg = (r'<br>See <a href="https://landsat.usgs.gov/landsat-surface-reflectance-high-'
+                               r'level-data-products">Caveats and Constraints</a> for more details.')
+                        self._errors.append("Requested {} products are restricted by date. Remove {} scenes: {} {}"
+                                            .format(product_type, path.split('.products')[0],
+                                                    [x.upper() for x in date_restricted[product_type]], msg))
+                else:
+                    self._error('Requested products are restricted by date',
+                                date_restricted, fieldname, path=path)
 
         prods = []
         for key in avail_prods:
@@ -290,8 +316,15 @@ class OrderValidatorV0(validictory.SchemaValidator):
                     dif.remove(d)
 
         if dif:
-            self._error('Requested products are not available',
-                        dif, fieldname, path=path)
+            if 'response-readable' in self.data_source:
+                for d in dif:
+                    if type(x) == dict:
+                        scene_ids = [s.upper() for s in x['inputs']]
+                        self._errors.append("Requested {} products are not available. Remove {} scenes: {}"
+                                            .format(d, path.split('.products')[0], scene_ids))
+            else:
+                self._error('Requested products are not available',
+                            dif, fieldname, path=path)
 
     def validate_oneormoreobjects(self, x, fieldname, schema, path, key_list):
         """Validates that at least one value is present from the list"""
@@ -430,6 +463,7 @@ class BaseValidationSchema(object):
                                                 'properties': resize},
                                      'resampling_method': {'type': 'string',
                                                            'enum': resampling_methods},
+                                     'response-readable': {'type': 'boolean'},
                                      'plot_statistics': {'type': 'boolean'},
                                      'note': {'type': 'string',
                                               'required': False,
