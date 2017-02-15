@@ -1,6 +1,8 @@
+import os
 import unittest
-from mock import patch
+from mock import patch, MagicMock
 
+from test.version0_testorders import build_base_order
 from api.external.nlaps import products_are_nlaps
 from api.external import onlinecache
 from api.external.mocks import onlinecache as mockonlinecache
@@ -21,22 +23,76 @@ class TestLPDAAC(unittest.TestCase):
 
 class TestLTA(unittest.TestCase):
     def setUp(self):
-        pass
+        os.environ['espa_api_testing'] = 'True'
+        self.contact_id = 0
+        self.lta_order_number = 0
+        self.lta_unit_number = 0
+        base_order = build_base_order()
+        self.scene_ids = [base_order[b].get('inputs', [None]).pop() for b in base_order if type(base_order[b]) == dict]
+        self.scene_ids = [s for s in self.scene_ids if s and (s.startswith('L'))]  # Landsat only
 
+    def tearDown(self):
+        os.environ['espa_api_testing'] = ''
+
+    @patch('api.external.lta.requests.post', mocklta.get_verify_scenes_response)
     def test_verify_scenes(self):
-        pass
-        #product_list = ['LT50300372011275PAC01','LE70280312004362EDC00']
-        #resp = lta.verify_scenes(product_list)
-        #for item in product_list:
-        #    self.assertTrue(item in resp.keys())
-        #    self.assertTrue(resp[item])
+        resp = lta.verify_scenes(self.scene_ids)
+        for item in self.scene_ids:
+            self.assertTrue(item in resp.keys())
+            self.assertTrue(resp[item])
 
-    @patch('api.external.lta.OrderUpdateServiceClient.update_order', mocklta.return_update_order_resp)
-    #@patch('api.external.lta.SoapClient.getAvailableOrders', mocklta.get_available_orders)
+    @patch('api.external.lta.requests.post')
+    def test_verify_scenes_fail(self, mock_requests):
+        mock_requests.return_value = MagicMock(ok=False, reason='Testing Failure')
+        with self.assertRaises(Exception):
+            resp = lta.verify_scenes(self.scene_ids)
+
+    @patch('api.external.lta.requests.post', mocklta.get_order_scenes_response_main)
+    def test_order_scenes(self):
+        resp = lta.order_scenes(self.scene_ids, self.contact_id)
+        self.assertIn('ordered', resp)
+        self.assertEqual(len(self.scene_ids), len(resp['ordered']))
+
+    @patch('api.external.lta.requests.post')
+    def test_order_scenes_fail(self, mock_requests):
+        mock_requests.return_value = MagicMock(ok=False, reason='Testing Failure')
+        with self.assertRaises(Exception):
+            resp = lta.order_scenes(self.scene_ids, self.contact_id)
+
+    @patch('api.external.lta.requests.post', mocklta.get_order_scenes_response_main)
+    def test_get_download_urls(self):
+        resp = lta.get_download_urls(self.scene_ids, self.contact_id)
+        for item in self.scene_ids:
+            self.assertIn(item, resp)
+            self.assertEqual('available', resp[item]['status'])
+
+    @patch('api.external.lta.requests.post')
+    def test_get_download_urls_fail(self, mock_requests):
+        mock_requests.return_value = MagicMock(ok=False, reason='Testing Failure')
+        with self.assertRaises(Exception):
+            resp = lta.get_download_urls(self.scene_ids, self.contact_id)
+
+    #@patch('api.external.lta.OrderUpdateServiceClient.update_order', mocklta.return_update_order_resp)
+    @patch('api.external.lta.SoapClient', mocklta.MockSudsClient)
     def test_get_available_orders(self):
-        pass
-        #resp = lta.get_available_orders()
-        #print resp
+        resp = lta.get_available_orders()
+        self.assertEqual(len(resp[('100', '', '')]), 3)
+
+    @patch('api.external.lta.SoapClient', mocklta.MockSudsClient)
+    def test_get_order_status(self):
+        resp = lta.get_order_status(self.lta_order_number)
+        self.assertIn('order_status', resp)
+        self.assertEqual(resp['order_num'], str(self.lta_order_number))
+
+    @patch('api.external.lta.SoapClient', mocklta.MockSudsClient)
+    def test_update_order_complete(self):
+        resp = lta.update_order_status(self.lta_order_number, self.lta_unit_number, 'C')
+        self.assertTrue(resp.success)
+
+    @patch('api.external.lta.SoapClient', mocklta.MockSudsClient)
+    def test_update_order_incomplete(self):
+        resp = lta.update_order_status('failure', self.lta_unit_number, 'C')
+        self.assertFalse(resp.success)
 
 
 class TestNLAPS(unittest.TestCase):

@@ -70,6 +70,7 @@ class TransportTestCase(unittest.TestCase):
         response = self.app.get('/api', headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         assert response.content_type == 'application/json'
 
+    @patch('api.domain.user.User.get', MockUser.get)
     def test_get_api_response_content(self):
         response = self.app.get('/api', headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
