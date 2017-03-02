@@ -248,7 +248,8 @@ class OrderValidatorV0(validictory.SchemaValidator):
 
         # path resembles '<obj>.olitirs8.products'
         stats = self.restricted['stats']
-        if path.split('.')[1] not in stats['sensors']:
+        sensor = path.split('.')[1].replace('_collection', '')
+        if sensor not in stats['sensors']:
             return
 
         if not set(stats['products']) & set(x['products']):
