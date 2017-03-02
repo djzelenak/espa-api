@@ -12,6 +12,11 @@ stats:
         - tm4
         - tm5
         - etm7
+        - olitirs8_collection
+        - oli8_collection
+        - tm4_collection
+        - tm5_collection
+        - etm7_collection
     products:
         - 'toa'
         - 'bt'
