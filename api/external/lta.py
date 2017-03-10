@@ -376,6 +376,14 @@ class OrderWrapperServiceClient(LTAService):
 
     @staticmethod
     def get_xml_item(etree, schema, name):
+        """
+        Helper function to parse the EarthExplorer XML namespace
+
+        :param etree: XML ETree element to search
+        :param schema: EarthExplorer XML schema suffix
+        :param name: Element in the tree to grab
+        :return: XML ETree
+        """
         response_namespace = 'http://earthexplorer.usgs.gov/schema/' + schema
         ns_prefix = ''.join(['{', response_namespace, '}'])
         item_elem = ''.join([ns_prefix, name])
@@ -383,6 +391,13 @@ class OrderWrapperServiceClient(LTAService):
 
     @classmethod
     def valid_dload_url(self, etree, schema):
+        """
+        Grabs the downloadURL from EE XML, and verifies resource is reachable
+
+        :param etree: XML ETree element to search
+        :param schema: EarthExplorer (EE) XML schema suffix
+        :return: bool
+        """
         #  may not be included with every response if not online
         url = self.get_xml_item(etree, schema, 'downloadURL').text
         # These URLs from LTA cannot be trusted
