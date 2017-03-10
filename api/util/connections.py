@@ -12,8 +12,11 @@ def is_reachable(url, timeout=0.001, allow_redirects=True, n_tries=3):
     :return: bool
     """
     for _ in range(n_tries):
-        resp = requests.head(url, timeout=timeout,
-                             allow_redirects=allow_redirects)
-        if resp.status_code == 200:
-            return True
+        try:
+            resp = requests.head(url, timeout=timeout,
+                                 allow_redirects=allow_redirects)
+            if resp.status_code == 200:
+                return True
+        except Exception as e:
+            pass
     return False
