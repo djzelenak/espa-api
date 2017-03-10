@@ -5,6 +5,8 @@ import os
 import subprocess
 import datetime
 
+import connections
+
 
 def get_cfg(cfgfile=".cfgnfo"):
     """
