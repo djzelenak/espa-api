@@ -24,6 +24,15 @@ if config.mode in ('dev', 'tst'):
     logging.getLogger('suds.client').setLevel(logging.DEBUG)
 
 
+def check_lta_available():
+    """
+    Simple wrapper to check if lta is up
+    :return: bool
+    """
+    url = config.url_for('earthexplorer')
+    return utils.connections.is_reachable(url, timeout=1)
+
+
 class LTAService(object):
     ''' Abstract service client for all of LTA services '''
 

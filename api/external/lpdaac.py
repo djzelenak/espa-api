@@ -34,6 +34,14 @@ class LPDAACService(object):
 
         return response
 
+    def check_lpdaac_available(self):
+        """
+        Simple wrapper to check if lpdacc is up
+        :return: bool
+        """
+        url = 'http://{}'.format(self.datapool)
+        return utils.connections.is_reachable(url)
+
     def input_exists(self, product):
         '''Determines if a LPDAAC product is available for download
 
@@ -157,3 +165,7 @@ def get_download_url(product):
 
 def get_download_urls(products):
     return LPDAACService().get_download_urls(products)
+
+
+def check_lpdaac_available():
+    return LPDAACService().check_lpdaac_available()

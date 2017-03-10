@@ -934,6 +934,9 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         Handles all submitted landsat products
         :return: True
         """
+        if not lta.check_lta_available():
+            logger.debug('LTA down. Skip handle_submitted_landsat_products...')
+            return False
         logger.info('Handling submitted landsat products...')
         # Here's the real logic for this handling submitted landsat products
         self.mark_nlaps_unavailable()
@@ -959,6 +962,9 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         Moves all submitted modis products to oncache if true
         :return: True
         """
+        if not lpdaac.check_lpdaac_available():
+            logger.debug('DAAC down. Skip handle_submitted_modis_products...')
+            return False
         logger.info("Handling submitted modis products...")
         modis_products = Scene.where({'status': 'submitted', 'sensor_type': 'modis'})
         logger.warn("Found {0} submitted modis products".format(len(modis_products)))
