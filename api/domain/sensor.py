@@ -162,6 +162,14 @@ class Modis13Q1(Modis):
     default_cols = 4800
 
 
+class Modis11A1(Modis):
+    """models modis 11A1"""
+    default_resolution_m = 1000
+    default_resolution_dd = 0.0089831
+    default_rows = 1200
+    default_cols = 1200
+
+
 class ModisTerra09A1(Terra, Modis09A1):
     """models modis 09A1 from Terra"""
     pass
@@ -202,6 +210,11 @@ class ModisTerra13Q1(Terra, Modis13Q1):
     pass
 
 
+class ModisTerra11A1(Terra, Modis11A1):
+    """models modis 11A1 from Terra"""
+    pass
+
+
 class ModisAqua09A1(Aqua, Modis09A1):
     """models modis 09A1 from Aqua"""
     pass
@@ -239,6 +252,11 @@ class ModisAqua13A3(Aqua, Modis13A3):
 
 class ModisAqua13Q1(Aqua, Modis13Q1):
     """models modis 13Q1 from Aqua"""
+    pass
+
+
+class ModisAqua11A1(Aqua, Modis11A1):
+    """models modis 11A1 from Aqua"""
     pass
 
 
