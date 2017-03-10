@@ -55,9 +55,6 @@ class LPDAACService(object):
             if 'download_url' in url[product.product_id]:
 
                 url = url[product.product_id]['download_url']
-
-                response = None
-
                 try:
                     result = utils.connections.is_reachable(url, timeout=1)
                 except Exception, e:
@@ -65,11 +62,6 @@ class LPDAACService(object):
                                      'Exception:{1}'
                                      .format(url, e))
                     return result
-                finally:
-                    if response is not None:
-                        response.close()
-                        response = None
-
         except sensor.ProductNotImplemented:
             logger.warn('{0} is not an implemented LPDAAC product'
                         .format(product))
