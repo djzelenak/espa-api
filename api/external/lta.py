@@ -14,6 +14,7 @@ from suds.cache import ObjectCache
 from api.domain import sensor
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.system.logger import ilogger as logger
+from api import util as utils
 
 config = ConfigurationProvider()
 
@@ -360,23 +361,16 @@ class OrderWrapperServiceClient(LTAService):
             status = self.get_xml_item(scene, schema, 'status').text
 
             if status == 'available':
-                if not 'available' in retval:
-                    retval['available'] = [name]
-                else:
-                    retval['available'].append(name)
+                if self.valid_dload_url(scene, schema):
+                    values = retval.get('available', []) + [name]
+                    retval.update(available=values)
             elif status == 'invalid':
-                if not 'invalid' in retval:
-                    retval['invalid'] = [name]
-                else:
-                    retval['invalid'].append(name)
+                retval.update(invalid=retval.get('available', []) + [name])
             elif status == 'ordered':
-                if not 'ordered' in retval:
-                    retval['ordered'] = [name]
-                else:
-                    retval['ordered'].append(name)
-
-                if not 'lta_order_id' in retval:
-                    retval['lta_order_id'] = self.get_xml_item(scene, schema, 'orderNumber').text
+                retval.update(ordered=retval.get('available', []) + [name])
+                order_num = self.get_xml_item(scene, schema, 'orderNumber').text
+                values = retval.get('available', []) + [order_num]
+                retval.update(lta_order_id=values)
 
         return retval
 
@@ -386,6 +380,19 @@ class OrderWrapperServiceClient(LTAService):
         ns_prefix = ''.join(['{', response_namespace, '}'])
         item_elem = ''.join([ns_prefix, name])
         return etree.find(item_elem)
+
+    @classmethod
+    def valid_dload_url(self, etree, schema):
+        #  may not be included with every response if not online
+        url = self.get_xml_item(etree, schema, 'downloadURL').text
+        # These URLs from LTA cannot be trusted
+
+        if not utils.connections.is_reachable(url, timeout=3):
+            msg = 'ERR Link received from LTA is invalid: {}'.format(url)
+            logger.debug(msg)
+            return False
+        else:
+            return True
 
     def get_download_urls(self, product_list, contact_id):
         ''' Returns a list of named tuples containing the product id,
@@ -493,7 +500,8 @@ class OrderWrapperServiceClient(LTAService):
                     if dload_url.find(ehost) != -1:
                         dload_url = dload_url.replace(ehost,
                                                       ihosts[index % 2].strip())
-                    retval[name]['download_url'] = dload_url
+                    if self.valid_dload_url(scene, schema):
+                        retval[name]['download_url'] = dload_url
 
             return retval
 
