@@ -9,6 +9,7 @@ from api.external import lpdaac, lta, onlinecache, nlaps, hadoop
 from api.system import errors
 from api.notification import emails
 from api.domain.user import User
+from api import util as utils
 
 import copy
 import datetime
@@ -855,6 +856,8 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         product_list = Order.get_user_scenes(user.id, {'sensor_type': 'landsat','status': 'submitted'})[:500]
         logger.info("Ordering {0} scenes for contact:{1}".format(len(product_list), contact_id))
 
+        product_list = self.check_dependencies_for_products(product_list)
+
         prod_name_list = [p.name for p in product_list]
         results = lta.order_scenes(prod_name_list, contact_id)
 
@@ -899,6 +902,32 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             self.set_products_unavailable(_nlaps, 'TMA data cannot be processed')
 
         return True
+
+    @staticmethod
+    def check_dependencies_for_products(scene_list):
+        """
+        Check if scene/product combination will require external data, and
+            filter the list if the service is unreachable at the moment
+
+        :param scene_list: list of api.domain.scene.Scene instances
+        :return: list
+        """
+        products_need_check = {
+            'lst': 'http://' + config.url_for('modis.datapool')  # LST requires ASTER GED
+        }
+        passed_dep_check = list()
+        for s in scene_list:
+            opts = s.order_attr('product_opts')
+            sn = sensor.instance(s.name).shortname
+            prods = opts[sn]['products']
+            passed_all = True
+            for p in prods:
+                need_check = p in products_need_check
+                if need_check:
+                    passed_all &= utils.connections.is_reachable(products_need_check[p])
+            if passed_all:
+                passed_dep_check.append(s)
+        return passed_dep_check
 
     def handle_submitted_landsat_products(self):
         """
