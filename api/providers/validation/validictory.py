@@ -543,6 +543,8 @@ class ValidationProvider(ValidationInterfaceV0):
         if 'plot_statistics' in order and order['plot_statistics']:
             stats = True
 
+        _ = order.pop('response-readable', None)
+
         for key in order:
             if key in prod_keys:
                 item1 = order[key]['inputs'][0]
