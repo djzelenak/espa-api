@@ -120,7 +120,7 @@ def julian_from_date(year, month, day):
     '''Returns a string representation of a julian date for a given year, month, day'''
     dt = datetime.datetime.strptime('.'.join([year, month, day]), '%Y.%m.%d')
     tt = dt.timetuple()
-    return str(tt.tm_yday)
+    return str(tt.tm_yday).zfill(3)
 
 
 def chunkify(lst, n):
