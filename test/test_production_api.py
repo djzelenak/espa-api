@@ -342,6 +342,7 @@ class TestProductionAPI(unittest.TestCase):
            mock_production_provider.respond_true)
     @patch('api.providers.production.production_provider.ProductionProvider.get_contactids_for_submitted_landsat_products',
            mock_production_provider.contact_ids_list)
+    @patch('api.external.lta.check_lta_available', mock_production_provider.respond_true)
     def test_production_handle_submitted_landsat_products(self):
         self.assertTrue(production_provider.handle_submitted_landsat_products())
 
@@ -384,6 +385,7 @@ class TestProductionAPI(unittest.TestCase):
         self.assertTrue(len(response) > 0)
 
     @patch('api.external.lpdaac.input_exists', lpdaac.input_exists_true)
+    @patch('api.external.lpdaac.LPDAACService.check_lpdaac_available', mock_production_provider.respond_true)
     def test_production_handle_submitted_modis_products_input_exists(self):
         # handle oncache scenario
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))

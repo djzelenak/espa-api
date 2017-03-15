@@ -9,6 +9,7 @@ from api.external import lpdaac, lta, onlinecache, nlaps, hadoop
 from api.system import errors
 from api.notification import emails
 from api.domain.user import User
+from api import util as utils
 
 import copy
 import datetime
@@ -855,6 +856,8 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         product_list = Order.get_user_scenes(user.id, {'sensor_type': 'landsat','status': 'submitted'})[:500]
         logger.info("Ordering {0} scenes for contact:{1}".format(len(product_list), contact_id))
 
+        product_list = self.check_dependencies_for_products(product_list)
+
         prod_name_list = [p.name for p in product_list]
         results = lta.order_scenes(prod_name_list, contact_id)
 
@@ -900,11 +903,40 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         return True
 
+    @staticmethod
+    def check_dependencies_for_products(scene_list):
+        """
+        Check if scene/product combination will require external data, and
+            filter the list if the service is unreachable at the moment
+
+        :param scene_list: list of api.domain.scene.Scene instances
+        :return: list
+        """
+        products_need_check = {
+            'lst': 'http://' + config.url_for('modis.datapool')  # LST requires ASTER GED
+        }
+        passed_dep_check = list()
+        for s in scene_list:
+            opts = s.order_attr('product_opts')
+            sn = sensor.instance(s.name).shortname
+            prods = opts[sn]['products']
+            passed_all = True
+            for p in prods:
+                need_check = p in products_need_check
+                if need_check:
+                    passed_all &= utils.connections.is_reachable(products_need_check[p])
+            if passed_all:
+                passed_dep_check.append(s)
+        return passed_dep_check
+
     def handle_submitted_landsat_products(self):
         """
         Handles all submitted landsat products
         :return: True
         """
+        if not lta.check_lta_available():
+            logger.debug('LTA down. Skip handle_submitted_landsat_products...')
+            return False
         logger.info('Handling submitted landsat products...')
         # Here's the real logic for this handling submitted landsat products
         self.mark_nlaps_unavailable()
@@ -930,6 +962,9 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         Moves all submitted modis products to oncache if true
         :return: True
         """
+        if not lpdaac.check_lpdaac_available():
+            logger.debug('DAAC down. Skip handle_submitted_modis_products...')
+            return False
         logger.info("Handling submitted modis products...")
         modis_products = Scene.where({'status': 'submitted', 'sensor_type': 'modis'})
         logger.warn("Found {0} submitted modis products".format(len(modis_products)))

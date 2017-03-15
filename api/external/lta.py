@@ -14,6 +14,7 @@ from suds.cache import ObjectCache
 from api.domain import sensor
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.system.logger import ilogger as logger
+from api import util as utils
 
 config = ConfigurationProvider()
 
@@ -21,6 +22,15 @@ if config.mode in ('dev', 'tst'):
     import logging
     logging.basicConfig(level=logging.INFO)
     logging.getLogger('suds.client').setLevel(logging.DEBUG)
+
+
+def check_lta_available():
+    """
+    Simple wrapper to check if lta is up
+    :return: bool
+    """
+    url = config.url_for('earthexplorer')
+    return utils.connections.is_reachable(url, timeout=1)
 
 
 class LTAService(object):
@@ -334,11 +344,7 @@ class OrderWrapperServiceClient(LTAService):
         # since the xml is namespaced there is a namespace prefix for every
         # element we are looking for.  Build those values to make the code
         # a little more sane
-        response_namespace = 'http://earthexplorer.usgs.gov/schema/orderStatus'
-        ns_prefix = ''.join(['{', response_namespace, '}'])
-        status_elem = ''.join([ns_prefix, 'status'])
-        sceneid_elem = ''.join([ns_prefix, 'sceneId'])
-        order_number_elem = ''.join([ns_prefix, 'orderNumber'])
+        schema = 'orderStatus'
         # leave this here for now.  We aren't using it yet but will when EE
         # straightens out their urls + internal dowloading capability
         #dload_url_elem = ''.join([ns_prefix, 'downloadURL'])
@@ -360,29 +366,57 @@ class OrderWrapperServiceClient(LTAService):
 
         for scene in scene_elements:
 
-            name = scene.find(sceneid_elem).text
-            status = scene.find(status_elem).text
+            name = self.get_xml_item(scene, schema, 'sceneId').text
+            status = self.get_xml_item(scene, schema, 'status').text
 
             if status == 'available':
-                if not 'available' in retval:
-                    retval['available'] = [name]
-                else:
-                    retval['available'].append(name)
+                if self.valid_dload_url(scene, schema):
+                    values = retval.get(status, []) + [name]
+                    retval.update(available=values)
             elif status == 'invalid':
-                if not 'invalid' in retval:
-                    retval['invalid'] = [name]
-                else:
-                    retval['invalid'].append(name)
+                retval.update(invalid=retval.get(status, []) + [name])
             elif status == 'ordered':
-                if not 'ordered' in retval:
-                    retval['ordered'] = [name]
-                else:
-                    retval['ordered'].append(name)
-
-                if not 'lta_order_id' in retval:
-                    retval['lta_order_id'] = scene.find(order_number_elem).text
+                retval.update(ordered=retval.get(status, []) + [name])
+                order_num = self.get_xml_item(scene, schema, 'orderNumber').text
+                values = retval.get('lta_order_id', []) + [order_num]
+                retval.update(lta_order_id=values)
 
         return retval
+
+    @staticmethod
+    def get_xml_item(etree, schema, name):
+        """
+        Helper function to parse the EarthExplorer XML namespace
+
+        :param etree: XML ETree element to search
+        :param schema: EarthExplorer XML schema suffix
+        :param name: Element in the tree to grab
+        :return: XML ETree
+        """
+        response_namespace = 'http://earthexplorer.usgs.gov/schema/' + schema
+        ns_prefix = ''.join(['{', response_namespace, '}'])
+        item_elem = ''.join([ns_prefix, name])
+        return etree.find(item_elem)
+
+    @classmethod
+    def valid_dload_url(self, etree, schema):
+        """
+        Grabs the downloadURL from EE XML, and verifies resource is reachable
+
+        :param etree: XML ETree element to search
+        :param schema: EarthExplorer (EE) XML schema suffix
+        :return: bool
+        """
+        #  may not be included with every response if not online
+        url = self.get_xml_item(etree, schema, 'downloadURL').text
+        # These URLs from LTA cannot be trusted
+
+        if not utils.connections.is_reachable(url, timeout=3):
+            msg = 'ERR Link received from LTA is invalid: {}'.format(url)
+            logger.debug(msg)
+            return False
+        else:
+            return True
 
     def get_download_urls(self, product_list, contact_id):
         ''' Returns a list of named tuples containing the product id,
@@ -454,13 +488,7 @@ class OrderWrapperServiceClient(LTAService):
                </downloadList>
              '''
 
-            __ns = 'http://earthexplorer.usgs.gov/schema/downloadList'
-            __ns_prefix = ''.join(['{', __ns, '}'])
-            sceneid_elem = ''.join([__ns_prefix, 'sceneId'])
-            prod_code_elem = ''.join([__ns_prefix, 'prodCode'])
-            sensor_elem = ''.join([__ns_prefix, 'sensor'])
-            status_elem = ''.join([__ns_prefix, 'status'])
-            dload_url_elem = ''.join([__ns_prefix, 'downloadURL'])
+            schema = 'downloadList'
 
             # escape the ampersands and get rid of newlines if they exist
             # was having problems with the sax escape() function
@@ -476,17 +504,17 @@ class OrderWrapperServiceClient(LTAService):
             ihosts = config.url_for('internal_cache').split(',')
 
             for index, scene in enumerate(list(scene_elements)):
-                name = scene.find(sceneid_elem).text
-                prod_code = scene.find(prod_code_elem).text
-                sensor = scene.find(sensor_elem).text
-                status = scene.find(status_elem).text
+                name = self.get_xml_item(scene, schema, 'sceneId').text
+                status = self.get_xml_item(scene, schema, 'status').text
+                prod_code = self.get_xml_item(scene, schema, 'prodCode').text
+                sensor = self.get_xml_item(scene, schema, 'sensor').text
 
                 retval[name] = {'lta_code': prod_code,
                                 'sensor': sensor,
                                 'status': status}
 
                 #may not be included with every response if not online
-                __dload_url = scene.find(dload_url_elem)
+                __dload_url = self.get_xml_item(scene, schema, 'downloadURL')
 
                 dload_url = None
 
@@ -496,7 +524,8 @@ class OrderWrapperServiceClient(LTAService):
                     if dload_url.find(ehost) != -1:
                         dload_url = dload_url.replace(ehost,
                                                       ihosts[index % 2].strip())
-                    retval[name]['download_url'] = dload_url
+                    if self.valid_dload_url(scene, schema):
+                        retval[name]['download_url'] = dload_url
 
             return retval
 
