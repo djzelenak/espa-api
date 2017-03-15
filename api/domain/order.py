@@ -822,7 +822,8 @@ class OptionsConversion(object):
                 # No appropriate mapping as it is handled as a dummy
                 # scene in the DB
                 continue
-            elif key == 'note':
+            # TODO: remove response-readable (should now be removed from order)
+            elif key == 'note' or key == 'response-readable':
                 continue
             else:
                 raise ValueError('Unrecognized key: {}'.format(key))
