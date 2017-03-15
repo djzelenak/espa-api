@@ -524,7 +524,6 @@ class TestProductionAPI(unittest.TestCase):
                                          u'units': u'meters',
                                          u'west': -2415585.0},
                       u'note': u'CONUS_h1v1',
-                      u'response-readable': True,
 
                       u'projection': {u'aea': {u'central_meridian': -96,
                                                u'datum': u'nad83',
