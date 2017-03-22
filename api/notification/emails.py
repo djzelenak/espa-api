@@ -77,7 +77,7 @@ class Emails(object):
         #pattern = '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$'
         #some clown used a single quote in his email address... sigh.
         email_addr = email_addr.replace("'", "\'")
-        pattern = r'^[A-Za-z0-9._%+-\\\']+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$'
+        pattern = r'^[A-Za-z0-9._%+-\\\']+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
         return re.match(pattern, email_addr.strip())
 
     def send_gzip_error_email(self, product_id):
