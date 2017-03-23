@@ -162,6 +162,14 @@ class Modis13Q1(Modis):
     default_cols = 4800
 
 
+class Modis11A1(Modis):
+    """models modis 11A1"""
+    default_resolution_m = 1000
+    default_resolution_dd = 0.0089831
+    default_rows = 1200
+    default_cols = 1200
+
+
 class ModisTerra09A1(Terra, Modis09A1):
     """models modis 09A1 from Terra"""
     pass
@@ -202,6 +210,11 @@ class ModisTerra13Q1(Terra, Modis13Q1):
     pass
 
 
+class ModisTerra11A1(Terra, Modis11A1):
+    """models modis 11A1 from Terra"""
+    pass
+
+
 class ModisAqua09A1(Aqua, Modis09A1):
     """models modis 09A1 from Aqua"""
     pass
@@ -239,6 +252,11 @@ class ModisAqua13A3(Aqua, Modis13A3):
 
 class ModisAqua13Q1(Aqua, Modis13Q1):
     """models modis 13Q1 from Aqua"""
+    pass
+
+
+class ModisAqua11A1(Aqua, Modis11A1):
+    """models modis 11A1 from Aqua"""
     pass
 
 
@@ -472,6 +490,9 @@ class SensorCONST(object):
         'mod13q1': (r'^mod13q1\.a\d{7}\.h\d{2}v\d{2}\.00[5-6]\.\d{13}$',
                     ModisTerra13Q1, 'mod13q1.A2000072.h02v09.005.2008237032813'),
 
+        'mod11a1': (r'^mod11a1\.a\d{7}\.h\d{2}v\d{2}\.00[5-6]\.\d{13}$',
+                    ModisTerra11A1, 'mod11a1.a2000361.h24v03.006.2015111114747'),
+
         'myd09a1': (r'^myd09a1\.a\d{7}\.h\d{2}v\d{2}\.00[5-6]\.\d{13}$',
                     ModisAqua09A1, 'myd09a1.A2000072.h02v09.005.2008237032813'),
 
@@ -494,7 +515,10 @@ class SensorCONST(object):
                     ModisAqua13A3, 'myd13a3.A2000072.h02v09.005.2008237032813'),
 
         'myd13q1': (r'^myd13q1\.a\d{7}\.h\d{2}v\d{2}\.00[5-6]\.\d{13}$',
-                    ModisAqua13Q1, 'myd13q1.A2000072.h02v09.005.2008237032813')
+                    ModisAqua13Q1, 'myd13q1.A2000072.h02v09.005.2008237032813'),
+
+        'myd11a1': (r'^myd11a1\.a\d{7}\.h\d{2}v\d{2}\.00[5-6]\.\d{13}$',
+                    ModisAqua11A1, 'myd13q1.A2000072.h02v09.005.2008237032813')
     }
 
 
