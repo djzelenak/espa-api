@@ -99,21 +99,18 @@ class AdministrationProvider(AdminProviderInterfaceV0):
     @staticmethod
     def update_system_status(params):
 
-        if params.keys().sort() is not ['system_message_title', 'system_message_body', 'display_system_message'].sort():
+        if set(params) != {'system_message_title', 'system_message_body', 'display_system_message'}:
             return {'msg': 'Only 3 params are valid, and they must be present:'
                            'system_message_title, system_message_body,'
                            'display_system_message'}
 
-        sql_dict = {'msg.system_message_title': params['system_message_title'],
-                    'msg.system_message_body': params['system_message_body'],
-                    'system.display_system_message': params['display_system_message']}
-        sql = ""
-        for k, v in sql_dict.iteritems():
-            sql += "update ordering_configuration set value = '{0}' where key = '{1}';".format(v, k)
-
+        sql = '''update ordering_configuration set value = %s where key = 'msg.system_message_title';
+                 update ordering_configuration set value = %s where key = 'msg.system_message_body';
+                 update ordering_configuration set value = %s where key = 'system.display_system_message'; '''
+        sql_vals = (params['system_message_title'], params['system_message_body'], params['display_system_message'])
         try:
             with db_instance() as db:
-                db.execute(sql)
+                db.execute(sql, sql_vals)
                 db.commit()
         except DBConnectException as e:
             logger.debug("error updating system status: {}".format(e))
