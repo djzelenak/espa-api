@@ -23,6 +23,7 @@ stats:
         - 'sr_ndmi'
         - 'sr_nbr'
         - 'sr_nbr2'
+        - 'lst'
 
 olitirs8:
     role:
