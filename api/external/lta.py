@@ -370,9 +370,8 @@ class OrderWrapperServiceClient(LTAService):
             status = self.get_xml_item(scene, schema, 'status').text
 
             if status == 'available':
-                if self.valid_dload_url(scene, schema):
-                    values = retval.get(status, []) + [name]
-                    retval.update(available=values)
+                values = retval.get(status, []) + [name]
+                retval.update(available=values)
             elif status == 'invalid':
                 retval.update(invalid=retval.get(status, []) + [name])
             elif status == 'ordered':
@@ -524,8 +523,7 @@ class OrderWrapperServiceClient(LTAService):
                     if dload_url.find(ehost) != -1:
                         dload_url = dload_url.replace(ehost,
                                                       ihosts[index % 2].strip())
-                    if self.valid_dload_url(scene, schema):
-                        retval[name]['download_url'] = dload_url
+                    retval[name]['download_url'] = dload_url
 
             return retval
 
@@ -679,7 +677,7 @@ class OrderDeliveryServiceClient(LTASoapService):
                             'Product code[{3}]... ignoring'
                              .format(u.orderingId, u.orderNbr,
                                      u.unitNbr, u.productCode))
-                continue
+                # continue
 
             # get the processing parameters
             pp = u.processingParam
