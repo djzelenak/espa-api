@@ -167,12 +167,12 @@ class ListOrders(Resource):
             # no json this time
             filters = {}
 
-        if 'ext' in request.url:
+        if 'list-orders-ext' in request.url:
             if email:
                 return espa.fetch_user_orders_ext(str(email), filters)
             else:
                 return espa.fetch_user_orders_ext(auth.username(), filters)
-        elif 'feed' in request.url:
+        elif 'list-orders-feed' in request.url:
             return espa.fetch_user_orders_feed(email)
         else:
             if email:
