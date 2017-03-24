@@ -377,7 +377,7 @@ class OrderWrapperServiceClient(LTAService):
             elif status == 'ordered':
                 retval.update(ordered=retval.get(status, []) + [name])
                 order_num = self.get_xml_item(scene, schema, 'orderNumber').text
-                values = retval.get('lta_order_id', []) + [order_num]
+                values = retval.get('lta_order_id', ()) + (order_num,)
                 retval.update(lta_order_id=values)
 
         return retval
