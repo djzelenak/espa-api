@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from decimal import Decimal
 import copy
 import yaml
+import re
 
 import validictory
 from validictory.validator import RequiredFieldValidationError, SchemaError, DependencyValidationError
@@ -186,6 +187,22 @@ class OrderValidatorV0(validictory.SchemaValidator):
                     else:
                         self._error("is not in the enumeration: {options!r}", value, fieldname,
                                     options=options, path=path)
+
+    def validate_pattern(self, x, fieldname, schema, path, pattern=None):
+        '''
+        Validates that the given field, if a string, matches the given regular expression.
+        '''
+        value = x.get(fieldname)
+        if (isinstance(value, basestring) and
+            (isinstance(pattern, basestring) and not re.match(pattern, value)
+             or not isinstance(pattern, basestring) and not pattern.match(value))):
+            if 'response-readable' in self.data_source:
+                self._errors.append("Remove unrecognized input ID: {} ({} must match regex {})"
+                                    .format(value.upper(), path.split('.inputs')[0], pattern))
+            else:
+                self._error("does not match regular expression '{pattern}'", value, fieldname,
+                            pattern=pattern, path=path)
+
 
     def validate_enum_keys(self, x, fieldname, schema, path, valid_list):
         """Validates the keys in the given object match expected keys"""
