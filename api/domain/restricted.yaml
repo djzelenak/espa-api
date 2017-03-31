@@ -4,8 +4,6 @@ all:
         - lst
         - swe
         - restricted_prod
-        - mod11a1
-        - myd11a1
 
 stats:
     sensors:
