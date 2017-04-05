@@ -1,5 +1,9 @@
 ## Change Notes
-###### Version 1.10.0 (January 2017)
+###### April 2017
+* Restrict ordering of pre-collection landsat inputs
+###### March 2017
+* Allow MODIS LST (MxD11A1) products
+###### January 2017
 * Allow Landsat Collections processing
 * Allow tm4 and olitirs8 LST products
 * Allow MODIS Collection 6 product ordering
