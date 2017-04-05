@@ -490,19 +490,19 @@ curl --user username:password https://espa.cr.usgs.gov/api/v0/item-status/produc
  "orderid": {
              "production@usgs.gov-07282016-135122": [
                 {
-                       "cksum_download_url": "http://espa.cr.usgs.gov/orders/production@usgs.gov-07282016-135122/LC080270272016072201-SC20160728135757.md5",
+                       "cksum_download_url": "http://espa.cr.usgs.gov/orders/production@usgs.gov-07282016-135122/LC080270272016072201T1-SC20160728135757.md5",
                        "completion_date": "2016-08-01T14:17:08.589621",
                        "name": "LC08_L1TP_027027_20160722_20170221_01_T1",
                        "note": "",
-                       "product_dload_url": "http://espa.cr.usgs.gov/orders/production@usgs.gov-07282016-135122/LC080270272016072201-SC20160728135757.tar.gz",
+                       "product_dload_url": "http://espa.cr.usgs.gov/orders/production@usgs.gov-07282016-135122/LC080270272016072201T1-SC20160728135757.tar.gz",
                        "status": "complete"
                 },
                 {
-                       "cksum_download_url": "http://espa.cr.usgs.gov/orders/production@usgs.gov-08042016-120321-382/LT050260282011102201-SC20160804121126.md5",
+                       "cksum_download_url": "http://espa.cr.usgs.gov/orders/production@usgs.gov-08042016-120321-382/LT050260282011102201T1-SC20160804121126.md5",
                        "completion_date": "2016-08-01T14:17:08.589621",
                        "name": "LT05_L1TP_026028_20111022_20160830_01_T1",
                        "note": "",
-                       "product_dload_url": "http://espa.cr.usgs.gov/orders/production@usgs.gov-08042016-120321-382/LT050260282011102201-SC20160804121126.tar.gz",
+                       "product_dload_url": "http://espa.cr.usgs.gov/orders/production@usgs.gov-08042016-120321-382/LT050260282011102201T1-SC20160804121126.tar.gz",
                        
                        "status": "complete"
                 }
@@ -522,11 +522,11 @@ curl --user username:password https://espa.cr.usgs.gov/api/v0/item-status/produc
  "orderid": {
              "production@usgs.gov-07282016-135122": [
                 {
-                       "cksum_download_url": "http://espa.cr.usgs.gov/orders/production@usgs.gov-07282016-135122/LC080270272016072201-SC20160728135757.md5",
+                       "cksum_download_url": "http://espa.cr.usgs.gov/orders/production@usgs.gov-07282016-135122/LC080270272016072201T1-SC20160728135757.md5",
                        "completion_date": "2016-08-01T14:17:08.589621",
                        "name": "LC08_L1TP_027027_20160722_20170221_01_T1",
                        "note": "",
-                       "product_dload_url": "http://espa.cr.usgs.gov/orders/production@usgs.gov-07282016-135122/LC080270272016072201-SC20160728135757.tar.gz",
+                       "product_dload_url": "http://espa.cr.usgs.gov/orders/production@usgs.gov-07282016-135122/LC080270272016072201T1-SC20160728135757.tar.gz",
                        "status": "complete"
                 }
              ]
