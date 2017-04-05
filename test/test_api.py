@@ -236,11 +236,11 @@ class TestValidation(unittest.TestCase):
         Assert that a human readable response is returned for unavailable or date restricted products
         """
         exc_type = ValidationException
-        invalid_list = {'olitirs8': {'inputs': ['lc80310272016056lgn00'],
+        invalid_list = {'olitirs8_collection': {'inputs': ['lc08_l1tp_031043_20160225_20170224_01_t1'],
                                      'products': ['sr'],
                                      'err_msg': 'Requested {} products are restricted by date. '
                                                 'Remove <obj>.{} scenes: {}'},
-                        'oli8': {'inputs': ['lo80141122015030lgn00'],
+                        'oli8_collection': {'inputs': ['lo08_l1tp_021049_20150304_20170227_01_t1'],
                                  'products': ['sr'],
                                  'err_msg': 'Requested {} products are not available. '
                                             'Remove <obj>.{} scenes: {}'}}
