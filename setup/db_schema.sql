@@ -53,6 +53,20 @@ COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 SET search_path = public, pg_catalog;
 
 --
+-- Name: update_modified_column(); Type: FUNCTION; Schema: public; Owner: espadev
+--
+
+CREATE FUNCTION update_modified_column() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.status_modified = now();
+    RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: auth_group_id_seq; Type: SEQUENCE; Schema: public; Owner: espadev
 --
 
@@ -418,7 +432,8 @@ CREATE TABLE ordering_scene (
     reported_orphan timestamp without time zone,
     orphaned boolean,
     download_size bigint,
-    failed_lta_status_update character varying(8)
+    failed_lta_status_update character varying(8),
+    status_modified timestamp without time zone
 );
 
 
@@ -856,6 +871,12 @@ CREATE INDEX trans_etl_layer_trigger_date_trigger_read ON trans_etl_layer USING 
 --
 
 CREATE INDEX trans_etl_layer_trigger_read ON trans_etl_layer USING btree (trigger_read);
+
+--
+-- Name: ordering_scene update_status_modtime; Type: TRIGGER; Schema: public; Owner: espadev
+--
+
+CREATE TRIGGER update_status_modtime BEFORE UPDATE ON ordering_scene FOR EACH ROW EXECUTE PROCEDURE update_modified_column();
 
 
 --
