@@ -414,7 +414,11 @@ CREATE TABLE ordering_scene (
     job_name character varying(255),
     retry_after timestamp without time zone,
     retry_limit integer,
-    retry_count integer
+    retry_count integer,
+    reported_orphan timestamp without time zone,
+    orphaned boolean,
+    download_size bigint,
+    failed_lta_status_update character varying(8)
 );
 
 
