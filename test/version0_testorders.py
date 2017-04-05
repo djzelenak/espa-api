@@ -681,3 +681,26 @@ class InvalidOrders(object):
             ret.pop(path[0], None)
 
         return ret
+
+    def invalidate_required_collection(self, restr, mapping):
+        """
+        If restrictions are on, add a restricted value to the list
+        """
+        order = copy.deepcopy(self.valid_order)
+        results = []
+
+        if mapping[0].startswith('m'):
+            return results
+
+        if restr:
+            prods = order
+            for key in mapping:
+                prods = prods[key]
+
+            upd = self.build_update_dict(mapping, prods)
+            exc = self.build_exception('Pre-Collection Landsat scene-IDs are no longer accepted',
+                                       prods, mapping[-1], path=mapping)
+
+            results.append((self.update_dict(order, upd), 'role_restricted', exc))
+
+        return results
