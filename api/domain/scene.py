@@ -29,7 +29,8 @@ class Scene(object):
                  ee_unit_id=None, tram_order_id=None, sensor_type=None,
                  job_name=None, retry_after=None, retry_limit=None,
                  retry_count=None, reported_orphan=None, orphaned=None,
-                 download_size=None, failed_lta_status_update=None):
+                 download_size=None, failed_lta_status_update=None,
+                 status_modified=None):
         """
         Initialize the Scene object with all the information for it
         from the database
@@ -58,6 +59,7 @@ class Scene(object):
         :param orphaned: missing hadoop job
         :param download_size: size of final product download
         :param failed_lta_status_update: status update not yet delivered to LTA
+        :param status_modified: most recent time status was updated
         """
 
         self.name = name
@@ -82,6 +84,7 @@ class Scene(object):
         self.orphaned = orphaned
         self.download_size = download_size
         self.failed_lta_status_update = failed_lta_status_update
+        self.status_modified = status_modified
 
         if id:
             # no need to query the DB again
