@@ -273,6 +273,20 @@ class OrderValidatorV0(validictory.SchemaValidator):
             self._error('You must request valid products for statistics',
                         stats['products'], fieldname, path=path)
 
+    def validate_required_collection(self, x, fieldname, schema, path, required_collection):
+        ''' TODO: REMOVE THIS AFTER PRE-COLLECTION HAVE FINISHED PROCESSING '''
+        if not required_collection:
+            return
+
+        restricted_ordering = self.restricted['all']['ordering']
+        # path is like <obj>.mod09a1.inputs
+        sensor_id = path.split('.')[1]
+        scene_ids = x.get(fieldname)
+
+        if sensor_id in restricted_ordering:
+            self._error('Requested {sensor} products are no longer accepted',
+                        scene_ids, fieldname, sensor=sensor_id, path=path)
+
     def validate_restricted(self, x, fieldname, schema, path, restricted):
         """Validate that the requested products are available by date or role"""
         if not restricted:
@@ -495,6 +509,7 @@ class BaseValidationSchema(object):
                                                         'required': True,
                                                         'ItemCount': 'inputs',
                                                         'uniqueItems': True,
+                                                        'required_collection': True,
                                                         'minItems': 1,
                                                         'items': {'type': 'string',
                                                                   'pattern': _sensor_reg[key][0]}},
