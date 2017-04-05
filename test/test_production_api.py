@@ -352,7 +352,7 @@ class TestProductionAPI(unittest.TestCase):
            mock_production_provider.respond_true)
     def test_production_mark_nlaps_unavailable(self):
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
-        for scene in order.scenes():
+        for scene in order.scenes({'name !=': 'plot'}):
             scene.status = 'submitted'
             scene.sensor_type = 'landsat'
             scene.save()
@@ -368,7 +368,7 @@ class TestProductionAPI(unittest.TestCase):
            mock_production_provider.respond_true)
     def test_production_update_landsat_product_status(self):
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
-        for scene in order.scenes():
+        for scene in order.scenes({'name !=': 'plot'}):
             scene.status = 'submitted'
             scene.sensor_type = 'landsat'
             scene.save()
@@ -376,7 +376,7 @@ class TestProductionAPI(unittest.TestCase):
 
     def test_production_get_contactids_for_submitted_landsat_products(self):
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
-        for scene in order.scenes():
+        for scene in order.scenes({'name !=': 'plot'}):
             scene.status = 'submitted'
             scene.sensor_type = 'landsat'
             scene.save()
@@ -389,7 +389,7 @@ class TestProductionAPI(unittest.TestCase):
     def test_production_handle_submitted_modis_products_input_exists(self):
         # handle oncache scenario
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
-        for scene in order.scenes():
+        for scene in order.scenes({'name !=': 'plot'}):
             scene.status = 'submitted'
             scene.sensor_type = 'modis'
             scene.save()
@@ -401,7 +401,7 @@ class TestProductionAPI(unittest.TestCase):
     def test_production_handle_submitted_modis_products_input_missing(self):
         # handle unavailable scenario
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
-        for scene in order.scenes():
+        for scene in order.scenes({'name !=': 'plot'}):
             scene.status = 'submitted'
             scene.sensor_type = 'modis'
             scene.save()
