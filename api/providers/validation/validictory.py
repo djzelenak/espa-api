@@ -284,8 +284,8 @@ class OrderValidatorV0(validictory.SchemaValidator):
         scene_ids = x.get(fieldname)
 
         if sensor_id in restricted_ordering:
-            self._error('Requested {sensor} products are no longer accepted',
-                        scene_ids, fieldname, sensor=sensor_id, path=path)
+            self._error('Pre-Collection products are no longer accepted',
+                        scene_ids, fieldname, path=path)
 
     def validate_restricted(self, x, fieldname, schema, path, restricted):
         """Validate that the requested products are available by date or role"""
