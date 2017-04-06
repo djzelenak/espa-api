@@ -588,5 +588,16 @@ class TestProductionAPI(unittest.TestCase):
 
             ruberic[include] = False
 
+    def test_status_modified(self):
+        order_id = self.mock_order.generate_testing_order(self.user_id)
+        scene = Scene.where({'order_id': order_id}).pop()
+        scene.status = 'oncache'
+        scene.save()
+        old_time = scene.status_modified
+        scene.status = 'queued'
+        scene.save()
+        new_time = scene.status_modified
+        self.assertGreater(new_time, old_time)
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
