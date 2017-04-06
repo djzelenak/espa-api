@@ -13,6 +13,19 @@ SET client_min_messages = warning;
 SET search_path = espa_unit_test;
 
 --
+-- Name: update_modified_column(); Type: FUNCTION; Schema: espadev; Owner: espadev
+--
+
+CREATE FUNCTION update_modified_column() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.status_modified = now();
+    RETURN NEW;
+END;
+$$;
+
+--
 -- Name: auth_group_id_seq; Type: SEQUENCE; Schema: espa_unit_test; Owner: espadev
 --
 
@@ -374,7 +387,12 @@ CREATE TABLE ordering_scene (
     job_name character varying(255),
     retry_after timestamp without time zone,
     retry_limit integer,
-    retry_count integer
+    retry_count integer,
+    reported_orphan timestamp without time zone,
+    orphaned boolean,
+    download_size bigint,
+    failed_lta_status_update character varying(8),
+    status_modified timestamp without time zone
 );
 
 
@@ -458,6 +476,12 @@ ALTER TABLE espa_unit_test.trans_etl_layer OWNER TO espadev;
 
 ALTER TABLE ONLY auth_group
     ADD CONSTRAINT auth_group_id_pkey PRIMARY KEY (id);
+
+--
+-- Name: ordering_scene update_status_modtime; Type: TRIGGER; Schema: espadev; Owner: espadev
+--
+
+CREATE TRIGGER update_status_modtime BEFORE UPDATE ON ordering_scene FOR EACH ROW EXECUTE PROCEDURE update_modified_column();
 
 
 --
