@@ -358,7 +358,7 @@ class Scene(object):
                     'completion_date', 'ee_unit_id', 'retry_limit',
                     'cksum_distro_location', 'product_distro_location',
                     'reported_orphan', 'orphaned', 'failed_lta_status_update',
-                    'download_size')
+                    'download_size', 'status_modified')
 
         vals = tuple(self.__getattribute__(v) for v in attr_tup)
         cols = '({})'.format(','.join(attr_tup))
