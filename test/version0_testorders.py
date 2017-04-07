@@ -100,10 +100,9 @@ def build_base_order():
                                                             ['mod09ga', 'mod09gq', 'myd13a2', 'myd13a3']),
                      '.A2000361.h24v03.006.2015111114747': (['MOD11A1', 'MYD11A1'],
                                                             ['mod11a1', 'myd11a1']),
-                     '2181092013069PFS00': (['LT4', 'LT5', 'LE7', 'LO8', 'LC8'],
-                                            ['tm4', 'tm5', 'etm7', 'oli8', 'olitirs8']),
-                     'L1TP_044030_19851028_20161004_01_T1': (['LT05_'],
-                                                             ['tm5_collection'])}
+                     # TODO: REMOVE _collection from IDs
+                     'L1TP_044030_19851028_20161004_01_T1': (['LT04_', 'LT05_', 'LE07_', 'LO08_', 'LC08_'],
+                                                             ['tm4_collection', 'tm5_collection', 'etm7_collection', 'oli8_collection', 'olitirs8_collection'])}
 
     for acq in sensor_acqids:
         for prefix, label in zip(sensor_acqids[acq][0], sensor_acqids[acq][1]):
@@ -682,3 +681,26 @@ class InvalidOrders(object):
             ret.pop(path[0], None)
 
         return ret
+
+    def invalidate_required_collection(self, restr, mapping):
+        """
+        If restrictions are on, add a restricted value to the list
+        """
+        order = copy.deepcopy(self.valid_order)
+        results = []
+
+        if mapping[0].startswith('m'):
+            return results
+
+        if restr:
+            prods = order
+            for key in mapping:
+                prods = prods[key]
+
+            upd = self.build_update_dict(mapping, prods)
+            exc = self.build_exception('Pre-Collection Landsat scene-IDs are no longer accepted',
+                                       prods, mapping[-1], path=mapping)
+
+            results.append((self.update_dict(order, upd), 'role_restricted', exc))
+
+        return results

@@ -4,6 +4,13 @@ all:
         - lst
         - swe
         - restricted_prod
+    ordering:
+        - olitirs8
+        - oli8
+        - tm4
+        - tm5
+        - etm7
+
 
 stats:
     sensors:
