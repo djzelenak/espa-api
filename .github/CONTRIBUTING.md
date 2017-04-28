@@ -24,10 +24,11 @@ that may help resolving the issue, please leave a comment.
 If you suspect your issue is a bug, please create your issue description by 
 including the BUG REPORT INFORMATION [template](ISSUE_TEMPLATE.md).
 
-If you are unsure, consider using the [Landsat Contact Us](https://landsat.usgs.gov/contactus.php) page for help and questions.
-Here is helpful information you might include:
+If you are unsure, consider using the [Landsat Contact Us](https://landsat.usgs.gov/contactus.php) page for help and questions,
+and specify `"USGS ESPA"` in the subject. Here is helpful information you might include:
   * Your ERS login userid (**PLEASE DO NOT INCLUDE PASSWORDS**)
   * The specific URL (Web address) for the page or data set you were attempting to access
+    * Example: `https://espa.cr.usgs.gov/api`
   * The date and time you accessed our site
   * Your computer IP address (if you do not know your IP address, [google](https://www.google.com/#q=ip+address) can tell you)
   * The name of the data product, data set, or data variable you were searching for
