@@ -103,5 +103,5 @@ For a language-specific (python) example, please see [an API Demo](examples/api_
 
 ## Fixing Issues
 
-If you think you have found a bug, please see our [Contributing guide](docs/CONTRIBUTING.md)
+If you think you have found a bug, please see our [Contributing guide](.github/CONTRIBUTING.md)
 before opening a new issue.
