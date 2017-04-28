@@ -24,7 +24,8 @@ that may help resolving the issue, please leave a comment.
 If you suspect your issue is a bug, please create your issue description by 
 including the BUG REPORT INFORMATION [template](ISSUE_TEMPLATE.md).
 
-Helpful information to consider when using the [Landsat Contact Us](https://landsat.usgs.gov/contactus.php) page for help and questions:
+If you are unsure, consider using the [Landsat Contact Us](https://landsat.usgs.gov/contactus.php) page for help and questions.
+Here is helpful information you might include:
   * Your ERS login userid (**PLEASE DO NOT INCLUDE PASSWORDS**)
   * The specific URL (Web address) for the page or data set you were attempting to access
   * The date and time you accessed our site
