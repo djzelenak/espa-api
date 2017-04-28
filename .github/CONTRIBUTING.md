@@ -22,7 +22,7 @@ updates. If you have ways to reproduce the issue or have additional information
 that may help resolving the issue, please leave a comment. 
 
 If you suspect your issue is a bug, please create your issue description by 
-including the BUG REPORT INFORMATION [template](ISSUE-TEMPLATE.md).
+including the BUG REPORT INFORMATION [template](ISSUE_TEMPLATE.md).
 
 Helpful information to consider when using the [Landsat Contact Us](https://landsat.usgs.gov/contactus.php) page for help and questions:
   * Your ERS login userid (**PLEASE DO NOT INCLUDE PASSWORDS**)
