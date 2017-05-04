@@ -3,11 +3,13 @@ Purpose: module to extract embedded information from product names and supply
 configured values for each product
 Author: David V. Hill
 """
-
+import os
 import re
+
+import yaml
+
 from api import ProductNotImplemented
 from api.util import julian_date_check, julian_from_date
-import yaml
 
 # Grab details on product restrictions
 # Do it here, vs during object instantiation,
