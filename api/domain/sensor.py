@@ -8,13 +8,13 @@ import re
 
 import yaml
 
-from api import ProductNotImplemented
+from api import ProductNotImplemented, __location__
 from api.util import julian_date_check, julian_from_date
 
 # Grab details on product restrictions
 # Do it here, vs during object instantiation,
 # to avoid needless repetition
-with open('api/domain/restricted.yaml') as f:
+with open(os.path.join(__location__, 'domain/restricted.yaml')) as f:
     restricted = yaml.load(f.read())
 
 

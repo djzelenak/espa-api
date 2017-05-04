@@ -3,6 +3,7 @@ from decimal import Decimal
 import copy
 import yaml
 import re
+import os
 
 import validictory
 from validictory.validator import RequiredFieldValidationError, SchemaError, DependencyValidationError
@@ -12,6 +13,8 @@ from api import ValidationException
 import api.providers.ordering.ordering_provider as ordering
 import api.domain.sensor as sn
 
+from api import __location__
+
 
 class OrderValidatorV0(validictory.SchemaValidator):
     def __init__(self, *args, **kwargs):
@@ -20,7 +23,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
         self.data_source = None
         self.base_schema = None
         self._itemcount = None
-        with open('api/domain/restricted.yaml') as f:
+        with open(os.path.join(__location__, 'domain/restricted.yaml')) as f:
             self.restricted = yaml.load(f.read())
 
     def validate(self, data, schema):

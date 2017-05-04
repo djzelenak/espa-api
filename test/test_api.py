@@ -8,7 +8,7 @@ from api.util import lowercase_all
 from api.util.dbconnect import db_instance
 import version0_testorders as testorders
 from api.providers.validation.validictory import BaseValidationSchema
-from api import ValidationException, InventoryException
+from api import ValidationException, InventoryException, __location__
 
 import os
 from api.domain.mocks.order import MockOrder
@@ -47,7 +47,7 @@ class TestAPI(unittest.TestCase):
         user_scene = self.order.scenes()[0]
         user_scene.update('name', self.staff_product_id)
 
-        with open('api/domain/restricted.yaml') as f:
+        with open(os.path.join(__location__, 'domain/restricted.yaml')) as f:
             self.restricted = yaml.load(f.read())
             self.restricted['all']['role'].remove('restricted_prod')
 

@@ -1,4 +1,5 @@
 import datetime
+import os
 
 from api.domain import sensor
 from api.domain.order import Order
@@ -14,6 +15,7 @@ import yaml
 
 cache = CachingProvider()
 config = ConfigurationProvider()
+from api import __location__
 
 
 class OrderingProviderException(Exception):
@@ -43,7 +45,7 @@ class OrderingProvider(ProviderInterfaceV0):
         user = User.by_username(username)
         pub_prods = copy.deepcopy(OrderingProvider.sensor_products(product_id))
 
-        with open('api/domain/restricted.yaml') as f:
+        with open(os.path.join(__location__, 'domain/restricted.yaml')) as f:
                 restricted = yaml.load(f.read())
 
         role = False if user.is_staff() else True
