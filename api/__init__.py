@@ -1,5 +1,7 @@
 import re
+import os
 
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 """ Holds all the custom exceptions raised by the api """
 
