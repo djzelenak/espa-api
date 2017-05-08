@@ -56,6 +56,13 @@ class OnlineCache(object):
         else:
             path = os.path.join(self.orderpath, orderid)
 
+        try:
+            self.execute_command('ls -d {0}'.format(path))
+        except OnlineCacheException as e:
+            msg = 'INVALID PATH {}'.format(path)
+            logger.debug(msg)
+            raise e
+
         # this should be the dir where the order is held
         logger.info('Deleting {} from online cache'.format(path))
         try:
