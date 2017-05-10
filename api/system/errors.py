@@ -45,6 +45,7 @@ class Errors(object):
         self.conditions.append(self.ssh_errors)
         self.conditions.append(self.warp_errors)
         self.conditions.append(self.node_space_errors)
+        self.conditions.append(self.lasrc_mystery_segfaults)
 
         #construct the named tuple for the return value of this module
         self.resolution = collections.namedtuple('ErrorResolution',
@@ -276,6 +277,14 @@ class Errors(object):
         status = 'retry'
         reason = 'Error writing to disk on processing node, retrying'
         extras = self.__add_retry('node_space_errors')
+        return self.__find_error(error_message, keys, status, reason, extras)
+
+    def lasrc_mystery_segfaults(self, error_message):
+        ''' errors creating directories or transferring statistics '''
+        keys = ['Segmentation fault lasrc']
+        status = 'retry'
+        reason = 'illegal memory location'
+        extras = self.__add_retry('segfault_errors')
         return self.__find_error(error_message, keys, status, reason, extras)
 
 
