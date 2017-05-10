@@ -311,6 +311,8 @@ class TestProductionAPI(unittest.TestCase):
         self.assertTrue(order.product_opts == {'format': 'gtiff',
                                                'etm7': {'inputs': ['LE70900652008327EDC00'],
                                                         'products': ['sr']}})
+        key = 'system.load_ee_orders_enabled'
+        self.assertEqual(api.get_production_key(key)[key], 'True')
         production_provider.load_ee_orders()
         reorder = Order.find(order.id)
         self.assertTrue(reorder.product_opts == {'format': 'gtiff',
