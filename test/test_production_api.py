@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import datetime
 import unittest
-import logging
 
 import os
 from api.domain.mocks.order import MockOrder
@@ -16,8 +15,6 @@ from api.providers.production.mocks.production_provider import MockProductionPro
 from api.providers.production.production_provider import ProductionProvider
 from api.system.mocks import errors
 from mock import patch
-
-logging.basicConfig(level=logging.DEBUG)
 
 api = API()
 production_provider = ProductionProvider()
