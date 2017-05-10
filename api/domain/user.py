@@ -82,7 +82,7 @@ class User(object):
     def email(self, value):
         if not validate_email(value):
             raise StandardError('user email value invalid')
-        self._email = value
+        self._email = value.strip()
 
     @classmethod
     def get(cls, username, password):
