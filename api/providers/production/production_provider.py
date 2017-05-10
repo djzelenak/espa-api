@@ -599,15 +599,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 user = cache.get(cache_key)
 
                 if user is None:
-                    username = lta.get_user_name(contactid)
+                    username = str(lta.get_user_name(contactid))
                     # Find or create the user
-                    db_id = User.find_or_create_user(username, email_addr,
-                                                     'from', 'earthexplorer',
-                                                     contactid)
-                    user = User.find(db_id)
-                    if not user.contactid:
-                        user.update('contactid', contactid)
-
+                    user = User(username, email_addr, 'from', 'earthexplorer',
+                                contactid)
                     cache.set(cache_key, user, 60)
 
                 # We have a user now.  Now build the new Order since it
