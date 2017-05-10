@@ -92,10 +92,10 @@ class TransportTestCase(unittest.TestCase):
 
     @patch('api.domain.user.User.get', MockUser.get)
     @patch('api.providers.ordering.ordering_provider.OrderingProvider.available_products', mock_api.available_products)
-    def test_post_available_prods(self):
+    def test_get_available_prods_json(self):
         url = '/api/v1/available-products'
         data_dict = {'inputs': self.sceneids}
-        response = self.app.post(url, data=json.dumps(data_dict), headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
+        response = self.app.get(url, data=json.dumps(data_dict), headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
         assert "etm" in resp_json.keys()
 
