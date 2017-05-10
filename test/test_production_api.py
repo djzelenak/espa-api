@@ -127,6 +127,18 @@ class TestProductionAPI(unittest.TestCase):
                                               'Verify the missing auxillary data products')
         self.assertTrue('retry' == Scene.get('ordering_scene.status', scene.name, order.orderid))
 
+    def test_production_set_product_error_retry_lasrc_segfault(self):
+        """
+        Move a scene status from error to retry based on the error
+        message
+        """
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        scene = order.scenes({'sensor_type': 'landsat'})[-1]
+        production_provider.set_product_error(scene.name, order.orderid,
+                                              'somewhere',
+                                              'runSr  sh: line 1: 1010 Segmentation fault lasrc --xml=')
+        self.assertTrue('retry' == Scene.get('ordering_scene.status', scene.name, order.orderid))
+
     @patch('api.external.lta.update_order_status', lta.update_order_status)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
     def test_update_product_details_update_status(self):
