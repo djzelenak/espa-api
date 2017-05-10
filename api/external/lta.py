@@ -41,8 +41,7 @@ class LTAService(object):
     def __init__(self):
         self.xml_header = "<?xml version ='1.0' encoding='UTF-8' ?>"
         self.url = config.url_for(self.service_name)
-        if self.url:  # unit testing
-            self.location = self.url.split('?')[0]
+        self.location = self.url.split('?')[0]
 
     def __repr__(self):
         return "LTAService:{0}".format(self.__dict__)
