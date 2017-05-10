@@ -425,16 +425,15 @@ class TestProductionAPI(unittest.TestCase):
             # creates 21 products for the order. divvy those
             # up between 'complete' and 'unavailable', setting
             # one aside as the 'plot' product
-            if idx % 2 == 0:
-                if idx == 0:
-                    # need to define a plot product
-                    scene.update('status', 'submitted')
-                    scene.update('sensor_type', 'plot')
-                    plot_id = scene.id
-                else:
-                    scene.update('status', 'complete')
+            if scene.sensor_type == 'plot':
+                # need to define a plot product
+                scene.update('status', 'submitted')
+                plot_id = scene.id
             else:
-                scene.update('status', 'unavailable')
+                if idx % 2 == 0:
+                    scene.update('status', 'complete')
+                else:
+                    scene.update('status', 'unavailable')
 
         self.assertTrue(production_provider.handle_submitted_plot_products())
         self.assertEqual(Scene.find(plot_id).status, "oncache")
