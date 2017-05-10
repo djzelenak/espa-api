@@ -70,8 +70,8 @@ class User(object):
 
     @last_name.setter
     def contactid(self, value):
-        if not isinstance(value, int):
-            raise TypeError('Expected a integer')
+        if not isinstance(value, str):
+            raise TypeError('Expected a string')
         self._contactid = value
 
     @property
