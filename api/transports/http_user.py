@@ -142,18 +142,12 @@ class AvailableProducts(Resource):
     decorators = [auth.login_required, greylist, version_filter]
 
     @staticmethod
-    def post(version):
-        prod_list = request.get_json(force=True)['inputs']
-        return espa.available_products(prod_list, auth.username())
-
-    @staticmethod
     def get(version, prod_id=None):
+        if prod_id is None:
+            prod_list = request.get_json(force=True)['inputs']
         if prod_id:
-            return espa.available_products(prod_id, auth.username())
-        else:
-            response = {"status": 404, "message": ("Must supply a product id to {}/<prod_id>"
-                                                   .format(request.url.strip('/')))}
-            return response, response['status']
+            prod_list = [prod_id]
+        return espa.available_products(prod_list, auth.username())
 
 
 class ListOrders(Resource):
