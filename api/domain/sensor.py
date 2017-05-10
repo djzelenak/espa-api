@@ -5,6 +5,7 @@ Author: David V. Hill
 """
 import os
 import re
+from collections import namedtuple
 
 import yaml
 
@@ -17,6 +18,12 @@ from api.util import julian_date_check, julian_from_date
 with open(os.path.join(__location__, 'domain/restricted.yaml')) as f:
     restricted = yaml.load(f.read())
 
+with open(os.path.join(__location__, 'domain/product_names.dat')) as f:
+    product_names = [l.strip() for l in f.readlines()]
+prods = namedtuple('AllProducts', product_names)  # API values
+ap = prods("source_metadata", "l1", "toa", "bt", "cloud", "sr", "lst", "swe",
+           "sr_ndvi", "sr_evi", "sr_savi", "sr_msavi", "sr_ndmi", "sr_nbr",
+           "sr_nbr2", "stats")  # Internal code names
 
 class SensorProduct(object):
     """Base class for all sensor products"""
@@ -91,13 +98,13 @@ class Terra(Modis):
     """Superclass for Terra based Modis products"""
 
     sensor_name = 'terra'
-    products = ['l1', 'stats']
+    products = [ap.l1, ap.stats]
 
 
 class Aqua(Modis):
     """Superclass for Aqua based Modis products"""
-    products = ['l1', 'stats']
     sensor_name = 'aqua'
+    products = [ap.l1, ap.stats]
 
 
 class Modis09A1(Modis):
@@ -311,9 +318,9 @@ class Landsat(SensorProduct):
 
 class LandsatTM(Landsat):
     """Models Landsat TM only products"""
-    products = ["source_metadata", "l1", "toa", "bt", "cloud", "sr", "lst", "swe",
-                "sr_ndvi", "sr_evi", "sr_savi", "sr_msavi", "sr_ndmi", "sr_nbr",
-                "sr_nbr2", "stats"]
+    products = [ap.source_metadata, ap.l1, ap.toa, ap.bt, ap.sr, ap.lst, ap.swe,
+                ap.sr_ndvi, ap.sr_evi, ap.sr_savi, ap.sr_msavi, ap.sr_ndmi,
+                ap.sr_nbr, ap.sr_nbr2, ap.stats, ap.cloud]
     lta_name = 'LANDSAT_TM'
     sensor_name = 'tm'
 
@@ -323,9 +330,9 @@ class LandsatTM(Landsat):
 
 class LandsatETM(Landsat):
     """Models Landsat ETM only products"""
-    products = ["source_metadata", "l1", "toa", "bt", "cloud", "sr", "lst", "swe",
-                "sr_ndvi", "sr_evi", "sr_savi", "sr_msavi", "sr_ndmi", "sr_nbr",
-                "sr_nbr2", "stats"]
+    products = [ap.source_metadata, ap.l1, ap.toa, ap.bt, ap.sr, ap.lst, ap.swe,
+                ap.sr_ndvi, ap.sr_evi, ap.sr_savi, ap.sr_msavi, ap.sr_ndmi,
+                ap.sr_nbr, ap.sr_nbr2, ap.stats, ap.cloud]
     lta_name = 'LANDSAT_ETM_PLUS'
     sensor_name = 'etm'
 
@@ -335,9 +342,9 @@ class LandsatETM(Landsat):
 
 class LandsatOLITIRS(Landsat):
     """Models Landsat OLI/TIRS only products"""
-    products = ["source_metadata", "l1", "toa", "bt", "cloud", "sr", "lst", "swe",
-                "sr_ndvi", "sr_evi", "sr_savi", "sr_msavi", "sr_ndmi", "sr_nbr",
-                "sr_nbr2", "stats"]
+    products = [ap.source_metadata, ap.l1, ap.toa, ap.bt, ap.sr, ap.lst, ap.swe,
+                ap.sr_ndvi, ap.sr_evi, ap.sr_savi, ap.sr_msavi, ap.sr_ndmi,
+                ap.sr_nbr, ap.sr_nbr2, ap.stats, ap.cloud]
     lta_name = 'LANDSAT_8'
     sensor_name = 'olitirs'
 
@@ -347,7 +354,7 @@ class LandsatOLITIRS(Landsat):
 
 class LandsatOLI(Landsat):
     """Models Landsat OLI only products"""
-    products = ["source_metadata", "l1", "toa", "stats"]
+    products = [ap.source_metadata, ap.l1, ap.toa, ap.stats]
     lta_name = 'LANDSAT_8'
     sensor_name = 'oli'
 
