@@ -32,50 +32,57 @@ class User(object):
         self.first_name = first_name
         self.last_name = last_name
         self.contactid = contactid
+        self.id = self.find_or_create_user()
 
-        @property
-        def username(self):
-            return self._username
+    @property
+    def username(self):
+        return self._username
 
-        @username.setter
-        def username(self, value):
-            if not isinstance(value, str):
-                raise TypeError('Expected a string')
-            self._username = value
+    @username.setter
+    def username(self, value):
+        if not isinstance(value, str):
+            raise TypeError('Expected a string')
+        self._username = value
 
-        @property
-        def first_name(self):
-            return self._first_name
+    @property
+    def first_name(self):
+        return self._first_name
 
-        @first_name.setter
-        def first_name(self, value):
-            if not isinstance(value, str):
-                raise TypeError('Expected a string')
-            self._first_name = value
+    @first_name.setter
+    def first_name(self, value):
+        if not isinstance(value, str):
+            raise TypeError('Expected a string')
+        self._first_name = value
 
-        @property
-        def last_name(self):
-            return self._last_name
+    @property
+    def last_name(self):
+        return self._last_name
 
-        @last_name.setter
-        def last_name(self, value):
-            if not isinstance(value, str):
-                raise TypeError('Expected a string')
-            self._last_name = value
+    @last_name.setter
+    def last_name(self, value):
+        if not isinstance(value, str):
+            raise TypeError('Expected a string')
+        self._last_name = value
 
-        @property
-        def email(self):
-            return self._email
+    @property
+    def contactid(self):
+        return self._contactid
 
-        @email.setter
-        def email(self, value):
-            if not validate_email(value):
-                raise StandardError('user email value invalid')
-            self._email = value
+    @last_name.setter
+    def contactid(self, value):
+        if not isinstance(value, int):
+            raise TypeError('Expected a integer')
+        self._contactid = value
 
-        # check if user exists in our DB, if
-        # not create them, and assign self.id
-        self.id = User.find_or_create_user(self.username, self.email, self.first_name, self.last_name, self.contactid)
+    @property
+    def email(self):
+        return self._email
+
+    @email.setter
+    def email(self, value):
+        if not validate_email(value):
+            raise StandardError('user email value invalid')
+        self._email = value
 
     @classmethod
     def get(cls, username, password):
@@ -97,11 +104,13 @@ class User(object):
                 raise UserException("Error authenticating user in get() with ERS. "
                                     "message:{}".format(e.message))
 
-    @classmethod
-    def find_or_create_user(cls, username, email, first_name, last_name, contactid):
+    def find_or_create_user(self):
+        """ check if user exists in our DB, if not create them
+            returns what should be assigned to self.id
+        """
+        (username, email, first_name, last_name, contactid) = (
+            self.username, self.email, self.first_name, self.last_name, self.contactid)
         user_id = None
-        # username comes in not as a str from EE, which DBConnect takes issue with
-        username = str(username)
         nownow = time.strftime('%Y-%m-%d %H:%M:%S')
         insert_stmt = "insert into auth_user (username, " \
                       "email, first_name, last_name, password, " \
