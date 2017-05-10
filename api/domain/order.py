@@ -270,7 +270,7 @@ class Order(object):
         :param email_addr: Email address of the requestor
         :return: An order id string for the ESPA system for ee created orders
         """
-        return '{}-{}'.format(email_addr, eeorder)
+        return 'espa-{}-{}'.format(email_addr, eeorder)
 
     @staticmethod
     def get_default_product_options():
@@ -596,7 +596,7 @@ class Order(object):
         """
         d = datetime.datetime.now()
 
-        return '{}-{}-{}'.format(email, d.strftime('%m%d%Y-%H%M%S'), d.strftime('%f')[:3])
+        return 'espa-{}-{}-{}'.format(email, d.strftime('%m%d%Y-%H%M%S'), d.strftime('%f')[:3])
 
 
 class OptionsConversion(object):
