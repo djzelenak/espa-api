@@ -23,8 +23,7 @@ class MockUser(object):
 
     def add_testing_user(self):
         ''' add user record to test schemas auth_user table '''
-        user = User.find_or_create_user('bilbo_baggins', 'bilbo@usgs.gov',
-                                 'bilbo', 'baggins', '123456')
+        user = User('bilbo_baggins', 'bilbo@usgs.gov', 'bilbo', 'baggins', '123456')
         return user
 
     def cleanup(self):
