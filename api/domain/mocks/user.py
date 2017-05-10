@@ -24,7 +24,7 @@ class MockUser(object):
     def add_testing_user(self):
         ''' add user record to test schemas auth_user table '''
         user = User('bilbo_baggins', 'bilbo@usgs.gov', 'bilbo', 'baggins', '123456')
-        return user
+        return user.id
 
     def cleanup(self):
         sql = "DELETE from auth_user where id > 0;"
