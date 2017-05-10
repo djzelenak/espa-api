@@ -30,17 +30,15 @@ class TestAPI(unittest.TestCase):
         # create a user
         self.mock_user = MockUser()
         self.mock_order = MockOrder()
-        user_id = self.mock_user.add_testing_user()
-        order_id = self.mock_order.generate_testing_order(user_id)
+        self.user = self.mock_user.add_testing_user()
+        order_id = self.mock_order.generate_testing_order(self.user.id)
         self.order = Order.find(order_id)
-        self.user = User.find(user_id)
         self.product_id = 'LT50150401987120XXX02'
         self.staff_product_id = 'LE70450302003206EDC01'
 
-        staff_user_id = self.mock_user.add_testing_user()
-        self.staff_user = User.find(staff_user_id)
+        self.staff_user = self.mock_user.add_testing_user()
         self.staff_user.update('is_staff', True)
-        staff_order_id = self.mock_order.generate_testing_order(staff_user_id)
+        staff_order_id = self.mock_order.generate_testing_order(self.staff_user.id)
         staff_order = Order.find(staff_order_id)
         staff_scene = staff_order.scenes()[0]
         staff_scene.update('name', self.staff_product_id)
@@ -115,7 +113,7 @@ class TestValidation(unittest.TestCase):
         os.environ['espa_api_testing'] = 'True'
 
         self.mock_user = MockUser()
-        self.staffuser = User.find(self.mock_user.add_testing_user())
+        self.staffuser = self.mock_user.add_testing_user()
         self.staffuser.update('is_staff', True)
 
         self.base_order = lowercase_all(testorders.build_base_order())
