@@ -411,6 +411,7 @@ class TestProductionAPI(unittest.TestCase):
         self.assertTrue(production_provider.handle_submitted_modis_products())
         self.assertEquals(Scene.find(sid).status, "oncache")
 
+    @patch('api.external.lpdaac.check_lpdaac_available', lpdaac.check_lpdaac_available)
     @patch('api.external.lpdaac.input_exists', lpdaac.input_exists_false)
     def test_production_handle_submitted_modis_products_input_missing(self):
         # handle unavailable scenario
