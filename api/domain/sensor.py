@@ -23,7 +23,7 @@ with open(os.path.join(__location__, 'domain/product_names.dat')) as f:
 prods = namedtuple('AllProducts', product_names)  # API values
 ap = prods("source_metadata", "l1", "toa", "bt", "cloud", "sr", "lst", "swe",
            "sr_ndvi", "sr_evi", "sr_savi", "sr_msavi", "sr_ndmi", "sr_nbr",
-           "sr_nbr2", "stats")  # Internal code names
+           "sr_nbr2", "stats", "pixel_qa")  # Internal code names
 
 class SensorProduct(object):
     """Base class for all sensor products"""
@@ -320,7 +320,7 @@ class LandsatTM(Landsat):
     """Models Landsat TM only products"""
     products = [ap.source_metadata, ap.l1, ap.toa, ap.bt, ap.sr, ap.lst, ap.swe,
                 ap.sr_ndvi, ap.sr_evi, ap.sr_savi, ap.sr_msavi, ap.sr_ndmi,
-                ap.sr_nbr, ap.sr_nbr2, ap.stats, ap.cloud]
+                ap.sr_nbr, ap.sr_nbr2, ap.stats, ap.cloud, ap.pixel_qa]
     lta_name = 'LANDSAT_TM'
     sensor_name = 'tm'
 
@@ -332,7 +332,7 @@ class LandsatETM(Landsat):
     """Models Landsat ETM only products"""
     products = [ap.source_metadata, ap.l1, ap.toa, ap.bt, ap.sr, ap.lst, ap.swe,
                 ap.sr_ndvi, ap.sr_evi, ap.sr_savi, ap.sr_msavi, ap.sr_ndmi,
-                ap.sr_nbr, ap.sr_nbr2, ap.stats, ap.cloud]
+                ap.sr_nbr, ap.sr_nbr2, ap.stats, ap.cloud, ap.pixel_qa]
     lta_name = 'LANDSAT_ETM_PLUS'
     sensor_name = 'etm'
 
@@ -344,7 +344,7 @@ class LandsatOLITIRS(Landsat):
     """Models Landsat OLI/TIRS only products"""
     products = [ap.source_metadata, ap.l1, ap.toa, ap.bt, ap.sr, ap.lst, ap.swe,
                 ap.sr_ndvi, ap.sr_evi, ap.sr_savi, ap.sr_msavi, ap.sr_ndmi,
-                ap.sr_nbr, ap.sr_nbr2, ap.stats, ap.cloud]
+                ap.sr_nbr, ap.sr_nbr2, ap.stats, ap.cloud, ap.pixel_qa]
     lta_name = 'LANDSAT_8'
     sensor_name = 'olitirs'
 
@@ -354,7 +354,7 @@ class LandsatOLITIRS(Landsat):
 
 class LandsatOLI(Landsat):
     """Models Landsat OLI only products"""
-    products = [ap.source_metadata, ap.l1, ap.toa, ap.stats]
+    products = [ap.source_metadata, ap.l1, ap.toa, ap.stats, ap.pixel_qa]
     lta_name = 'LANDSAT_8'
     sensor_name = 'oli'
 

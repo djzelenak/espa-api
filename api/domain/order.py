@@ -663,7 +663,8 @@ class OptionsConversion(object):
                 ('include_sr_msavi', 'sr_msavi', True),
                 ('include_sr_evi', 'sr_evi', True),
                 ('include_lst', 'lst', True),
-                ('include_cfmask', 'cloud', True)]
+                ('include_cfmask', 'cloud', True),
+                ('include_pixel_qa', 'pixel_qa', True)]
 
     resample_map = [('cubic', 'cc', None),
                     ('near', 'nn', None),
