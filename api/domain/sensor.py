@@ -18,12 +18,29 @@ from api.util import julian_date_check, julian_from_date
 with open(os.path.join(__location__, 'domain/restricted.yaml')) as f:
     restricted = yaml.load(f.read())
 
-with open(os.path.join(__location__, 'domain/product_names.dat')) as f:
-    product_names = [l.strip() for l in f.readlines()]
-prods = namedtuple('AllProducts', product_names)  # API values
-ap = prods("source_metadata", "l1", "toa", "bt", "cloud", "sr", "lst", "swe",
-           "sr_ndvi", "sr_evi", "sr_savi", "sr_msavi", "sr_ndmi", "sr_nbr",
-           "sr_nbr2", "stats", "pixel_qa")  # Internal code names
+
+class ProductNames(object):
+    @classmethod
+    def get(cls):
+        """ Defines the mapping between products and sensor variables
+        :return: AllProducts class (namedtuple)
+        """
+        # API product values
+        product_names = ["source_metadata", "l1", "pixel_qa",
+                         "toa", "bt", "cloud",
+                         "sr", "lst", "swe",
+                         "sr_ndvi", "sr_evi", "sr_savi", "sr_msavi", "sr_ndmi",
+                         "sr_nbr", "sr_nbr2",
+                         "stats"]
+        prods = namedtuple('AllProducts', product_names)
+        # Internal code names
+        return prods("source_metadata", "l1", "pixel_qa",
+                     "toa", "bt", "cloud",
+                     "sr", "lst", "swe",
+                     "sr_ndvi", "sr_evi", "sr_savi", "sr_msavi", "sr_ndmi",
+                     "sr_nbr", "sr_nbr2",
+                     "stats")
+AllProducts = ProductNames().get()
 
 class SensorProduct(object):
     """Base class for all sensor products"""
@@ -98,13 +115,13 @@ class Terra(Modis):
     """Superclass for Terra based Modis products"""
 
     sensor_name = 'terra'
-    products = [ap.l1, ap.stats]
+    products = [AllProducts.l1, AllProducts.stats]
 
 
 class Aqua(Modis):
     """Superclass for Aqua based Modis products"""
     sensor_name = 'aqua'
-    products = [ap.l1, ap.stats]
+    products = [AllProducts.l1, AllProducts.stats]
 
 
 class Modis09A1(Modis):
@@ -318,9 +335,9 @@ class Landsat(SensorProduct):
 
 class LandsatTM(Landsat):
     """Models Landsat TM only products"""
-    products = [ap.source_metadata, ap.l1, ap.toa, ap.bt, ap.sr, ap.lst, ap.swe,
-                ap.sr_ndvi, ap.sr_evi, ap.sr_savi, ap.sr_msavi, ap.sr_ndmi,
-                ap.sr_nbr, ap.sr_nbr2, ap.stats, ap.cloud, ap.pixel_qa]
+    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr, AllProducts.lst, AllProducts.swe,
+                AllProducts.sr_ndvi, AllProducts.sr_evi, AllProducts.sr_savi, AllProducts.sr_msavi, AllProducts.sr_ndmi,
+                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.cloud, AllProducts.pixel_qa]
     lta_name = 'LANDSAT_TM'
     sensor_name = 'tm'
 
@@ -330,9 +347,9 @@ class LandsatTM(Landsat):
 
 class LandsatETM(Landsat):
     """Models Landsat ETM only products"""
-    products = [ap.source_metadata, ap.l1, ap.toa, ap.bt, ap.sr, ap.lst, ap.swe,
-                ap.sr_ndvi, ap.sr_evi, ap.sr_savi, ap.sr_msavi, ap.sr_ndmi,
-                ap.sr_nbr, ap.sr_nbr2, ap.stats, ap.cloud, ap.pixel_qa]
+    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr, AllProducts.lst, AllProducts.swe,
+                AllProducts.sr_ndvi, AllProducts.sr_evi, AllProducts.sr_savi, AllProducts.sr_msavi, AllProducts.sr_ndmi,
+                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.cloud, AllProducts.pixel_qa]
     lta_name = 'LANDSAT_ETM_PLUS'
     sensor_name = 'etm'
 
@@ -342,9 +359,9 @@ class LandsatETM(Landsat):
 
 class LandsatOLITIRS(Landsat):
     """Models Landsat OLI/TIRS only products"""
-    products = [ap.source_metadata, ap.l1, ap.toa, ap.bt, ap.sr, ap.lst, ap.swe,
-                ap.sr_ndvi, ap.sr_evi, ap.sr_savi, ap.sr_msavi, ap.sr_ndmi,
-                ap.sr_nbr, ap.sr_nbr2, ap.stats, ap.cloud, ap.pixel_qa]
+    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr, AllProducts.lst, AllProducts.swe,
+                AllProducts.sr_ndvi, AllProducts.sr_evi, AllProducts.sr_savi, AllProducts.sr_msavi, AllProducts.sr_ndmi,
+                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.cloud, AllProducts.pixel_qa]
     lta_name = 'LANDSAT_8'
     sensor_name = 'olitirs'
 
@@ -354,7 +371,7 @@ class LandsatOLITIRS(Landsat):
 
 class LandsatOLI(Landsat):
     """Models Landsat OLI only products"""
-    products = [ap.source_metadata, ap.l1, ap.toa, ap.stats, ap.pixel_qa]
+    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.stats, AllProducts.pixel_qa]
     lta_name = 'LANDSAT_8'
     sensor_name = 'oli'
 
