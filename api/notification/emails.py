@@ -240,7 +240,7 @@ class Emails(object):
         subject = 'Purged orders for {month}-{day}-{year}'.format(day=now.day,
                                                                   month=now.month,
                                                                   year=now.year)
-        recipients = config.get('email.purge_report_list')
+        recipients = config.get('email.purge_report_list').split(',')
         return self.__send(recipient=recipients, subject=subject, body=body)
 
 def send_purge_report(start_capacity, end_capacity, orders):
