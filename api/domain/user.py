@@ -94,6 +94,9 @@ class User(object):
             raise TypeError('Expected an integer')
         self._id = value
 
+    def __repr__(self):
+        return self.as_dict()
+
     @classmethod
     def get(cls, username, password):
         if username == 'espa_admin':
