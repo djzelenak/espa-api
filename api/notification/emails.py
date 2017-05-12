@@ -13,6 +13,8 @@ from cStringIO import StringIO
 from email.mime.text import MIMEText
 from smtplib import SMTP
 
+from validate_email import validate_email
+
 from api.domain.order import Order
 from api.domain.scene import Scene
 from api.providers.configuration.configuration_provider import ConfigurationProvider
@@ -37,18 +39,17 @@ class Emails(object):
         '''Sends an email to a receipient on the behalf of espa'''
 
         def _validate(email):
-            if not self.validate_email(email):
+            if not validate_email(email):
                 raise TypeError("Invalid email address provided:%s" % email)
 
         to_header = recipient
-
-        if type(recipient) in (list, tuple):
+        if isinstance(recipient, (list, tuple)):
             for r in recipient:
                 _validate(r)
-
             to_header = ','.join(recipient)
-        elif type(recipient) in (str, unicode):
+        elif isinstance(recipient, basestring):
             _validate(recipient)
+            recipient = [recipient]
         else:
             raise ValueError("Unsupported datatype for recipient:%s"
                              % type(recipient))
@@ -62,23 +63,6 @@ class Emails(object):
         s.quit()
 
         return True
-
-    def validate_email(self, email_addr):
-        '''Compares incoming email address against regular expression
-        to make sure its at least formatted like an email
-
-        Keyword args:
-        email -- String to validate as an email address
-
-        Return:
-        True if the string is a properly formatted email address
-        False if not
-        '''
-        #pattern = '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$'
-        #some clown used a single quote in his email address... sigh.
-        email_addr = email_addr.replace("'", "\'")
-        pattern = r'^[A-Za-z0-9._%+-\\\']+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
-        return re.match(pattern, email_addr.strip())
 
     def send_gzip_error_email(self, product_id):
         '''Sends an email to our people telling them to reprocess
