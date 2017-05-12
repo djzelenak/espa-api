@@ -37,7 +37,7 @@ def greylist(func):
     def decorated(*args, **kwargs):
         black_ls = api_cfg().get('user_blacklist')
         white_ls = api_cfg().get('user_whitelist')
-        denied_response = make_response(jsonify({'msg': 'Access Denied'}), 403)
+        denied_response = MessagesResponse(errors=['Access Denied'])
 
         if 'X-Forwarded-For' in request.headers:
             remote_addr = request.headers.getlist('X-Forwarded-For')[0].rpartition(' ')[-1]
@@ -47,12 +47,12 @@ def greylist(func):
         # prohibited ip's
         if black_ls:
             if remote_addr in black_ls.split(','):
-                return denied_response
+                return make_response(jsonify(denied_response.as_dict(), 403))
 
         # for when were guarding access
         if white_ls:
             if remote_addr not in white_ls.split(','):
-                return denied_response
+                return make_response(jsonify(denied_response.as_dict(), 403))
 
         return func(*args, **kwargs)
     return decorated
@@ -68,14 +68,15 @@ def version_filter(func):
         if url_version in versions:
             return func(*args, **kwargs)
         else:
-            msg = 'Invalid API version %s' % url_version
-            return make_response(jsonify({'msg', msg}), 404)
+            msg = MessagesResponse(errors=['Invalid API version %s' % url_version])
+            return make_response(jsonify(msg.as_dict()), 404)
     return decorated
 
 
 @auth.error_handler
 def unauthorized():
-    return make_response(jsonify({'msg': 'Invalid username/password'}), 401)
+    msg = MessagesResponse(errors=['Invalid username/password'])
+    return make_response(jsonify(msg.as_dict()), 401)
 
 
 @auth.verify_password
@@ -129,14 +130,14 @@ class VersionInfo(Resource):
                 return_code = 200
             else:
                 ver_str = ", ".join(info_dict.keys())
-                err_msg = "%s is not a valid api version, these are: %s" % (version, ver_str)
-                response = {"errmsg": err_msg}
+                msg = "Invalid api version {0}. Options: {1}".format(version, ver_str)
+                response = MessagesResponse(errors=[msg]).as_dict()
                 return_code = 404
         else:
             response = espa.api_versions()
             return_code = 200
 
-        return response, return_code
+        return make_response(jsonify(response), return_code)
 
 
 class AvailableProducts(Resource):
@@ -248,7 +249,8 @@ class UserInfo(Resource):
 
     @staticmethod
     def get(version):
-        return flask.g.user.as_dict()
+        user = UserResponse(**flask.g.user.as_dict())
+        return make_response(jsonify(user.as_dict()), 200)
 
 
 class ItemStatus(Resource):
