@@ -2,7 +2,7 @@
 
 import os
 
-from flask import Flask, request
+from flask import Flask, request, make_response, jsonify
 from flask.ext.restful import Api, Resource, reqparse, fields, marshal
 
 from api.providers.configuration.configuration_provider import ConfigurationProvider
@@ -14,16 +14,21 @@ from http_user import Index, VersionInfo, AvailableProducts, ValidationInfo,\
 from http_production import ProductionVersion, ProductionConfiguration, ProductionOperations, ProductionManagement
 
 from http_admin import Reports, SystemStatus, OrderResets, ProductionStats
+from http_json import MessagesResponse
 
 config = ConfigurationProvider()
 
 app = Flask(__name__)
 app.secret_key = api_cfg('config').get('key')
 
-errors = {'NotFound': {'message': 'The requested URL was not found on the server.',
-                       'status': 404}}
 
-transport_api = Api(app, errors=errors, catch_all_404s=True)
+@app.errorhandler(404)
+def page_not_found(e):
+    errors = MessagesResponse(errors=['{} not found on the server'
+                              .format(request.path)])
+    return make_response(jsonify(errors.as_dict()), 404)
+
+transport_api = Api(app)
 
 # USER facing functionality
 
