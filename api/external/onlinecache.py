@@ -129,7 +129,7 @@ class OnlineCache(object):
         results = {'capacity': clean[1],
                    'used': clean[2],
                    'available': clean[3],
-                   'percent_free': clean[4]}
+                   'percent_used': clean[4]}
 
         return results
 
