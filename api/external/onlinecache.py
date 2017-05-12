@@ -44,6 +44,25 @@ class OnlineCache(object):
             logger.debug('No connection to OnlineCache host: {}'.format(e))
             raise OnlineCacheException(e)
 
+    def exists(self, orderid, filename=None):
+        """ Check if an order [optional filename] exists on the onlinecache
+
+        :param orderid:  associated order to check
+        :param filename: file to check inside of an order
+        :return: bool
+        """
+        if filename:
+            path = os.path.join(self.orderpath, orderid, filename)
+        else:
+            path = os.path.join(self.orderpath, orderid)
+
+        try:
+            result = self.execute_command('ls -d {0}'.format(path))
+            ret = tuple(x.rstrip() for x in result['stdout'])
+            return ret[-1] == path
+        except OnlineCacheException as e:
+            return False
+
     def delete(self, orderid, filename=None):
         """
         Removes an order from physical online cache disk
@@ -139,6 +158,9 @@ class OnlineCache(object):
         logger.info('call to {} returned {}'.format(cmd, result))
 
         return result
+
+def exists(orderid):
+    return OnlineCache().exists(orderid)
 
 
 def delete(orderid):
