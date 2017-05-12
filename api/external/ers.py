@@ -9,7 +9,15 @@ from api.providers.configuration.configuration_provider import ConfigurationProv
 cfg = ConfigurationProvider()
 
 
-class ERSApiException(Exception):
+class ERSApiErrorException(Exception):
+    pass
+
+
+class ERSApiConnectionException(Exception):
+    pass
+
+
+class ERSApiAuthFailedException(Exception):
     pass
 
 
@@ -22,22 +30,45 @@ class ERSApi(object):
     def _api_post(self, url, data):
         # certificate verification fails in dev/tst
         verify = True if cfg.mode == 'ops' else False
-        return requests.post(self._host+url, data=data, verify=verify).json()
+        try:
+            resp = requests.post(self._host + url, data=data, verify=verify)
+            resp.raise_for_status()
+        except Exception as e:
+            raise ERSApiConnectionException(e)
+        try:
+            data = resp.json()
+        except Exception as e:
+            raise ERSApiErrorException(e)
+        return data
 
     def _api_get(self, url, header):
         # certificate verification fails in dev/tst
         verify = True if cfg.mode == 'ops' else False
-        return requests.get(self._host+url, headers=header, verify=verify).json()
+        try:
+            resp = requests.get(self._host+url, headers=header, verify=verify)
+            resp.raise_for_status()
+        except Exception as e:
+            raise ERSApiConnectionException(e)
+        try:
+            data = resp.json()
+        except Exception as e:
+            raise ERSApiErrorException(e)
+        return data
 
     def get_user_info(self, user, passw):
-        auth_resp = self._api_post('/auth', {'username': user, 'password': passw, 'client_secret': self._secret})
+        auth_resp = self._api_post('/auth', {'username': user,
+                                             'password': passw,
+                                             'client_secret': self._secret})
         if not auth_resp['errors']:
-            user_resp = self._api_get('/me', {'X-AuthToken': auth_resp['data']['authToken']})
+            headers = {'X-AuthToken': auth_resp['data']['authToken']}
+            user_resp = self._api_get('/me', headers)
             if not user_resp['errors']:
                 return user_resp['data']
             else:
-                raise ERSApiException('Error retrieving user {} details. '
-                                      'message {}'.format(user, user_resp['errors']))
+                msg = ('Error retrieving user {} details. message {}'
+                       .format(user, user_resp['errors']))
+                raise ERSApiErrorException(msg)
         else:
-            raise ERSApiException('Error authenticating {}. '
-                                  'message: {}'.format(user, auth_resp['errors']))
+            msg = ('Error authenticating {}. message: {}'
+                   .format(user, auth_resp['errors']))
+            raise ERSApiAuthFailedException(msg)
