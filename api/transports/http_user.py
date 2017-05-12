@@ -9,6 +9,7 @@ from api.system.logger import ilogger as logger
 from api.util import api_cfg
 from api.util import lowercase_all
 from api.domain.user import User
+from api.transports.http_json import (MessagesResponse, UserResponse, OrderResponse)
 
 from flask import jsonify
 from flask import make_response
