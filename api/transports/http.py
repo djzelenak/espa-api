@@ -37,7 +37,8 @@ transport_api.add_resource(Index, '/')
 transport_api.add_resource(VersionInfo,
                            '/api',
                            '/api/',
-                           '/api/v<version>')
+                           '/api/v<version>',
+                           '/api/v<version>/')
 
 transport_api.add_resource(AvailableProducts,
                            '/api/v<version>/available-products/<prod_id>',
