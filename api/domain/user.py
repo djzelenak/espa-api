@@ -84,6 +84,16 @@ class User(object):
             raise StandardError('user email value invalid')
         self._email = value.strip()
 
+    @property
+    def id(self):
+        return self._id
+
+    @id.setter
+    def id(self, value):
+        if not isinstance(value, int):
+            raise TypeError('Expected an integer')
+        self._id = value
+
     @classmethod
     def get(cls, username, password):
         if username == 'espa_admin':
