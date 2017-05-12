@@ -8,7 +8,8 @@ from api.domain import user_api_operations
 from api.system.logger import ilogger as logger
 from api.util import api_cfg
 from api.util import lowercase_all
-from api.domain.user import User
+from api.domain.user import User, UserException
+from api.external.ers import ERSApiErrorException, ERSApiConnectionException, ERSApiAuthFailedException
 from api.transports.http_json import (MessagesResponse, UserResponse, OrderResponse)
 
 from flask import jsonify
@@ -75,8 +76,21 @@ def version_filter(func):
 
 @auth.error_handler
 def unauthorized():
-    msg = MessagesResponse(errors=['Invalid username/password'])
-    return make_response(jsonify(msg.as_dict()), 401)
+    reasons = ['unknown', 'auth', 'conn']
+    reason = flask.g.get('error_reason', '')
+    if reason not in reasons or reason == 'unknown':
+        if reason not in reasons:
+            logger.debug('ERR uncaught exception in user authentication')
+        msg = MessagesResponse(errors=["System experienced an exception. "
+                                       "Admins have been notified"])
+        response_code = 500
+    elif reason == 'auth':
+        msg = MessagesResponse(errors=['Invalid username/password'])
+        response_code = 401
+    elif reason == 'conn':
+        msg = MessagesResponse(warnings=['ERS connection failed'])
+        response_code = 503
+    return make_response(jsonify(msg.as_dict()), response_code)
 
 
 @auth.verify_password
@@ -103,8 +117,25 @@ def verify_user(username, password):
 
         user = User(*user_entry)
         flask.g.user = user  # Replace usage with cached version
+    except UserException as e:
+        logger.info('Invalid login attempt, username: {}, {}'.format(username, e))
+        flask.g.error_reason = 'unknown'
+        return False
+    except ERSApiAuthFailedException as e:
+        logger.info('Invalid login attempt, username: {}, {}'.format(username, e))
+        flask.g.error_reason = 'auth'
+        return False
+    except ERSApiErrorException as e:
+        logger.info('ERS lookup failed, username: {}, {}'.format(username, e))
+        flask.g.error_reason = 'unknown'
+        return False
+    except ERSApiConnectionException as e:
+        logger.info('ERS is down {}'.format(e))
+        flask.g.error_reason = 'conn'
+        return False
     except Exception:
         logger.info('Invalid login attempt, username: {}'.format(username))
+        flask.g.error_reason = 'unknown'
         return False
 
     return True
