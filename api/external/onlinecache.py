@@ -70,17 +70,15 @@ class OnlineCache(object):
         :param filename: file to delete inside of an order
         :param orderid: associated order to delete
         """
+        if not self.exists(orderid, filename):
+            msg = 'Invalid orderid {} or filename {}'.format(orderid, filename)
+            logger.debug(msg)
+            return False
+
         if filename:
             path = os.path.join(self.orderpath, orderid, filename)
         else:
             path = os.path.join(self.orderpath, orderid)
-
-        try:
-            self.execute_command('ls -d {0}'.format(path))
-        except OnlineCacheException as e:
-            msg = 'INVALID PATH {}'.format(path)
-            logger.debug(msg)
-            raise e
 
         # this should be the dir where the order is held
         logger.info('Deleting {} from online cache'.format(path))
