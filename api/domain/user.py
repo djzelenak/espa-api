@@ -9,7 +9,7 @@ from validate_email import validate_email
 from api.domain import format_sql_params
 from api.domain.order import Order
 from api.domain.scene import Scene
-from api.external.ers import ERSApi, ERSApiException
+from api.external.ers import ERSApi
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.system.logger import ilogger as logger
 from api.util.dbconnect import db_instance, DBConnectException
@@ -100,22 +100,16 @@ class User(object):
     @classmethod
     def get(cls, username, password):
         if username == 'espa_admin':
-            try:
-                cp = ConfigurationProvider()
-                if pbkdf2_sha256.verify(password, cp.espa256):
-                    return username, cp.get('apiemailreceive'), 'espa', 'admin', ''
-                else:
-                    raise UserException("ERR validating espa_admin, invalid password ")
-            except:
-                # try/except added due to trouble sorting out issue when
-                raise UserException("ERR validating espa_admin, traceback: {0}".format(traceback.format_exc()))
+            cp = ConfigurationProvider()
+            if pbkdf2_sha256.verify(password, cp.espa256):
+                return username, cp.get('apiemailreceive'), 'espa', 'admin', ''
+            else:
+                msg = "ERR validating espa_admin, invalid password "
+                logger.debug(msg)
+                raise UserException(msg)
         else:
-            try:
-                eu = ers.get_user_info(username, password)
-                return eu['username'], eu['email'], eu['firstName'], eu['lastName'], eu['contact_id']
-            except ERSApiException, e:
-                raise UserException("Error authenticating user in get() with ERS. "
-                                    "message:{}".format(e.message))
+            eu = ers.get_user_info(username, password)
+            return eu['username'], eu['email'], eu['firstName'], eu['lastName'], eu['contact_id']
 
     def find_or_create_user(self):
         """ check if user exists in our DB, if not create them
