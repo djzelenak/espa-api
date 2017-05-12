@@ -1143,9 +1143,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     product.job_name = ''
                     product.save()
 
-                # bulk update product status, delete unnecessary field data
-                logger.info('Deleting {0} from online cache disk'.format(order.orderid))
-                onlinecache.delete(order.orderid)
+                if onlinecache.exists(order.orderid):
+                    # bulk update product status, delete unnecessary field data
+                    logger.info('Deleting {0} from online cache disk'.format(order.orderid))
+                    onlinecache.delete(order.orderid)
             except onlinecache.OnlineCacheException:
                 logger.debug('Could not delete {0} from the online cache'.format(order.orderid))
             except Exception as e:
