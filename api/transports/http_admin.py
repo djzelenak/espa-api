@@ -31,7 +31,7 @@ def whitelist(func):
     """
     def decorated(*args, **kwargs):
         white_ls = espa.get_admin_whitelist()
-        if 'X-Forwarded-For' in request.headers:
+        if 'X-Forwarded-For' in request.headers and request.remote_addr == '127.0.0.1':
             remote_addr = request.headers.getlist('X-Forwarded-For')[0].rpartition(' ')[-1]
         else:
             remote_addr = request.remote_addr or 'untrackable'
