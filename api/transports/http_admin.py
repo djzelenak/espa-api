@@ -9,6 +9,7 @@ from api.domain import default_error_message, admin_api_operations
 from api.interfaces.admin.version1 import API as APIv1
 from api.system.logger import ilogger as logger
 from api.domain.user import User
+from api.transports.http_json import MessagesResponse
 
 from flask import jsonify
 from flask import make_response
@@ -31,15 +32,20 @@ def whitelist(func):
     """
     def decorated(*args, **kwargs):
         white_ls = espa.get_admin_whitelist()
-        if 'X-Forwarded-For' in request.headers and request.remote_addr == '127.0.0.1':
+        denied_response = MessagesResponse(errors=['Access Denied'])
+        is_web_redirect = ('X-Forwarded-For' in request.headers
+                           and request.remote_addr == '127.0.0.1')
+        if is_web_redirect:
             remote_addr = request.headers.getlist('X-Forwarded-For')[0].rpartition(' ')[-1]
         else:
             remote_addr = request.remote_addr or 'untrackable'
 
-        if remote_addr in white_ls:
+        if ((remote_addr in white_ls or request.remote_addr in white_ls)
+                and remote_addr != 'untrackable'):
             return func(*args, **kwargs)
         else:
-            return make_response(jsonify({'msg': 'Access Denied'}), 403)
+            logger.warn('*** Not in whitelist ({1}): {0}'.format(remote_addr, white_ls))
+            return make_response(jsonify(denied_response.as_dict()), 403)
     return decorated
 
 
@@ -49,15 +55,20 @@ def stats_whitelist(func):
     """
     def decorated(*args, **kwargs):
         white_ls = espa.get_stat_whitelist()
-        if 'X-Forwarded-For' in request.headers:
+        denied_response = MessagesResponse(errors=['Access Denied'])
+        is_web_redirect = ('X-Forwarded-For' in request.headers
+                           and request.remote_addr == '127.0.0.1')
+        if is_web_redirect:
             remote_addr = request.headers.getlist('X-Forwarded-For')[0].rpartition(' ')[-1]
         else:
             remote_addr = request.remote_addr or 'untrackable'
 
-        if remote_addr in white_ls:
+        if ((remote_addr in white_ls or request.remote_addr in white_ls)
+                and remote_addr != 'untrackable'):
             return func(*args, **kwargs)
         else:
-            return make_response(jsonify({'msg': 'Access Denied'}), 403)
+            logger.warn('*** Not in whitelist ({1}): {0}'.format(remote_addr, white_ls))
+            return make_response(jsonify(denied_response.as_dict()), 403)
     return decorated
 
 
@@ -71,14 +82,16 @@ def version_filter(func):
         if url_version in versions:
             return func(*args, **kwargs)
         else:
-            msg = 'Invalid API version %s' % url_version
-            return make_response(jsonify({'msg': msg}), 404)
+            msg = MessagesResponse(errors=['Invalid API version {}'
+                                   .format(url_version)])
+            return make_response(jsonify(msg.as_dict()), 404)
     return decorated
 
 
 @auth.error_handler
 def unauthorized():
-    return make_response(jsonify({'msg': 'Invalid username/password'}), 403)
+    msg = MessagesResponse(errors=['Invalid username/password'])
+    return make_response(jsonify(msg.as_dict()), 403)
 
 
 @auth.verify_password
