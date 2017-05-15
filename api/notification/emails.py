@@ -190,23 +190,6 @@ class Emails(object):
         Capacity:{end_capacity} Used:{end_used} Available:{end_available} Percent Used:{end_percent_free}
 
         ===================================
-        Past 24 Hours
-        Orders Placed:not available
-        Orders Completed:not available
-        Scenes Placed:not available
-        Scenes Completed:not available
-
-        Past 7 Days
-        Orders Placed:not available
-        Orders Completed:not available
-        Scenes Placed:not available
-        Scenes Completed:not available
-
-        ===================================
-        Open orders:not available
-        Open scenes:not available
-
-        ===================================
         Purged orders
           {purged_orders}
         ========== End of report ==========
