@@ -437,12 +437,12 @@ class OrdersResponse(object):
         self.code = code
 
     def __repr__(self):
-        return repr(self.as_json())
+        return repr(self.as_list())
 
     def __call__(self):
         if self.code is None:
             raise ValueError('OrdersResponse must set response_code')
-        return make_response(jsonify(self.as_json()), self.code)
+        return make_response(json.dumps(self.as_list()), self.code)
 
     @property
     def orders(self):
@@ -481,20 +481,18 @@ class OrdersResponse(object):
                                 .format(valid_codes))
         self._code = value
 
-    def as_json(self):  # TODO: this is usually a list...
+    def as_list(self):
         mapper = lambda x: {"order_note": x.note,
                             "order_status": x.status,
                             "orderid": x.orderid}
         resp = map(mapper, self.orders)
-        # TODO: This is used by list-orders-feed to make an object like
-        #       {orderid: {scenes: [{name, url, status}], orderdate: ""}
 
         if self.limit:
             if len(self.limit) > 1:
                 resp = [{k: getattr(r, k) for k in self.limit} for r in resp]
             else:
                 resp = [getattr(o, self.limit[0]) for o in self.orders]
-        return json.dumps(resp)
+        return resp
 
 
 class MessagesResponse(object):
