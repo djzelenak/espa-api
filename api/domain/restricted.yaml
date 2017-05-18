@@ -3,6 +3,7 @@ all:
     role:
         - lst
         - swe
+        - pixel_qa
         - restricted_prod
     ordering:
         - olitirs8
