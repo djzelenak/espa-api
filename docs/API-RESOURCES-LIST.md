@@ -1,5 +1,40 @@
 ### User API Operations
 
+#### Messages
+
+The HTTP Response Code coming from the server is the primary method of alerting users of the results of their request (success/fail). 
+In addition to the HTTP Response Code, the JSON response will also include any `"messages"` which will give clarification of the Response Code, and should always be examined.
+ 
+The JSON response will only contain `"messages"` if there is an associated message field contained. It will only contain one object, either: 
+1. **Errors**: An un-recoverable error has occurred
+  * `"messages": {"errors": [...]}` 
+1. **Warnings**: Nothing wrong has occurred inside the system, but these warnings can later elevate to errors (for example, if a product becomes deprecated). 
+  * `"messages": {"warnings": [...]}`
+  
+#### HTTP Status Codes
+
+The status code will match the desired behavior, depending on the HTTP Method used:
+
+* GET: Performs searches for current system states
+  * `200 OK`: The search was performed successfully (**Note:** the result returned may be an empty object)
+  * `401 Authenication Failed`: Could not authenticate the username/password combination
+  * `403 Forbidden`: The user is not allowed to access the system
+  * `404 Not Found`: The server could not perform the requested operation
+* POST: For every request, a new state on the server is created 
+  * `201 Created`: A new resource has been created, information of which is included in the response
+  * `400 Bad Request`: Unable to parse the supplied message
+  * `405 Method Not Allowed`: Cannot perform POST
+* PUT: Updates a resource, changing it to the desired state
+  * `202 Accepted`: The resource has been updated, and the response represents the new state
+
+There are circumstances when the server supersedes the API, and gives information related to its current configuration: 
+
+* Server maintenance: The server is either down for maintenance, or experiencing extreme difficulties
+  * `500 Internal Server Error`: This likely means the server is on fire, and system admins are working to restore it
+  * `503 Service Unavailable`: This means the server is down for regular maintenance
+* Host redirection: The hostname supplied is now living at a new location
+  * `301 Moved Permanently`: Use the location header to navigate to the correct page
+    * This is usually used for HTTPS redirection, but will also occur during system maintenance
   
 #### Schema definitions
 
