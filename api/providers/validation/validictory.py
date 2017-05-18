@@ -276,20 +276,6 @@ class OrderValidatorV0(validictory.SchemaValidator):
             self._error('You must request valid products for statistics',
                         stats['products'], fieldname, path=path)
 
-    def validate_required_collection(self, x, fieldname, schema, path, required_collection):
-        ''' TODO: REMOVE THIS AFTER PRE-COLLECTION HAVE FINISHED PROCESSING '''
-        if not required_collection:
-            return
-
-        restricted_ordering = self.restricted['all']['ordering']
-        # path is like <obj>.mod09a1.inputs
-        sensor_id = path.split('.')[1]
-        scene_ids = x.get(fieldname)
-
-        if sensor_id in restricted_ordering:
-            self._error('Pre-Collection Landsat scene-IDs are no longer accepted',
-                        scene_ids, fieldname, path=path)
-
     def validate_restricted(self, x, fieldname, schema, path, restricted):
         """Validate that the requested products are available by date or role"""
         if not restricted:
@@ -312,10 +298,15 @@ class OrderValidatorV0(validictory.SchemaValidator):
 
         not_implemented = avail_prods.pop('not_implemented', None)
         date_restricted = avail_prods.pop('date_restricted', None)
+        ordering_restricted = avail_prods.pop('ordering_restricted', None)
 
         # Check for to make sure there is only one sensor type in there
         if len(avail_prods) > 1:
             return
+
+        if not_implemented:
+            self._errors.append("Requested IDs are not recognized. Remove: {}"
+                                .format(not_implemented))
 
         if date_restricted:
             restr_prods = date_restricted.keys()
@@ -325,16 +316,21 @@ class OrderValidatorV0(validictory.SchemaValidator):
                     date_restricted.pop(key, None)
 
             if date_restricted:
-                if 'response-readable' in self.data_source:
-                    for product_type in date_restricted:
-                        msg = (r'<br>See <a href="https://landsat.usgs.gov/landsat-surface-reflectance-high-'
-                               r'level-data-products">Caveats and Constraints</a> for more details.')
-                        self._errors.append("Requested {} products are restricted by date. Remove {} scenes: {} {}"
-                                            .format(product_type, path.split('.products')[0],
-                                                    [x.upper() for x in date_restricted[product_type]], msg))
-                else:
-                    self._error('Requested products are restricted by date',
-                                date_restricted, fieldname, path=path)
+                for product_type in date_restricted:
+                    msg = ("Requested {} products are restricted by date. "
+                           "Remove {} scenes: {}"
+                           .format(product_type, path.split('.products')[0],
+                                   [x.upper()
+                                    for x in date_restricted[product_type]]))
+                    self._errors.append(msg)
+
+        if ordering_restricted:
+            restr_sensors = ordering_restricted.keys()
+
+            for sensor in restr_sensors:
+                msg = ("Requested sensor is restricted from ordering. "
+                       "Remove: {}".format(sensor))
+                self._errors.append(msg)
 
         prods = []
         for key in avail_prods:
@@ -511,7 +507,6 @@ class BaseValidationSchema(object):
                                                         'required': True,
                                                         'ItemCount': 'inputs',
                                                         'uniqueItems': True,
-                                                        'required_collection': True,
                                                         'minItems': 1,
                                                         'items': {'type': 'string',
                                                                   'pattern': _sensor_reg[key][0]}},

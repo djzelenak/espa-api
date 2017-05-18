@@ -53,8 +53,9 @@ class OrderingProvider(ProviderInterfaceV0):
         restrict_all = restricted.get('all', {})
         all_role = restrict_all.get('role', [])
         all_by_date = restrict_all.get('by_date', {})
+        all_ordering_rsctd = restrict_all.get('ordering', [])
 
-        upd = {'date_restricted': {}}
+        upd = {'date_restricted': {}, 'ordering_restricted': {}}
         for sensor_type, prods in pub_prods.items():
             if sensor_type == 'not_implemented':
                 continue
@@ -70,6 +71,15 @@ class OrderingProvider(ProviderInterfaceV0):
 
             outs = pub_prods[sensor_type]['products']
             ins = pub_prods[sensor_type]['inputs']
+
+            if sensor_type in all_ordering_rsctd:
+                for sc_id in ins:
+                    if sensor_type in upd['ordering_restricted']:
+                        upd['ordering_restricted'][sensor_type].append(sc_id)
+                    else:
+                        upd['ordering_restricted'][sensor_type] = [sc_id]
+                pub_prods.pop(sensor_type)
+                continue
 
             remove_me = []
             if role:
@@ -101,7 +111,9 @@ class OrderingProvider(ProviderInterfaceV0):
                     continue
 
         if upd['date_restricted']:
-            pub_prods.update(upd)
+            pub_prods.update(date_restricted=upd['date_restricted'])
+        if upd['ordering_restricted']:
+            pub_prods.update(ordering_restricted=upd['ordering_restricted'])
 
         return pub_prods
 
