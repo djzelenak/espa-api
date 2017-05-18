@@ -56,6 +56,15 @@ class ERSApi(object):
         return data
 
     def get_user_info(self, user, passw):
+        """ Handles the authentication with ERS, and gets the users information
+
+        The information used are:
+            {"username", "firstName", "lastName", "email", "contact_id"}
+
+        :param user: ERS username
+        :param passw: ERS password
+        :return: dict
+        """
         auth_resp = self._api_post('/auth', {'username': user,
                                              'password': passw,
                                              'client_secret': self._secret})
