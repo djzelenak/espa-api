@@ -91,7 +91,7 @@ def version_filter(func):
 @auth.error_handler
 def unauthorized():
     msg = MessagesResponse(errors=['Invalid username/password'])
-    return make_response(jsonify(msg.as_dict()), 403)
+    return make_response(jsonify(msg.as_dict()), 401)
 
 
 @auth.verify_password
@@ -116,6 +116,8 @@ def verify_user(username, password):
         cache.set(cache_key, cache_entry, 7200)
 
         user = User(*user_entry)
+        if not user.is_staff:
+            return False
         flask.g.user = user  # Replace usage with cached version
     except Exception:
         logger.info('Invalid login attempt, username: {}'.format(username))
