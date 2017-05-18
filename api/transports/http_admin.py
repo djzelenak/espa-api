@@ -32,7 +32,7 @@ def whitelist(func):
     """
     def decorated(*args, **kwargs):
         white_ls = espa.get_admin_whitelist()
-        denied_response = MessagesResponse(errors=['Access Denied'])
+        denied_response = MessagesResponse(errors=['Access Denied'], code=403)
         is_web_redirect = ('X-Forwarded-For' in request.headers
                            and request.remote_addr == '127.0.0.1')
         if is_web_redirect:
@@ -45,7 +45,7 @@ def whitelist(func):
             return func(*args, **kwargs)
         else:
             logger.warn('*** Not in whitelist ({1}): {0}'.format(remote_addr, white_ls))
-            return make_response(jsonify(denied_response.as_dict()), 403)
+            return denied_response()
     return decorated
 
 
@@ -55,7 +55,7 @@ def stats_whitelist(func):
     """
     def decorated(*args, **kwargs):
         white_ls = espa.get_stat_whitelist()
-        denied_response = MessagesResponse(errors=['Access Denied'])
+        denied_response = MessagesResponse(errors=['Access Denied'], code=403)
         is_web_redirect = ('X-Forwarded-For' in request.headers
                            and request.remote_addr == '127.0.0.1')
         if is_web_redirect:
@@ -68,7 +68,7 @@ def stats_whitelist(func):
             return func(*args, **kwargs)
         else:
             logger.warn('*** Not in whitelist ({1}): {0}'.format(remote_addr, white_ls))
-            return make_response(jsonify(denied_response.as_dict()), 403)
+            return denied_response()
     return decorated
 
 
@@ -83,15 +83,17 @@ def version_filter(func):
             return func(*args, **kwargs)
         else:
             msg = MessagesResponse(errors=['Invalid API version {}'
-                                   .format(url_version)])
-            return make_response(jsonify(msg.as_dict()), 404)
+                                           .format(url_version)],
+                                   code=404)
+            return msg()
     return decorated
 
 
 @auth.error_handler
 def unauthorized():
-    msg = MessagesResponse(errors=['Invalid username/password'])
-    return make_response(jsonify(msg.as_dict()), 401)
+    msg = MessagesResponse(errors=['Invalid username/password'],
+                           code=401)
+    return msg()
 
 
 @auth.verify_password
@@ -170,21 +172,18 @@ class SystemStatus(Resource):
         try:
             response = espa.update_system_status(data)
             if response == default_error_message:
-                message = {'status': 500, 'message': 'internal server error'}
-            elif isinstance(response, dict) and response.keys() == ['msg']:
-                message = {'status': 400, 'message': response['msg']}
+                resp = MessagesResponse(errors=['internal server error'],
+                                        code=500)
+            elif isinstance(response, dict) and response.keys() == ['messages']:
+                resp = MessagesResponse(errors=response['msg'],
+                                        code=400)
             else:
-                message = {'status': 200, 'message': 'success'}
-
-            resp = jsonify(message)
-            resp.status_code = message['status']
-            return resp
-        except:
+                return 'success'
+        except Exception as e:
             logger.debug("ERROR updating system status: {0}".format(traceback.format_exc()))
-            message = {'status': 500, 'message': 'internal server error'}
-            resp = jsonify(message)
-            resp.status_code = 500
-            return resp
+            resp = MessagesResponse(errors=['internal server error'],
+                                    code=500)
+        return resp()
 
 
 class OrderResets(Resource):
