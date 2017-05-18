@@ -67,13 +67,6 @@ user_api_operations = {
                     "GET"
                 ]
             },
-            "/api/v0/list-orders-ext/<email>": {
-                'function': "List extended information about users orders and their statuses. Accepts JSON filters.",
-                'methods': [
-                    "HEAD",
-                    "GET"
-                ]
-            },
             "/api/v0/order/<ordernum>": {
                 'function': "retrieves a submitted order",
                 'methods': [
@@ -152,13 +145,6 @@ user_api_operations = {
             },
             "/api/v1/list-orders/<email>": {
                 'function': "list orders for supplied email, for user collaboration",
-                'methods': [
-                    "HEAD",
-                    "GET"
-                ]
-            },
-            "/api/v1/list-orders-ext/<email>": {
-                'function': "List extended information about users orders and their statuses. Accepts JSON filters.",
                 'methods': [
                     "HEAD",
                     "GET"

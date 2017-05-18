@@ -1,27 +1,50 @@
 ### User API Operations
 
-A handy table to quickly find examples for each of the resources available
-through the API. 
+  
+#### Schema definitions
+
+The following resources are available for navigating the API, in the hopes that the API itself can guide users through its usage in a straightforward and explicit manner. 
 
 HTTP Method	| URI	| Action
 ---|---|---
-[GET](#api)  |  `https://espa.cr.usgs.gov/api/`  |  Lists all available versions of the api.
-[GET](#apiOps)  |  `https://espa.cr.usgs.gov/api/v0`  |  Lists all available api operations.
-[GET](#apiUser)  |  `https://espa.cr.usgs.gov/api/v0/user`  |  Returns user information for the authenticated user.
-[GET](#apiProdsGet)  |  `https://espa.cr.usgs.gov/api/v0/available-products/<product_id>`  |  Lists the available output products for the supplied input.
-[POST](#apiProdsPost)  |  `https://espa.cr.usgs.gov/api/v0/available-products`  |  Lists available products for the supplied inputs. Also classifies the inputs by sensor or lists as 'not implemented' if the values cannot be ordered or determined.
-[GET](#apiProj)  |  `https://espa.cr.usgs.gov/api/v0/projections`  |  Lists and describes available projections. This is a dump of the schema defined that constrains projection info.
-[GET](#apiFormats)  |  `https://espa.cr.usgs.gov/api/v0/formats`  |  Lists all available output formats
-[GET](#apiResamp)  |  `https://espa.cr.usgs.gov/api/v0/resampling-methods`  |  Lists all available resampling methods
-[GET](#apiOrders)  |  `https://espa.cr.usgs.gov/api/v0/list-orders`  |  List orders for the authenticated user.
-[GET](#apiOrdersEmail)  |  `https://espa.cr.usgs.gov/api/v0/list-orders/<email>`  |  Lists orders for the supplied email. Necessary to support user collaboration.
-[GET](#apiOrdersExt)  |  `https://espa.cr.usgs.gov/api/v0/list-orders-ext/<email>`  |  List extended information about users orders and their statuses. Accepts JSON filters.
-[GET](#apiStatus)  |  `https://espa.cr.usgs.gov/api/v0/order-status/<ordernum>`  |  Retrieves a submitted orders status
-[GET](#apiOrderDetails)  |  `https://espa.cr.usgs.gov/api/v0/order/<ordernum>`  |  Retrieves details for a submitted order. Some information may be omitted from this response depending on access privileges.
-[GET](#apiItemStats)  |  `https://espa.cr.usgs.gov/api/v0/item-status/<ordernum>`  |  Retrieve the status and details for all products in an order.
-[GET](#apiProdStats)  |  `https://espa.cr.usgs.gov/api/v0/item-status/<ordernum>/<itemnum>`  |  Retrieve status and details for a particular product in an order
-[POST](#apiSubmitOrder)  |  `https://espa.cr.usgs.gov/api/v0/order ` |  Accepts requests for process from an HTTP POST with a JSON body. The body is validated and any errors are returned to the caller. Otherwise, an orderid is returned.
-[GET](#apiOrderSchema)  |  `https://espa.cr.usgs.gov/api/v0/order-schema`  |  Retrieves order schema definition
+[GET](#api)  |  `/api/`  |  Lists all available versions of the api.
+[GET](#apiOps)  |  `/api/v0`  |  Lists all available api operations.
+[GET](#apiProdsGet)  |  `/api/v0/available-products/<product_id>`  |  Lists the available output products for the supplied input.
+[POST](#apiProdsPost)  |  `/api/v0/available-products`  |  Lists available products for the supplied inputs. Also classifies the inputs by sensor or lists as 'not implemented' if the values cannot be ordered or determined.
+[GET](#apiProj)  |  `/api/v0/projections`  |  Lists and describes available projections. This is a dump of the schema defined that constrains projection info.
+[GET](#apiFormats)  |  `/api/v0/formats`  |  Lists all available output formats
+[GET](#apiResamp)  |  `/api/v0/resampling-methods`  |  Lists all available resampling methods
+[GET](#apiOrderSchema)  |  `/api/v0/order-schema`  |  Retrieves order schema definition
+
+
+#### User
+
+The following endpoints exist for validating that the ERS authentication service is working. 
+
+HTTP Method	| URI	| Action
+---|---|---
+[GET](#apiUser)  |  `/api/v0/user`  |  Returns user information for the authenticated user.
+
+
+#### Orders
+
+HTTP Method	| URI	| Action
+---|---|---
+[POST](#apiSubmitOrder)  |  `/api/v0/order ` |  Accepts requests for processing. The order is validated, and an orderid is returned.
+[PUT](#apiUpdateOrder)  |  `/api/v0/order ` |  
+[GET](#apiStatus)  |  `/api/v0/order-status/<ordernum>`  |  Retrieves a submitted orders status
+[GET](#apiOrderDetails)  |  `/api/v0/order/<ordernum>`  |  Retrieves details for a submitted order. Some information may be omitted from this response depending on access privileges.
+[GET](#apiOrders)  |  `/api/v0/list-orders`  |  List orders for the authenticated user.
+[GET](#apiOrdersEmail)  |  `/api/v0/list-orders/<email>`  |  Lists orders for the supplied email. Necessary to support user collaboration. Accepts JSON filters.
+
+#### Scenes
+
+These endpoints are the only access to the real-time status of the final output products. 
+
+HTTP Method	| URI	| Action
+---|---|---
+[GET](#apiItemStats)  |  `/api/v0/item-status/<ordernum>`  |  Retrieve the status and details for all products in an order.
+[GET](#apiProdStats)  |  `/api/v0/item-status/<ordernum>/<itemnum>`  |  Retrieve status and details for a particular product in an order
 
 
 #### Known Issues
@@ -31,6 +54,8 @@ objects be wrapped in double quotes with internal strings wrapped in escaped
 double quotes. For example:
 ```"{\"olitirs8\": {\"inputs\": [\"LC08_L1TP_027027_20160722_20170221_01_T1\"],\"products...```
 For more info, see [Issue #42](https://github.com/USGS-EROS/espa-api/issues/42#issuecomment-263454906)
+
+---
 
 **GET /api**<a id="api"></a>
 
@@ -114,13 +139,6 @@ curl --user username:password https://espa.cr.usgs.gov/api/v0
         },
         "/api/v0/list-orders/<email>": {
             "function": "list orders for supplied email, for user collaboration",
-            "methods": [
-                "HEAD",
-                "GET"
-            ]
-        },
-        "/api/v0/list-orders-ext/<email>": {
-            "function": "List extended information about users orders and their statuses. Accepts JSON filters.",
             "methods": [
                 "HEAD",
                 "GET"
@@ -420,24 +438,6 @@ curl --user username:password https://espa.cr.usgs.gov/api/v0/list-orders/produc
     "production@email.com-101115143201-00132"
   ]
 }
-```
-
-**GET /api/v0/list-orders-ext/\<email\>**<a id="apiOrdersExt"></a>
-
-List extended information about users orders and their statuses. Accepts JSON filters. 
-```json
-curl --user username:password -XGET -d '{"status": ["complete"]}' https://espa.cr.usgs.gov/api/v0/list-orders-ext/production@email.com
-
-[
-    {
-        "order_note": "",
-        "order_status": "complete",
-        "orderid": "production@email.com-101015143201-00132",
-        "products_complete": 1,
-        "products_error": 0,
-        "products_ordered": 1
-    }
-]
 ```
 
 **GET /api/v0/order-status/\<ordernum\>**<a id="apiStatus"></a>
