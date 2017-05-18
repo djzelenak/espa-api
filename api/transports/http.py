@@ -25,8 +25,9 @@ app.secret_key = api_cfg('config').get('key')
 @app.errorhandler(404)
 def page_not_found(e):
     errors = MessagesResponse(errors=['{} not found on the server'
-                              .format(request.path)])
-    return make_response(jsonify(errors.as_dict()), 404)
+                                      .format(request.path)],
+                              code=404)
+    return errors
 
 transport_api = Api(app)
 

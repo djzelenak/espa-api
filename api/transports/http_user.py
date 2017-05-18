@@ -10,7 +10,8 @@ from api.util import api_cfg
 from api.util import lowercase_all
 from api.domain.user import User, UserException
 from api.external.ers import ERSApiErrorException, ERSApiConnectionException, ERSApiAuthFailedException
-from api.transports.http_json import (MessagesResponse, UserResponse, OrderResponse)
+from api.transports.http_json import (
+    MessagesResponse, UserResponse, OrderResponse, OrdersResponse)
 
 from flask import jsonify
 from flask import make_response
@@ -38,7 +39,8 @@ def greylist(func):
     def decorated(*args, **kwargs):
         black_ls = api_cfg().get('user_blacklist')
         white_ls = api_cfg().get('user_whitelist')
-        denied_response = MessagesResponse(errors=['Access Denied'])
+        denied_response = MessagesResponse(errors=['Access Denied'],
+                                           code=403)
 
         is_web_redirect = ('X-Forwarded-For' in request.headers
                            and request.remote_addr == '127.0.0.1')
@@ -50,12 +52,12 @@ def greylist(func):
         # prohibited ip's
         if black_ls:
             if remote_addr in black_ls.split(','):
-                return make_response(jsonify(denied_response.as_dict()), 403)
+                return denied_response()
 
         # for when were guarding access
         if white_ls:
             if remote_addr not in white_ls.split(','):
-                return make_response(jsonify(denied_response.as_dict()), 403)
+                return denied_response()
 
         return func(*args, **kwargs)
     return decorated
@@ -71,8 +73,10 @@ def version_filter(func):
         if url_version in versions:
             return func(*args, **kwargs)
         else:
-            msg = MessagesResponse(errors=['Invalid API version %s' % url_version])
-            return make_response(jsonify(msg.as_dict()), 404)
+            msg = MessagesResponse(errors=['Invalid API version {}'
+                                           .format(url_version)],
+                                   code=404)
+            return msg()
     return decorated
 
 
@@ -84,15 +88,15 @@ def unauthorized():
         if reason not in reasons:
             logger.debug('ERR uncaught exception in user authentication')
         msg = MessagesResponse(errors=["System experienced an exception. "
-                                       "Admins have been notified"])
-        response_code = 500
+                                       "Admins have been notified"],
+                               code=500)
     elif reason == 'auth':
-        msg = MessagesResponse(errors=['Invalid username/password'])
-        response_code = 401
+        msg = MessagesResponse(errors=['Invalid username/password'],
+                               code=401)
     elif reason == 'conn':
-        msg = MessagesResponse(warnings=['ERS connection failed'])
-        response_code = 503
-    return make_response(jsonify(msg.as_dict()), response_code)
+        msg = MessagesResponse(warnings=['ERS connection failed'],
+                               code=503)
+    return msg()
 
 
 @auth.verify_password
@@ -164,13 +168,12 @@ class VersionInfo(Resource):
             else:
                 ver_str = ", ".join(info_dict.keys())
                 msg = "Invalid api version {0}. Options: {1}".format(version, ver_str)
-                response = MessagesResponse(errors=[msg]).as_dict()
-                return_code = 404
+                response = MessagesResponse(errors=[msg], code=404)
         else:
             response = espa.api_versions()
             return_code = 200
 
-        return make_response(jsonify(response), return_code)
+        return response()
 
 
 class AvailableProducts(Resource):
@@ -192,22 +195,18 @@ class ListOrders(Resource):
     def get(version, email=None):
         try:
             filters = request.get_json(force=True)
-        except:
-            # no json this time
+        except BadRequest as e:
+            # no json this time # FIXME: Should this fail?
             filters = {}
 
-        if 'list-orders-ext' in request.url:
-            if email:
-                return espa.fetch_user_orders_ext(str(email), filters)
-            else:
-                return espa.fetch_user_orders_ext(auth.username(), filters)
-        elif 'list-orders-feed' in request.url:
-            return espa.fetch_user_orders_feed(email)
+        if email:
+            search = dict(email=str(email), filters=filters)
         else:
-            if email:
-                return espa.fetch_user_orders(str(email))
-            else:
-                return espa.fetch_user_orders(auth.username())
+            search = dict(username=auth.username(), filters=filters)
+        response = OrdersResponse(espa.fetch_user_orders(**search))
+        response.limit = ('orderid',)
+        response.code = 200
+        return response()
 
 
 class ValidationInfo(Resource):
@@ -235,46 +234,87 @@ class Ordering(Resource):
 
     @staticmethod
     def get(version, ordernum):
+        user = flask.g.user
+        order = espa.fetch_order(ordernum)
+        response = OrderResponse(**order.as_dict())
+        response.code = 200
         if 'order-status' in request.url:
-            return espa.order_status(ordernum)
+            response.limit = ('orderid', 'status')
         else:
-            return jsonify(espa.fetch_order(ordernum))
+            if not user.is_staff:
+                response.limit = ('orderid','order_date','completion_date',
+                                  'status', 'note', 'order_source',
+                                  'product_opts')
+        return response()
+
 
     @staticmethod
     def post(version):
+        user = flask.g.user
+        message = None
         try:
-            user = flask.g.user
             order = request.get_json(force=True)
-            if not order:
-                message = {"status": 400, "msg": "Unable to parse json data. Please ensure your order follows json "
-                                                 "conventions and your http call is correct. If you believe this "
-                                                 "message is in error please email customer service"}
-            else:
+            if order:
                 try:
                     order = lowercase_all(order)
-                    orderid = espa.place_order(order, user)
-                    if isinstance(orderid, str) and "@" in orderid:
-                        # if order submission was successful, orderid is returned as a string
-                        # which includes the submitters email address
-                        message = {"status": 200, "orderid": orderid}
-                    else:
-                        # there was a problem, and orderid is a dict with the problem details
-                        logger.info("problem with user submitted order. user: {0}\n details: {1}".format(user.username, orderid))
-                        message = {"status": 400, "message": orderid}
+                    order = espa.place_order(order, user)
+                    message = OrderResponse(**order.as_dict())
+                    message.limit = ('orderid', 'status')
+                    message.code = 201
+                except ValidationException as e:
+                    logger.info('Invalid order received: {0}\nresponse {1}'
+                                .format(order, e.response))
+                    message = MessagesResponse(errors=[e.response],
+                                               code=400)
+                except InventoryException as e:
+                    logger.info('Requested inputs not available: {0}\n'
+                                'response {1}'.format(order, e.response))
+                    message = MessagesResponse(errors=[e.response],
+                                               code=400)
                 except Exception as e:
-                    logger.debug("exception posting order: {0}\nuser: {1}\n msg: {2}".format(order, user.username, e.message))
-                    message = {"status": 500, "msg": "the system experienced an exception. the admins have been notified"}
+                    logger.debug("exception posting order: {0}\n"
+                                 "user: {1}\n msg: {2}\n trace: {3}"
+                                 .format(order, user.username, e.message,
+                                         traceback.format_exc()))
+                    msg = ("System experienced an exception. "
+                           "Admins have been notified")
+                    message = MessagesResponse(errors=[msg],
+                                               code=500)
         except BadRequest as e:
             # request.get_json throws a BadRequest
-            logger.debug("BadRequest, could not parse request into json {}\nuser: {}\nform data {}\n".format(e.description, user.username, request.form))
-            message = {"status": 400, "msg": "Could not parse the request into json"}
+            logger.debug("BadRequest, could not parse request into json {}\n"
+                         "user: {}\nform data {}\n"
+                         .format(e.description, user.username, request.form))
+            message = MessagesResponse(errors=['Could not parse request into JSON'],
+                                       code=400)
         except Exception as e:
-            logger.debug("ERR posting order. user: {0}\n error: {1}".format(user.username, e))
-            message = {"status": 500, "msg": "the system has experienced an exception. the admins have been notified."}
+            logger.debug("ERR posting order. user: {0}\n error: {1}"
+                         .format(user.username, e))
+            msg = ("System experienced an exception. "
+                   "Admins have been notified")
+            message = MessagesResponse(errors=[msg], code=500)
 
-        response = jsonify(message)
-        response.status_code = message['status']
-        return response
+        return message()
+
+    @staticmethod
+    def put(version):
+        user = flask.g.user
+        remote_addr = request.remote_addr
+        message = MessagesResponse(errors=["BadRequest"],
+                                   code=400)
+        update = request.get_json()
+        try:
+            order = espa.fetch_order(update.get('orderid'))
+            assert(order.user_id == user.id)
+            message = OrderResponse(**order.as_dict())
+            message.limit = ('orderid', 'status')
+            message.code = 202
+        except BadRequest as e:
+            pass
+        except Exception as e:
+            pass
+
+        return message()
 
 
 class UserInfo(Resource):
@@ -283,7 +323,8 @@ class UserInfo(Resource):
     @staticmethod
     def get(version):
         user = UserResponse(**flask.g.user.as_dict())
-        return make_response(jsonify(user.as_dict()), 200)
+        user.code = 200
+        return user()
 
 
 class ItemStatus(Resource):
