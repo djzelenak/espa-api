@@ -11,6 +11,7 @@ all:
         - tm4
         - tm5
         - etm7
+        - restricted_sensor
 
 
 stats:
