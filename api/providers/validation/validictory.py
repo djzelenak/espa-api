@@ -57,8 +57,10 @@ class OrderValidatorV0(validictory.SchemaValidator):
                 return
             if 'lonlat' in self.data_source['projection']:
                 if 'image_extents' in self.data_source and self.data_source['image_extents']['units'] != 'dd':
-                    self._error('must be "dd" for projection "lonlat"', self.data_source['image_extents']['units'],
-                                fieldname, path=path)
+                    msg = ('{}:{} must be "dd" for projection "lonlat", not "{}"'
+                           .format(path, fieldname,
+                                   self.data_source['image_extents']['units']))
+                    self._errors.append(msg)
                     return
 
         if 'resize' in self.data_source:
@@ -130,11 +132,13 @@ class OrderValidatorV0(validictory.SchemaValidator):
         cmax = max(count_ls)
         cmin = min(count_ls)
         if cmax > pixel_count:
-            self._error(': pixel count value is greater than maximum size of {} pixels'.format(pixel_count),
-                        cmax, fieldname, path=path)
+            msg = ('{}:{} pixel count is greater than maximum size of {}'
+                   ' pixels'.format(path, fieldname, cmax))
+            self._errors.append(msg)
         elif cmin < 1:
-            self._error(': pixel count value falls below acceptable threshold, check extent parameters',
-                        cmin, fieldname, path=path)
+            msg = ('{}:{} pixel count value falls below acceptable threshold'
+                   'of 1 pixel'.format(path, fieldname, cmin))
+            self._errors.append(msg)
 
     @staticmethod
     def calc_extent(xmax, ymax, xmin, ymin, extent_units, resize_units, resize_pixel):
@@ -170,8 +174,9 @@ class OrderValidatorV0(validictory.SchemaValidator):
         if isinstance(value, dict):
             if single:
                 if len(value) > 1:
-                    self._error(': field only accepts one object',
-                                len(value), fieldname, path=path)
+                    msg = ('{}: {} field only accepts one object, not {}',
+                           path, fieldname, len(value))
+                    self._errors.append(msg)
 
     def validate_enum(self, x, fieldname, schema, path, options=None):
         '''
@@ -183,9 +188,10 @@ class OrderValidatorV0(validictory.SchemaValidator):
                 options = options(x)
             if value not in options:
                 if not (value == '' and schema.get('blank', self.blank_by_default)):
-                        self._errors.append("Not available: {} products for {} scenes. "
-                                            "Please choose from available products: {}"
-                                            .format(value, path.split('.products')[0], options))
+                    msg = ("Not available: {} products for {} scenes. "
+                           "Please choose from available products: {}"
+                           .format(value, path.split('.products')[0], options))
+                    self._errors.append(msg)
 
     def validate_pattern(self, x, fieldname, schema, path, pattern=None):
         '''
@@ -210,8 +216,8 @@ class OrderValidatorV0(validictory.SchemaValidator):
 
             for field in value:
                 if field not in valid_list:
-                    self._error('Unknown key: Allowed keys {}'.format(valid_list),
-                                field, fieldname, path=path)
+                    msg = ('Unknown key {}: Allowed keys {}'.format(field, valid_list))
+                    self._errors.append(msg)
 
     def validate_abs_rng(self, x, fieldname, schema, path, val_range):
         """Validates that the absolute value of a field falls within a given range"""
@@ -219,8 +225,9 @@ class OrderValidatorV0(validictory.SchemaValidator):
 
         if isinstance(value, (int, long, float, Decimal)):
             if not val_range[0] <= abs(value) <= val_range[1]:
-                self._error('Absolute value must fall between {} and {}'.format(val_range[0], val_range[1]),
-                            value, fieldname, path=path)
+                msg = ('Absolute value of {} must fall between {} and {}'
+                       .format(fieldname, val_range[0], val_range[1]))
+                self._errors.append(msg)
 
     def validate_ps_dd_rng(self, x, fieldname, schema, path, val_range):
         """Validates the pixel size given for Decimal Degrees is within a given range"""
@@ -230,8 +237,9 @@ class OrderValidatorV0(validictory.SchemaValidator):
             if 'pixel_size_units' in x:
                 if x['pixel_size_units'] == 'dd':
                     if not val_range[0] <= value <= val_range[1]:
-                        self._error('Value must fall between {} and {}'.format(val_range[0], val_range[1]),
-                                    value, fieldname, path=path)
+                        msg = ('Value of {} must fall between {} and {}'
+                               .format(fieldname, val_range[0], val_range[1]))
+                        self._errors.append(msg)
 
     def validate_ps_meter_rng(self, x, fieldname, schema, path, val_range):
         """Validates the pixel size given for Meters is within a given range"""
@@ -241,8 +249,9 @@ class OrderValidatorV0(validictory.SchemaValidator):
             if 'pixel_size_units' in x:
                 if x['pixel_size_units'] == 'meters':
                     if not val_range[0] <= value <= val_range[1]:
-                        self._error('Value must fall between {} and {}'.format(val_range[0], val_range[1]),
-                                    value, fieldname, path=path)
+                        msg = ('{} value must fall between {} and {}'
+                               .format(fieldname, val_range[0], val_range[1]))
+                        self._errors.append(msg)
 
     def validate_stats(self, x, fieldname, schema, path, stats):
         """
@@ -265,8 +274,9 @@ class OrderValidatorV0(validictory.SchemaValidator):
             return
 
         if not set(stats['products']) & set(x['products']):
-            self._error('You must request valid products for statistics',
-                        stats['products'], fieldname, path=path)
+            msg = ('You must request valid products for statistics: {}'
+                   .format(stats['products']))
+            self._errors.append(msg)
 
     def validate_restricted(self, x, fieldname, schema, path, restricted):
         """Validate that the requested products are available by date or role"""
@@ -339,11 +349,13 @@ class OrderValidatorV0(validictory.SchemaValidator):
                     dif.remove(d)
 
         if dif:
-                for d in dif:
-                    if type(x) == dict:
-                        scene_ids = [s.upper() for s in x['inputs']]
-                        self._errors.append("Requested {} products are not available. Remove {} scenes: {}"
-                                            .format(d, path.split('.products')[0], scene_ids))
+            for d in dif:
+                if type(x) == dict:
+                    scene_ids = [s.upper() for s in x['inputs']]
+                    msg = ("Requested {} products are not available. "
+                           "Remove {} scenes: {}"
+                           .format(d, path.split('.products')[0], scene_ids))
+                    self._errors.append(msg)
 
     def validate_oneormoreobjects(self, x, fieldname, schema, path, key_list):
         """Validates that at least one value is present from the list"""
@@ -354,8 +366,8 @@ class OrderValidatorV0(validictory.SchemaValidator):
                 if key in val:
                     return
 
-            self._error('No requests for products were submitted', None, None, path=path,
-                        exctype=RequiredFieldValidationError)
+            msg = 'No requests for products were submitted'
+            self._errors.append(msg)
 
     def validate_set_ItemCount(self, x, fieldname, schema, path, (key, val)):
         """Sets item count limits for multiple arrays across a potential order"""
@@ -380,8 +392,9 @@ class OrderValidatorV0(validictory.SchemaValidator):
         self._itemcount[key]['count'] += len(vals)
 
         if self._itemcount[key]['count'] > self._itemcount[key]['max']:
-            self._error('Count exceeds size limit of {max} for {key}', None, None,
-                        exctype=DependencyValidationError, max=self._itemcount[key]['max'], key=key)
+            msg = ('Count exceeds size limit of {max} for {key}'
+                   .format(max=self._itemcount[key]['max'], key=key))
+            self._errors.append(msg)
 
 
 class BaseValidationSchema(object):
