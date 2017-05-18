@@ -13,15 +13,16 @@ class SchemaDefinitionResponse(object):
 
 
 class UserResponse(object):
-    def __init__(self, email, first_name, last_name, roles, username):
+    def __init__(self, email, first_name, last_name, roles, username, code=None):
         self.email = email
         self.first_name = first_name
         self.last_name = last_name
         self.roles = roles
         self.username = username
+        self.code = code
 
     def __repr__(self):
-        return repr(self.as_dict())
+        return repr(self.as_json())
 
     @property
     def email(self):
@@ -76,7 +77,22 @@ class UserResponse(object):
             raise TypeError('Username must be a string')
         self._username = value
 
-    def as_dict(self):
+    @property
+    def code(self):
+        return self._code
+
+    @code.setter
+    def code(self, value):
+        valid_codes = (200, 201)
+        if value is not None:
+            if not isinstance(value, int):
+                raise TypeError('HTTP Response Code is always an integer')
+            if value not in valid_codes:
+                raise TypeError('HTTP Response Code must be one of: {}'
+                                .format(valid_codes))
+        self._code = value
+
+    def as_json(self):
         """ Removes the leading underscore used in validation
         :return: str
         """
@@ -90,13 +106,14 @@ class UserResponse(object):
 
 class SceneResponse(object):
     def __init__(self, name, note, status, completion_date, cksum_download_url,
-                 product_dload_url):
+                 product_dload_url, code=None):
         self.name = name
         self.note = note
         self.status = status
         self.completion_date = completion_date
         self.cksum_download_url = cksum_download_url
         self.product_dload_url = product_dload_url
+        self.code = code
 
     def __repr__(self):
         pass
@@ -161,7 +178,22 @@ class SceneResponse(object):
             raise TypeError('Expected String')
         self._product_dload_url = value
 
-    def as_dict(self):
+    @property
+    def code(self):
+        return self._code
+
+    @code.setter
+    def code(self, value):
+        valid_codes = (200, 201)
+        if value is not None:
+            if not isinstance(value, int):
+                raise TypeError('HTTP Response Code is always an integer')
+            if value not in valid_codes:
+                raise TypeError('HTTP Response Code must be one of: {}'
+                                .format(valid_codes))
+        self._code = value
+
+    def as_json(self):
         return {"cksum_download_url": self.cksum_download_url,
                 "completion_date": self.completion_date,
                 "name": self.name,
@@ -170,11 +202,12 @@ class SceneResponse(object):
                 "status": self.status}
 
 
+
 class OrderResponse(object):
     def __init__(self, orderid, status, completion_date, note, order_date,
                  order_source, order_type, priority, product_options,
                  product_opts, products_complete=None, products_error=None,
-                 products_ordered=None):
+                 products_ordered=None, limit=None, code=None):
         self.orderid = orderid
         self.status = status
         self.completion_date = completion_date
@@ -188,9 +221,12 @@ class OrderResponse(object):
         self.products_complete = products_complete
         self.products_error = products_error
         self.products_ordered = products_ordered
+        self.limit = limit
+        self.code = code
 
     def __repr__(self):
-        return repr(self.as_dict())
+        return repr(self.as_json())
+
 
     @property
     def orderid(self):
@@ -218,8 +254,11 @@ class OrderResponse(object):
 
     @completion_date.setter
     def completion_date(self, value):
-        if not isinstance(value, basestring):
-            raise TypeError('Expected String')
+        if isinstance(value, datetime.datetime):
+                value = str(value)
+        if value is not None:
+            if not isinstance(value, basestring):
+                raise TypeError('Expected String')
         self._completion_date = value
 
     @property
@@ -238,6 +277,8 @@ class OrderResponse(object):
 
     @order_date.setter
     def order_date(self, value):
+        if isinstance(value, datetime.datetime):
+                value = str(value)
         if not isinstance(value, basestring):
             raise TypeError('Expected String')
         self._order_date = value
@@ -325,8 +366,36 @@ class OrderResponse(object):
                 raise TypeError('Expected Integer')
         self._products_ordered = value
 
-    def as_dict(self):
-        return {
+    @property
+    def limit(self):
+        return self._limit
+
+    @limit.setter
+    def limit(self, value):
+        if value and not isinstance(value, tuple):
+            raise TypeError('Expected tuple')
+        self._limit = value
+
+    @property
+    def code(self):
+        return self._code
+
+    @code.setter
+    def code(self, value):
+        valid_codes = (200,  # Order fetch
+                       201,  # Order created
+                       202,  # Order updated (cancelled)
+        )
+        if value is not None:
+            if not isinstance(value, int):
+                raise TypeError('HTTP Response Code is always an integer')
+            if value not in valid_codes:
+                raise TypeError('HTTP Response Code must be one of: {}'
+                                .format(valid_codes))
+        self._code = value
+
+    def as_json(self):
+        resp = {
                   "completion_date": self.completion_date,
                   "note": self.note,
                   "order_date": self.order_date,
@@ -338,20 +407,20 @@ class OrderResponse(object):
                   "product_opts": self.product_opts,
                   "status": self.status
                 }
-
-    def order_status(self):
-        """ OrderID and status
-        """
-        return {"orderid": self.orderid,
-                "status": self.status}
+        if self.limit:
+            resp = {k: resp.get(k) for k in self.limit}
+        return resp
 
 
 class OrdersResponse(object):
-    def __init__(self, orders):
+    def __init__(self, orders, limit=None, code=None):
         self.orders = orders
+        self.limit = limit
+        self.code = code
 
     def __repr__(self):
-        return repr(self.list_orders())
+        return repr(self.as_json())
+
 
     @property
     def orders(self):
@@ -361,38 +430,60 @@ class OrdersResponse(object):
     def orders(self, value):
         if not isinstance(value, list):
             raise TypeError('Expected List')
-        if not all([isinstance(i, Order) for i in value]):
-            raise TypeError('Expected List of Orders')
+        if not all([isinstance(i, OrderResponse) for i in value]):
+            value = map(lambda x: OrderResponse(**x.as_dict()), value)
         self._orders = value
 
-    def list_orders(self):
-        """  list of orderids
-        """
-        return {"orders": [o.orderid for o in self.orders]}
+    @property
+    def limit(self):
+        return self._limit
 
-    def list_orders_ext(self):
-        """ list of order details
-        """
-        orders = self.orders
-        resp = list()
-        for o in orders:
-            ext_order = {"order_note": o.note,
-                         "order_status": o.status,
-                         "orderid": o.orderid,
-                         "products_complete": o.products_complete,
-                         "products_error": o.products_error,
-                         "products_ordered": o.products_ordered}
-            resp.append(ext_order)
-        return resp
+    @limit.setter
+    def limit(self, value):
+        if value and not isinstance(value, tuple):
+            raise TypeError('Expected tuple')
+        self._limit = value
+
+    @property
+    def code(self):
+        return self._code
+
+    @code.setter
+    def code(self, value):
+        valid_codes = (200, 201)
+        if value is not None:
+            if not isinstance(value, int):
+                raise TypeError('HTTP Response Code is always an integer')
+            if value not in valid_codes:
+                raise TypeError('HTTP Response Code must be one of: {}'
+                                .format(valid_codes))
+        self._code = value
+
+    def as_json(self):  # TODO: this is usually a list...
+        mapper = lambda x: {"order_note": x.note,
+                            "order_status": x.status,
+                            "orderid": x.orderid}
+        resp = map(mapper, self.orders)
+        # TODO: This is used by list-orders-feed to make an object like
+        #       {orderid: {scenes: [{name, url, status}], orderdate: ""}
+
+        if self.limit:
+            if len(self.limit) > 1:
+                resp = [{k: getattr(r, k) for k in self.limit} for r in resp]
+            else:
+                resp = [getattr(o, self.limit[0]) for o in self.orders]
+        return json.dumps(resp)
 
 
 class MessagesResponse(object):
-    def __init__(self, errors=None, warnings=None):
+    def __init__(self, errors=None, warnings=None, code=None):
         self.errors = errors or list()
         self.warnings = warnings or list()
+        self.code = code
 
     def __repr__(self):
-        return repr(self.as_dict())
+        return repr(self.as_json())
+
 
     @property
     def errors(self):
@@ -420,7 +511,30 @@ class MessagesResponse(object):
                 raise TypeError('Warnings must all be strings')
         self._warnings = value
 
-    def as_dict(self):
+    @property
+    def code(self):
+        return self._code
+
+    @code.setter
+    def code(self, value):
+        valid_codes = (200,  # Warnings
+                       400,  # Bad JSON supplied
+                       401,  # Auth Failed
+                       403,  # Forbidden (Blacklist)
+                       404,  # URL Not found
+                       405,  # Bad HTTP Method
+                       500,  # Uncaught Error
+                       503   # Service Unavailable (probably handled by proxy)
+        )
+        if value is not None:
+            if not isinstance(value, int):
+                raise TypeError('HTTP Response Code is always an integer')
+            if value not in valid_codes:
+                raise TypeError('HTTP Response Code must be one of: {}'
+                                .format(valid_codes))
+        self._code = value
+
+    def as_json(self):
         """ Ensure that errors always supersede warnings (strip hidden)
         :return: str
         """
