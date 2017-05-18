@@ -7,6 +7,7 @@ from flask.ext.restful import Api, Resource, reqparse, fields, marshal
 
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.util import api_cfg
+from api.system.logger import ilogger as logger
 
 from http_user import Index, VersionInfo, AvailableProducts, ValidationInfo,\
     ListOrders, Ordering, UserInfo, ItemStatus, BacklogStats, PublicSystemStatus
