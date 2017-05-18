@@ -1,6 +1,10 @@
 """
     Purpose: Force consistent JSON response objects
 """
+import json
+import datetime
+
+from flask import make_response, jsonify
 
 
 class SchemaDefinitionResponse(object):
@@ -23,6 +27,11 @@ class UserResponse(object):
 
     def __repr__(self):
         return repr(self.as_json())
+
+    def __call__(self):
+        if self.code is None:
+            raise ValueError('UserResponse must set response_code')
+        return make_response(jsonify(self.as_json()), self.code)
 
     @property
     def email(self):
@@ -117,6 +126,11 @@ class SceneResponse(object):
 
     def __repr__(self):
         pass
+
+    def __call__(self):
+        if self.code is None:
+            raise ValueError('SceneResponse must set response_code')
+        return make_response(jsonify(self.as_json()), self.code)
 
     @property
     def name(self):
@@ -227,6 +241,10 @@ class OrderResponse(object):
     def __repr__(self):
         return repr(self.as_json())
 
+    def __call__(self):
+        if self.code is None:
+            raise ValueError('OrderResponse must set response_code')
+        return make_response(jsonify(self.as_json()), self.code)
 
     @property
     def orderid(self):
@@ -421,6 +439,10 @@ class OrdersResponse(object):
     def __repr__(self):
         return repr(self.as_json())
 
+    def __call__(self):
+        if self.code is None:
+            raise ValueError('OrdersResponse must set response_code')
+        return make_response(jsonify(self.as_json()), self.code)
 
     @property
     def orders(self):
@@ -484,6 +506,13 @@ class MessagesResponse(object):
     def __repr__(self):
         return repr(self.as_json())
 
+    def __call__(self):
+        if self.code is None:
+            if len(self.errors):
+                self.code = 500
+            elif len(self.warnings):
+                self.code = 200
+        return make_response(jsonify(self.as_json()), self.code)
 
     @property
     def errors(self):
