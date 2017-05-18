@@ -1,4 +1,5 @@
 # Contains user facing REST functionality
+import traceback
 
 import flask
 import memcache
@@ -9,9 +10,11 @@ from api.system.logger import ilogger as logger
 from api.util import api_cfg
 from api.util import lowercase_all
 from api.domain.user import User, UserException
-from api.external.ers import ERSApiErrorException, ERSApiConnectionException, ERSApiAuthFailedException
+from api.external.ers import (
+    ERSApiErrorException, ERSApiConnectionException, ERSApiAuthFailedException)
 from api.transports.http_json import (
     MessagesResponse, UserResponse, OrderResponse, OrdersResponse)
+from api import ValidationException, InventoryException
 
 from flask import jsonify
 from flask import make_response
