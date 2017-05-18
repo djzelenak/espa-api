@@ -220,17 +220,6 @@ class TestValidation(unittest.TestCase):
                                   '\nUsing test: {}'.format(exc_type, str(exc), test))
         #print c  # For initial debugging
 
-    def test_validate_allow_human_readable(self):
-        """
-        Assert that adding response-readable to the JSON request is accepted
-        """
-        valid_order = copy.deepcopy(self.base_order)
-        valid_order['response-readable'] = True
-        try:
-            good = api.validation.validate(valid_order, self.staffuser.username)
-        except ValidationException as e:
-            self.fail('Raised ValidationException: {}'.format(e.message))
-
     def test_validate_sr_restricted_human_readable(self):
         """
         Assert that a human readable response is returned for unavailable or date restricted products
@@ -249,7 +238,6 @@ class TestValidation(unittest.TestCase):
             invalid_order = copy.deepcopy(self.base_order)
             invalid_order[stype]['inputs'] = invalid_list[stype]['inputs']
             invalid_order[stype]['products'] = invalid_list[stype]['products']
-            invalid_order['response-readable'] = True
             uppercase_products = map(str.upper, invalid_order[stype]['inputs'])
             for p in invalid_order[stype]['products']:
                 err_message = invalid_list[stype]['err_msg'].format(p, stype, uppercase_products)

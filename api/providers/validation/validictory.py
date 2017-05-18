@@ -498,7 +498,6 @@ class BaseValidationSchema(object):
                                                 'properties': resize},
                                      'resampling_method': {'type': 'string',
                                                            'enum': resampling_methods},
-                                     'response-readable': {'type': 'boolean'},
                                      'plot_statistics': {'type': 'boolean'},
                                      'note': {'type': 'string',
                                               'required': False,
@@ -578,8 +577,6 @@ class ValidationProvider(ValidationInterfaceV0):
         stats = False
         if 'plot_statistics' in order and order['plot_statistics']:
             stats = True
-
-        _ = order.pop('response-readable', None)
 
         for key in order:
             if key in prod_keys:
