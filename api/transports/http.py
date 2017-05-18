@@ -29,6 +29,15 @@ def page_not_found(e):
                               code=404)
     return errors
 
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    logger.debug('Internal Server Error: {}'.format(e))
+    errors = MessagesResponse(errors=["System experienced an exception. "
+                                      "Admins have been notified"],
+                              code=500)
+    return errors
+
 transport_api = Api(app)
 
 # USER facing functionality
