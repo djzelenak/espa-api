@@ -9,7 +9,7 @@ from api.providers.configuration.configuration_provider import ConfigurationProv
 from api.util import api_cfg
 
 from http_user import Index, VersionInfo, AvailableProducts, ValidationInfo,\
-    ListOrders, Ordering, UserInfo, ItemStatus
+    ListOrders, Ordering, UserInfo, ItemStatus, BacklogStats, PublicSystemStatus
 
 from http_production import ProductionVersion, ProductionConfiguration, ProductionOperations, ProductionManagement
 
@@ -73,6 +73,12 @@ transport_api.add_resource(UserInfo,
 transport_api.add_resource(ItemStatus,
                            '/api/v<version>/item-status/<orderid>',
                            '/api/v<version>/item-status/<orderid>/<itemnum>')
+
+transport_api.add_resource(BacklogStats,
+                           '/api/v<version>/info/backlog')
+
+transport_api.add_resource(PublicSystemStatus,
+                           '/api/v<version>/info/status')
 
 transport_api.add_resource(Reports,
                            '/api/v<version>/reports/',

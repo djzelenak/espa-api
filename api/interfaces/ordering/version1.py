@@ -239,4 +239,16 @@ class API(object):
             logger.debug("ERR version1 get_system_status. traceback {0}".format(traceback.format_exc()))
             response = default_error_message
 
+    def get_backlog(self, user=None):
+        """
+        retrive the global backlog scene count
+        :return: str
+        """
+        try:
+            # TODO: Allow getting user-specific backlog?
+            response = self.reporting.get_stat('stat_backlog_depth')
+        except:
+            logger.debug("ERR version1 get_backlog, traceback: {0}"
+                         .format(traceback.format_exc()))
+            raise
         return response

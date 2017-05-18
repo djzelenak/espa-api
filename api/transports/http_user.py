@@ -293,3 +293,19 @@ class ItemStatus(Resource):
     def get(version, orderid, itemnum='ALL'):
         user = flask.g.user
         return espa.item_status(orderid, itemnum, user.username)
+
+
+class BacklogStats(Resource):
+    decorators = [auth.login_required, greylist, version_filter]
+
+    @staticmethod
+    def get(version):
+        return espa.get_backlog()
+
+
+class PublicSystemStatus(Resource):
+    decorators = [auth.login_required, greylist, version_filter]
+
+    @staticmethod
+    def get(version):
+        return espa.get_system_status()
