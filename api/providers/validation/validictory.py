@@ -183,13 +183,9 @@ class OrderValidatorV0(validictory.SchemaValidator):
                 options = options(x)
             if value not in options:
                 if not (value == '' and schema.get('blank', self.blank_by_default)):
-                    if 'response-readable' in self.data_source:
                         self._errors.append("Not available: {} products for {} scenes. "
                                             "Please choose from available products: {}"
                                             .format(value, path.split('.products')[0], options))
-                    else:
-                        self._error("is not in the enumeration: {options!r}", value, fieldname,
-                                    options=options, path=path)
 
     def validate_pattern(self, x, fieldname, schema, path, pattern=None):
         '''
@@ -199,12 +195,8 @@ class OrderValidatorV0(validictory.SchemaValidator):
         if (isinstance(value, basestring) and
             (isinstance(pattern, basestring) and not re.match(pattern, value)
              or not isinstance(pattern, basestring) and not pattern.match(value))):
-            if 'response-readable' in self.data_source:
                 self._errors.append("Remove unrecognized input ID: {} ({} must match regex {})"
                                     .format(value.upper(), path.split('.inputs')[0], pattern))
-            else:
-                self._error("does not match regular expression '{pattern}'", value, fieldname,
-                            pattern=pattern, path=path)
 
 
     def validate_enum_keys(self, x, fieldname, schema, path, valid_list):
@@ -347,15 +339,11 @@ class OrderValidatorV0(validictory.SchemaValidator):
                     dif.remove(d)
 
         if dif:
-            if 'response-readable' in self.data_source:
                 for d in dif:
                     if type(x) == dict:
                         scene_ids = [s.upper() for s in x['inputs']]
                         self._errors.append("Requested {} products are not available. Remove {} scenes: {}"
                                             .format(d, path.split('.products')[0], scene_ids))
-            else:
-                self._error('Requested products are not available',
-                            dif, fieldname, path=path)
 
     def validate_oneormoreobjects(self, x, fieldname, schema, path, key_list):
         """Validates that at least one value is present from the list"""
