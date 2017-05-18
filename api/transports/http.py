@@ -50,6 +50,10 @@ transport_api.add_resource(VersionInfo,
                            '/api/v<version>',
                            '/api/v<version>/')
 
+transport_api.add_resource(UserInfo,
+                           '/api/v<version>/user',
+                           '/api/v<version>/user/')
+
 transport_api.add_resource(AvailableProducts,
                            '/api/v<version>/available-products/<prod_id>',
                            '/api/v<version>/available-products',
@@ -72,10 +76,6 @@ transport_api.add_resource(Ordering,
                            '/api/v<version>/order/',
                            '/api/v<version>/order/<ordernum>',
                            '/api/v<version>/order-status/<ordernum>')
-
-transport_api.add_resource(UserInfo,
-                           '/api/v<version>/user',
-                           '/api/v<version>/user/')
 
 transport_api.add_resource(ItemStatus,
                            '/api/v<version>/item-status/<orderid>',
