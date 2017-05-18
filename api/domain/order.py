@@ -82,7 +82,21 @@ class Order(object):
                     self.id = None
 
     def __repr__(self):
-        return 'Order: {}'.format(self.__dict__)
+        return 'Order: {}'.format(self.as_dict())
+
+    def as_dict(self):
+        return {
+                  "completion_date": self.completion_date,
+                  "note": self.note,
+                  "order_date": self.order_date,
+                  "order_source": self.order_source,
+                  "order_type": self.order_type,
+                  "orderid": self.orderid,
+                  "priority": self.priority,
+                  "product_options": self.product_options,
+                  "product_opts": self.product_opts,
+                  "status": self.status
+                }
 
     @classmethod
     def create(cls, params):
