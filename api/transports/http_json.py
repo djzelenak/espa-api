@@ -521,8 +521,8 @@ class MessagesResponse(object):
         if not isinstance(value, list):
             raise TypeError('Errors is always a list')
         if len(value):
-            if not all(isinstance(v, basestring) for v in value):
-                raise TypeError('Errors must all be strings')
+            if not all(isinstance(v, (basestring, dict)) for v in value):
+                raise TypeError('Errors must all be strings or dictionaries')
         self._errors = value
 
     @property
