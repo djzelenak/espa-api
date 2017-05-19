@@ -22,6 +22,7 @@ class API(object):
         self.inventory = self.providers.inventory
         self.validation = self.providers.validation
         self.metrics = self.providers.metrics
+        self.reporting = self.providers.reporting
 
     @staticmethod
     def api_versions():
