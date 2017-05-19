@@ -87,15 +87,14 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         :param log_file_contents: log file contents from processing
         :return: True
         """
+        order_status = Scene.get('ordering_order.status', name, orderid)
 
         order_id = Scene.get('order_id', name, orderid)
         order_source = Scene.get('order_source', name, orderid)
         base_url = config.url_for('distribution.cache')
 
-        product_file_parts = completed_file_location.split('/')
-        product_file = product_file_parts[len(product_file_parts) - 1]
-        cksum_file_parts = destination_cksum_file.split('/')
-        cksum_file = cksum_file_parts[len(cksum_file_parts) - 1]
+        product_file = os.path.basename(completed_file_location)
+        cksum_file = os.path.basename(destination_cksum_file)
 
         product_dload_url = ('{}/orders/{}/{}'
                              .format(base_url, orderid, product_file))
@@ -103,6 +102,18 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                               .format(base_url, orderid, cksum_file))
 
         scene = Scene.by_name_orderid(name, order_id)
+
+        if order_status == 'cancelled':
+            if os.path.exists(completed_file_location):
+                scene.download_size = os.path.getsize(completed_file_location)
+                onlinecache.delete(orderid, filename=product_file)
+                onlinecache.delete(orderid, filename=cksum_file)
+            else:
+                logger.debug('ERR file was not found: {}'
+                             .format(completed_file_location))
+            scene.cancel()
+            return True  # TODO: proc False?
+
         scene.status = 'complete'
         scene.processing_location = processing_loc
         scene.product_distro_location = completed_file_location
@@ -227,6 +238,9 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         """
         order = Order.find(orderid)
         scene = Scene.by_name_orderid(name, order.id)
+        if order.status == 'cancelled':
+            scene.cancel()
+            return True  # TODO: proc False?
         if processing_loc:
             scene.processing_location = processing_loc
         if status:

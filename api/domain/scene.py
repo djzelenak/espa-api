@@ -419,4 +419,21 @@ class Scene(object):
                                  .format(e.message))
 
         return ret
-
+    
+    def cancel(self):
+        """
+        Performs consistent cancellation from various providers
+        
+        :return: bool
+        """
+        self.status = 'cancelled'
+        self.note = 'Cancelled by user'
+        self.log_file_contents = ''
+        self.product_distro_location = ''
+        self.product_dload_url = ''
+        self.cksum_distro_location = ''
+        self.cksum_download_url = ''
+        self.job_name = ''
+        # download_size is left as an indication it was already completed
+        self.save()
+        return True

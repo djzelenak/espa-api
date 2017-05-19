@@ -201,16 +201,7 @@ class OrderingProvider(ProviderInterfaceV0):
                                  'error', 'unavailable', 'complete')
         scenes = order.scenes(sql_dict={'status': killable_scene_states})
         for product in scenes:
-            product.status = 'cancelled'
-            product.note = 'Cancelled by user'
-            product.log_file_contents = ''
-            product.product_distro_location = ''
-            product.product_dload_url = ''
-            product.cksum_distro_location = ''
-            product.cksum_download_url = ''
-            product.job_name = ''
-            # download_size is an indication it was already completed
-            product.save()
+            product.cancel()
             if product.ee_unit_id:
                 lta.update_order_status(order.ee_order_id,
                                         product.ee_unit_id, 'R')
