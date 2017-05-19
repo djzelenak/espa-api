@@ -34,6 +34,11 @@ class ProviderInterfaceV0(object):
         return
 
     @abc.abstractmethod
+    def cancel_order(self, orderid, request_ip_address):
+        """Kill an order in progress"""
+        return
+
+    @abc.abstractmethod
     def item_status(self, orderid, itemid):
         """Return order item processing status"""
         return

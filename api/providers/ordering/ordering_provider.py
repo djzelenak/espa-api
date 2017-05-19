@@ -9,6 +9,10 @@ from api.util import julian_date_check
 from api.providers.ordering import ProviderInterfaceV0
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.providers.caching.caching_provider import CachingProvider
+# ----------------------------------------------------------------------------------
+from api.external import lta, onlinecache  # TODO: is this the best place for these?
+from api.notification import emails        # TODO: is this the best place for these?
+from api.system.logger import ilogger as logger  # TODO: is this the best place for these?
 
 import copy
 import yaml
@@ -247,6 +251,49 @@ class OrderingProvider(ProviderInterfaceV0):
                     response[i] = db[0][i]
             else:
                 response['msg'] = 'sorry, no orders matched orderid %s' % orderid
+
+    def cancel_order(self, orderid, request_ip_address):
+        """
+        Cancels an order, and all scenes contained within it
+
+        :return:
+        """
+        order = Order.where({'id': orderid})
+        if len(order) != 1:
+            raise OrderingProviderException('Order not found')
+
+        logger.info('Received request to cancel {} from {}'
+                    .format(orderid, request_ip_address))
+        # TODO: ADD "queued" to list, when proc can handle exception
+        killable_scene_states = ('submitted', 'oncache', 'onorder',
+                                 'error', 'unavailable', 'complete')
+        scenes = order.scenes(sql_dict={'status': killable_scene_states})
+        for product in scenes:
+            product.status = 'cancelled'
+            product.note = 'Cancelled by user'
+            product.log_file_contents = ''
+            product.product_distro_location = ''
+            product.product_dload_url = ''
+            product.cksum_distro_location = ''
+            product.cksum_download_url = ''
+            product.job_name = ''
+            # download_size is an indication it was already completed
+            product.save()
+            if product.ee_unit_id:
+                lta.update_order_status(order.ee_order_id,
+                                        product.ee_unit_id, 'R')
+        order.status = 'cancelled'
+        onlinecache.delete(order.orderid)
+        emails.Emails().send_order_cancelled_email(orderid, request_ip_address)
+        order.completion_email_sent = datetime.datetime.now()
+        order.save()
+        logger.info('Request to cancel {} from {} successful.'
+                    .format(orderid, request_ip_address))
+        scenes = order.scenes(sql_dict={'status !=': 'cancelled'})
+        if len(scenes):
+            logger.info('Scenes missing cancellation: {}'
+                        .format([(s.name, s.status) for s in scenes]))
+        return Order.find(orderid).pop()
 
         return response
 
