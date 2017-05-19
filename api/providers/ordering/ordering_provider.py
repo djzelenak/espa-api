@@ -145,32 +145,11 @@ class OrderingProvider(ProviderInterfaceV0):
         return resp
 
     def fetch_order(self, ordernum):
-        sql = "select * from ordering_order where orderid = %s;"
-        out_dict = {}
-        opts_dict = {}
-        scrub_keys = ['initial_email_sent', 'completion_email_sent', 'id', 'user_id',
-                      'ee_order_id', 'email']
-
-        with db_instance() as db:
-            db.select(sql, (str(ordernum)))
-            if db:
-                for key, val in db[0].iteritems():
-                    if isinstance(val, datetime.datetime):
-                        out_dict[key] = val.isoformat()
-                    else:
-                        out_dict[key] = val
-                opts_str = db[0]['product_options']
-                opts_str = opts_str.replace("\n", "")
-                opts_dict = yaml.load(opts_str)
-                out_dict['product_options'] = opts_dict
-            else:
-                out_dict['msg'] = "sorry, no order matched that orderid"
-
-        for k in scrub_keys:
-            if k in out_dict.keys():
-                out_dict.pop(k)
-
-        return out_dict
+        orders = Order.where({'orderid': ordernum})
+        if len(orders) == 1:
+            return orders.pop()
+        else:
+            return {}
 
     def place_order(self, new_order, user):
         """
@@ -196,18 +175,12 @@ class OrderingProvider(ProviderInterfaceV0):
                       'product_options': ''}
 
         result = Order.create(order_dict)
-        return result.orderid
+        return result
 
     def order_status(self, orderid):
-        sql = "select orderid, status from ordering_order where orderid = %s;"
-        response = {}
-        with db_instance() as db:
-            db.select(sql, str(orderid))
-            if db:
-                for i in ['orderid', 'status']:
-                    response[i] = db[0][i]
-            else:
-                response['msg'] = 'sorry, no orders matched orderid %s' % orderid
+        resp = Order.where({'orderid': orderid})
+        if len(resp) == 1:
+            return resp[0]
 
     def cancel_order(self, orderid, request_ip_address):
         """
@@ -254,7 +227,6 @@ class OrderingProvider(ProviderInterfaceV0):
                         .format([(s.name, s.status) for s in scenes]))
         return Order.find(orderid)
 
-        return response
 
     def item_status(self, orderid, itemid='ALL', username=None):
         response = {}

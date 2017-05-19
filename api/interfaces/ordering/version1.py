@@ -113,12 +113,13 @@ class API(object):
             ordernum (str): the order id of a submitted order
 
         Returns:
-            dict: of order details
+            Order: The requested order
         """
         try:
             response = self.ordering.fetch_order(ordernum)
         except:
-            logger.debug("ERR version1 fetch_order arg: {0}\nexception {1}".format(ordernum, traceback.format_exc()))
+            logger.debug("ERR version1 fetch_order arg: {0}\n"
+                         "exception {1}".format(ordernum, traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -130,7 +131,7 @@ class API(object):
             :keyword order (api.domain.order.Order): The order to be entered into the system
 
         Returns:
-            str: The generated order id
+            Order: The generated order
 
         Raises:
             api.api_exceptions.ValidationException: Error occurred validating params
