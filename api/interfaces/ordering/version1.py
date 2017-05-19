@@ -252,3 +252,18 @@ class API(object):
                          .format(traceback.format_exc()))
             raise
         return response
+
+    def cancel_order(self, orderid, request_address):
+        """
+
+        :param orderid: Primary Key for Order
+        :param request_address: Remote IP Address
+        :return:
+        """
+        try:
+            response = self.ordering.cancel_order(orderid, request_address)
+        except:
+            logger.debug("ERR version1 cancel_order, traceback: {0}"
+                         .format(traceback.format_exc()))
+            raise
+        return response
