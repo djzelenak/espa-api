@@ -121,71 +121,28 @@ class OrderingProvider(ProviderInterfaceV0):
 
         return pub_prods
 
-    def fetch_user_orders(self, uid, filters=None):
-        # deal with unicode uid
-        if isinstance(uid, basestring):
-            uid = str(uid)
-
-        try:
-            user = User.where({'username': uid}).pop()
-        except IndexError:
-            try:
-                user = User.where({'email': uid}).pop()
-            except IndexError:
-                return {'msg': 'sorry, no user matched {0}'.format(uid)}
+    def fetch_user_orders(self, username='', email='', filters=None):
 
         if filters and not isinstance(filters, dict):
-            raise OrderingProviderException('filters param must be of type dict')
-        elif filters:
+            raise OrderingProviderException('filters must be dict')
+
+        if username:
+            user = User.where({'username': username})
+        elif email:
+            user = User.where({'email': email})
+        if len(user) != 1:
+            return list()
+        else:
+            user = user.pop()
+
+        if filters:
             params = dict(filters)
             params.update({'user_id': user.id})
         else:
             params = {'user_id': user.id}
 
-        return {'orders': [o.orderid for o in Order.where(params)]}
-
-    def fetch_user_orders_ext(self, uid, filters={}):
-        orders = self.fetch_user_orders(uid, filters=filters)
-        if 'orders' not in orders.keys():
-            return orders
-        orders_d = orders['orders']
-        output = []
-        for orderid in orders_d:
-            order = Order.find(orderid)
-            products_complete = order.scene_status_count('complete')
-            products_error = order.scene_status_count('error')
-            products_ordered = order.scene_status_count()
-
-            out_d = {'orderid': orderid, 'products_ordered': products_ordered,
-                     'products_complete': products_complete,
-                     'products_error': products_error,
-                     'order_status': order.status, 'order_note': order.note}
-            output.append(out_d)
-        return output
-
-    def fetch_user_orders_feed(self, email):
-        orders = self.fetch_user_orders(email)
-        if 'orders' not in orders.keys():
-            return orders
-
-        cache_key = "{0}_feed".format(email)
-        outd = cache.get(cache_key) or {}
-
-        if not outd:
-            for orderid in orders['orders']:
-                order = Order.find(orderid)
-                scenes = order.scenes({"status": "complete"})
-                if scenes:
-                    outd[order.orderid] = {'orderdate': str(order.order_date)}
-                    scene_list = []
-                    for scene in scenes:
-                        scene_list.append({'name': scene.name,
-                                           'url': scene.product_dload_url,
-                                           'status': scene.status})
-                    outd[order.orderid]['scenes'] = scene_list
-            cache.set(cache_key, outd)
-
-        return outd
+        resp = Order.where(params)
+        return resp
 
     def fetch_order(self, ordernum):
         sql = "select * from ordering_order where orderid = %s;"

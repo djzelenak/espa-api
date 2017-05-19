@@ -85,52 +85,24 @@ class API(object):
 
         return response
 
-    def fetch_user_orders(self, user_id, filters={}):
+    def fetch_user_orders(self, username='', email='', filters={}):
         """ Return orders given a user id
 
         Args:
             user_id (str): The email or username for the user who placed the order.
 
         Returns:
-            dict: of orders with list of order ids
+            list: of orders with list of order ids
         """
         try:
-            response = self.ordering.fetch_user_orders(user_id, filters=filters)
+            response = self.ordering.fetch_user_orders(email=email,
+                                                       username=username,
+                                                       filters=filters)
         except:
-            logger.debug("ERR version1 fetch_user_orders arg: {0}\nexception {1}".format(user_id, traceback.format_exc()))
             response = default_error_message
-
-        return response
-
-    def fetch_user_orders_ext(self, user_id, filters={}):
-        """ Return orders and product details given a user id
-
-        Args:
-            user_id (str): The email or username for the user who placed the order.
-
-        Returns:
-            list: of dictionaries with keys for orders and product details
-        """
-        try:
-            response = self.ordering.fetch_user_orders_ext(user_id, filters=filters)
-        except:
-            logger.debug("ERR version1 fetch_user_orders arg: {0}\nexception {1}".format(user_id, traceback.format_exc()))
-            response = default_error_message
-
-        return response
-
-    def fetch_user_orders_feed(self, email):
-        """
-        returns order and scene details for a user formatted
-        for an rss feed
-        :param email:
-        :return: dict
-        """
-        try:
-            response = self.ordering.fetch_user_orders_feed(email)
-        except:
-            logger.debug("ERR version1 fetch_user_orders_feed email: {0}\nexception: {1}".format(email, traceback.format_exc()))
-            response = default_error_message
+            logger.debug("ERR version1 fetch_user_orders arg: {0}\n"
+                         "exception {1}".format(username or email,
+                                                traceback.format_exc()))
 
         return response
 
