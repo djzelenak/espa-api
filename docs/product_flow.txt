@@ -1,0 +1,66 @@
+===============================================================================
+Product status flow (once a product has cleared initial validation on submit):
+===============================================================================
+Available product flow:
+    submitted -> oncache -> queued -> processing -> complete
+
+Need to order product flow:
+    submitted -> onorder -> oncache -> queued -> processing -> complete
+
+Not found in inventory flow:
+    submitted -> unavailable
+
+Error during processing flow no retry:
+    submitted -> oncache -> queued -> processing -> error
+
+Error during processing flow with retry:
+    submitted -> oncache -> queued -> processing -> error -> retry -> submitted
+
+Error during processing, non processable:
+    submitted -> oncache -> queued -> processing -> error -> unavailable
+
+===============================================================================
+Product status determination
+===============================================================================
+    Initial state == 'submitted'
+
+    'submitted' status:
+        if product exists in inventory and on cache:
+            New status: 'oncache'
+        elif product exists in inventory and not on cache:
+            New status: 'onorder'
+        elif product does not exist in inventory:
+            New status: 'unavailable'
+
+    'onorder' status:
+        if product now exists on cache:
+            New status: 'oncache'    
+    
+    'oncache' status:
+        Get products to process
+            New status: 'queued'
+    
+    'queued' status:
+        start processing product
+            New status: 'processing'
+        
+    'processing' status:
+        if processing went ok:
+            New status: 'complete'
+        elif processing didn't go ok:
+            New status(es): 'error' if not automatically recoverable
+                            'retry' if automatically recoverable 
+                            'unavailable' if not recoverable at all
+
+     'retry' status:
+         if retry timeout expired:
+             New status: 'submitted'
+
+     'error' status:
+         if manual intervention can fix:
+             New status: 'submitted'
+         elif cannot process at all:
+             New status: 'unavailable'
+
+                
+
