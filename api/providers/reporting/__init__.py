@@ -279,7 +279,7 @@ STATS = {
         'query': r'''SELECT COUNT(*) "statistic"
                      FROM ordering_scene
                      WHERE status
-                     NOT IN ('purged', 'complete', 'unavailable')'''
+                     NOT IN ('purged', 'complete', 'unavailable', 'cancelled')'''
     },
     'stat_products_complete_24_hrs': {
         'display_name': 'Products Complete 24hrs',
