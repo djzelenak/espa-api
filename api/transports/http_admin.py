@@ -177,10 +177,10 @@ class SystemStatus(Resource):
         data = request.get_json(force=True)
         try:
             response = espa.update_system_status(data)
-            if response == default_error_message:
+            if response is not True:
                 resp = MessagesResponse(errors=['internal server error'],
                                         code=500)
-            elif isinstance(response, dict) and response.keys() == ['messages']:
+            elif isinstance(response, dict) and response.keys() == ['msg']:
                 resp = MessagesResponse(errors=response['msg'],
                                         code=400)
             else:
