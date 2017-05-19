@@ -173,6 +173,46 @@ class Emails(object):
 
         return self.__send(recipient=email, subject=subject, body=body)
 
+    def send_order_cancelled_email(self, order_id, requester_ip):
+        if isinstance(order_id, Order):
+            order = order_id
+        else:
+            order = Order.find(order_id)
+
+        if not isinstance(order, Order):
+            msg = 'order must be str of orderid, int of pk or instance of Order'
+            raise TypeError(msg)
+
+        email = order.user_email()
+        orderid = str(order.orderid).strip()
+        n_scenes_cancelled = len(order.scenes({'status': 'cancelled'}))
+        n_scenes_running = len(order.scenes()) - n_scenes_cancelled
+
+        email_template = (
+            "Your order {orderid} has been cancelled.\n"
+            "The request originated from I.P. Address {ip_address}\n\n"
+            "A total of {n_scenes} scenes have been stopped.\n"
+            "{running_message}\n\n\n\n"
+            "Please contact Customer Services at 1-800-252-4547 or "
+            "email custserv@usgs.gov with any questions.\n\n"
+            "This is an automated email.\n\n"
+            "-------------------------------------------\n\n"
+            "{contact_footer}"
+        )
+        running_message = ('({n} scenes could not be immediately halted, but '
+                           'will finish in a cancelled state)'
+                           .format(n=n_scenes_running)
+                           if n_scenes_running else '')
+        information = dict(n_scenes=n_scenes_cancelled,
+                           running_message=running_message,
+                           ip_address=requester_ip,
+                           contact_footer=contact_footer,
+                           orderid=orderid)
+        email_msg = email_template.format(**information)
+        subject = ('USGS ESPA Processing order {orderid} cancelled'
+                   .format(orderid=orderid))
+
+        return self.__send(recipient=email, subject=subject, body=email_msg)
 
     def send_purge_report(self, start_capacity, end_capacity, orders):
         buffer = StringIO()
