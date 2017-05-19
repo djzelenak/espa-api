@@ -307,6 +307,7 @@ class Ordering(Resource):
                                    code=400)
         update = request.get_json()
         try:
+            assert(user.is_staff())  # TODO: plan to be public facing
             order = espa.fetch_order(update.get('orderid'))
             assert(order.user_id == user.id)
             order = espa.cancel_order(order.id, remote_addr)
