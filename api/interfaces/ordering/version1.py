@@ -205,6 +205,7 @@ class API(object):
         except:
             logger.debug("ERR version1 get_system_status. traceback {0}".format(traceback.format_exc()))
             response = default_error_message
+        return response
 
     def get_backlog(self, user=None):
         """
