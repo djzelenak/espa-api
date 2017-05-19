@@ -161,8 +161,8 @@ def exists(orderid):
     return OnlineCache().exists(orderid)
 
 
-def delete(orderid):
-    return OnlineCache().delete(orderid)
+def delete(orderid, filename=None):
+    return OnlineCache().delete(orderid, filename)
 
 
 def capacity():
