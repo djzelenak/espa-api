@@ -309,13 +309,19 @@ class Ordering(Resource):
         try:
             order = espa.fetch_order(update.get('orderid'))
             assert(order.user_id == user.id)
+            order = espa.cancel_order(order.id, remote_addr)
+            assert(order.status == 'cancelled')
             message = OrderResponse(**order.as_dict())
             message.limit = ('orderid', 'status')
             message.code = 202
         except BadRequest as e:
             pass
         except Exception as e:
-            pass
+            logger.debug("ERR cancelling order. user: {0}\n error: {1}"
+                         .format(user.username, e))
+            msg = ("System experienced an exception. "
+                   "Admins have been notified")
+            message = MessagesResponse(errors=[msg], code=500)
 
         return message()
 
