@@ -261,6 +261,8 @@ class OrderingProvider(ProviderInterfaceV0):
         order = Order.where({'id': orderid})
         if len(order) != 1:
             raise OrderingProviderException('Order not found')
+        else:
+            order = order.pop()
 
         logger.info('Received request to cancel {} from {}'
                     .format(orderid, request_ip_address))
@@ -293,7 +295,7 @@ class OrderingProvider(ProviderInterfaceV0):
         if len(scenes):
             logger.info('Scenes missing cancellation: {}'
                         .format([(s.name, s.status) for s in scenes]))
-        return Order.find(orderid).pop()
+        return Order.find(orderid)
 
         return response
 
