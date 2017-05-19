@@ -23,6 +23,22 @@ auth = HTTPBasicAuth()
 cache = memcache.Client(['127.0.0.1:11211'], debug=0)
 
 
+def user_ip_address():
+    """
+    Try to get the User's originating IP address, across proxies
+
+    :return: string
+    """
+    is_web_redirect = ('X-Forwarded-For' in request.headers
+                       and request.remote_addr == '127.0.0.1')
+    if is_web_redirect:
+        remote_addr =  request.headers.getlist('X-Forwarded-For'
+                                               )[0].rpartition(' ')[-1]
+    else:
+        remote_addr = request.remote_addr or 'untrackable'
+    return remote_addr
+
+
 def whitelist(func):
     """
     Provide a decorator to enact a white filter on an endpoint
@@ -33,12 +49,7 @@ def whitelist(func):
     def decorated(*args, **kwargs):
         white_ls = espa.get_admin_whitelist()
         denied_response = MessagesResponse(errors=['Access Denied'], code=403)
-        is_web_redirect = ('X-Forwarded-For' in request.headers
-                           and request.remote_addr == '127.0.0.1')
-        if is_web_redirect:
-            remote_addr = request.headers.getlist('X-Forwarded-For')[0].rpartition(' ')[-1]
-        else:
-            remote_addr = request.remote_addr or 'untrackable'
+        remote_addr = user_ip_address()
 
         if ((remote_addr in white_ls or request.remote_addr in white_ls)
                 and remote_addr != 'untrackable'):
@@ -56,12 +67,7 @@ def stats_whitelist(func):
     def decorated(*args, **kwargs):
         white_ls = espa.get_stat_whitelist()
         denied_response = MessagesResponse(errors=['Access Denied'], code=403)
-        is_web_redirect = ('X-Forwarded-For' in request.headers
-                           and request.remote_addr == '127.0.0.1')
-        if is_web_redirect:
-            remote_addr = request.headers.getlist('X-Forwarded-For')[0].rpartition(' ')[-1]
-        else:
-            remote_addr = request.remote_addr or 'untrackable'
+        remote_addr = user_ip_address()
 
         if ((remote_addr in white_ls or request.remote_addr in white_ls)
                 and remote_addr != 'untrackable'):

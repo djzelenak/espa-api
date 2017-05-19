@@ -30,6 +30,21 @@ espa = APIv1()
 auth = HTTPBasicAuth()
 cache = memcache.Client(['127.0.0.1:11211'], debug=0)
 
+def user_ip_address():
+    """
+    Try to get the User's originating IP address, across proxies
+
+    :return: string
+    """
+    is_web_redirect = ('X-Forwarded-For' in request.headers
+                       and request.remote_addr == '127.0.0.1')
+    if is_web_redirect:
+        remote_addr =  request.headers.getlist('X-Forwarded-For'
+                                               )[0].rpartition(' ')[-1]
+    else:
+        remote_addr = request.remote_addr or 'untrackable'
+    return remote_addr
+
 
 def greylist(func):
     """
@@ -44,14 +59,7 @@ def greylist(func):
         white_ls = api_cfg().get('user_whitelist')
         denied_response = MessagesResponse(errors=['Access Denied'],
                                            code=403)
-
-        is_web_redirect = ('X-Forwarded-For' in request.headers
-                           and request.remote_addr == '127.0.0.1')
-        if is_web_redirect:
-            remote_addr = request.headers.getlist('X-Forwarded-For')[0].rpartition(' ')[-1]
-        else:
-            remote_addr = request.remote_addr or 'untrackable'
-
+        remote_addr = user_ip_address()
         # prohibited ip's
         if black_ls:
             if remote_addr in black_ls.split(','):
@@ -302,7 +310,7 @@ class Ordering(Resource):
     @staticmethod
     def put(version):
         user = flask.g.user
-        remote_addr = request.remote_addr
+        remote_addr = user_ip_address()
         message = MessagesResponse(errors=["BadRequest"],
                                    code=400)
         update = request.get_json()
