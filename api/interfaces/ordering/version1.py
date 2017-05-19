@@ -8,7 +8,6 @@
 import traceback
 from api.system.logger import ilogger as logger
 from api.domain import default_error_message, user_api_operations
-from api import ValidationException, InventoryException
 
 
 class API(object):
@@ -146,16 +145,10 @@ class API(object):
             self.metrics.collect(order)
             # capture the order
             response = self.ordering.place_order(order, user)
-        except ValidationException as e:
-            logger.info('Invalid order received: {0}\nresponse {1}'.format(order, e.response))
-            # Need to format the string repr of the exception for end user consumption
-            response = e.response
-        except InventoryException as e:
-            logger.info('Requested inputs not available: {0}\nresponse {1}'.format(order, e.response))
-            response = e.response
         except:
-            logger.debug("ERR version1 place_order arg: {0}\nexception {1}".format(order, traceback.format_exc()))
-            response = default_error_message
+            logger.debug("ERR version1 place_order arg: {0}\n"
+                         "exception {1}".format(order, traceback.format_exc()))
+            raise
 
         return response
 
