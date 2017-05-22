@@ -201,5 +201,5 @@ class OrderResets(Resource):
         _to_whole = request.url.split('/')[-2]
         # eg 'unavailable'
         _to_state = _to_whole.split('_')[-1]
-        return espa.error_to(orderid, _to_state)
+        return str(espa.error_to(orderid, _to_state))
 
