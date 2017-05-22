@@ -621,6 +621,22 @@ Returns:
 ```
 
 
+**PUT /api/v0/order**<a id="apiUpdateOrder"></a>
+
+Accepts requests for process from an HTTP POST with a JSON body.  The body is validated and any errors are returned to the caller.  Otherwise, an orderid is returned.
+
+```json
+
+curl --user username:password -d '{"orderid": "production@email.com-101015143201-00132", "status": "cancelled"}' https://espa.cr.usgs.gov/api/v0/order
+
+Returns:
+{
+    "orderid": "production@email.com-101015143201-00132",
+    "status": "cancelled"
+}
+```
+
+
 **GET /api/v0/order-schema**<a id="apiOrderSchema"></a>
  
 Retrieves order schema definition
