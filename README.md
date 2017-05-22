@@ -102,7 +102,7 @@ curl --user <erosusername>:<erospassword> -X GET https://espa.cr.usgs.gov/api/v0
       "name": "LC08_L1TP_029030_20161008_20170220_01_T1",
       "note": "",
       "product_dload_url": "https://.../orders/.../LC080290302016100801T1-SC20170329224231.tar.gz",
-      "status": "submitted"
+      "status": "complete"
     }
   ]
 }
