@@ -360,6 +360,8 @@ class OrderResponse(object):
 
     @note.setter
     def note(self, value):
+        if value is None:
+            value = ''
         if not isinstance(value, basestring):
             raise TypeError('Expected String')
         self._note = value
