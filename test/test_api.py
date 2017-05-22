@@ -38,6 +38,7 @@ class TestAPI(unittest.TestCase):
         self.sensor_id = 'tm5_collection'
         self.staff_product_id = 'LE07_L1TP_010028_20050420_20160925_01_T1'
         self.staff_sensor = 'etm7_collection'
+        self.global_product_id = 'LE70450302003206EDC01'
 
         staff_user_id = self.mock_user.add_testing_user()
         self.staff_user = User.find(staff_user_id)
@@ -79,6 +80,13 @@ class TestAPI(unittest.TestCase):
         return_dict = api.available_products(self.staff_product_id, self.user.username)
         for item in self.restricted['all']['role']:
             self.assertFalse(item in return_dict[self.staff_sensor]['products'])
+
+    def test_get_available_products_global_restriction(self):
+        # testing of landsat pre-collection restricted
+        self.user.update('is_staff', False)
+        return_dict = api.available_products(self.global_product_id, self.user.username)
+        self.assertIn('ordering_restricted', return_dict)
+        self.assertEqual(return_dict['ordering_restricted']['etm7'], [self.global_product_id])
 
     def test_fetch_user_orders_by_email_val(self):
         orders = api.fetch_user_orders(email=self.user.email)
