@@ -4,6 +4,7 @@ import os
 
 from flask import Flask, request, make_response, jsonify
 from flask.ext.restful import Api, Resource, reqparse, fields, marshal
+import werkzeug.exceptions
 
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.util import api_cfg
@@ -32,6 +33,12 @@ def page_not_found(e):
     return errors()
 
 
+@app.errorhandler(IndexError)
+def no_results_found(e):
+    return MessagesResponse(warnings=['No results found.'],
+                            code=200)()
+
+
 @app.errorhandler(Exception)
 def internal_server_error(e):
     logger.debug('Internal Server Error: {}'.format(e))
@@ -50,6 +57,19 @@ def missing_data_error(e):
     message = MessagesResponse(errors=[e.response],
                                code=400)
     return message()
+
+
+@app.errorhandler(werkzeug.exceptions.BadRequest)
+def bad_request_error(e):
+    return BadRequestResponse()
+
+
+@app.errorhandler(werkzeug.exceptions.MethodNotAllowed)
+def method_not_allowed(e):
+    errors = MessagesResponse(errors=['{} does not support {}'
+                                      .format(request.path, request.__dict__)],
+                              code=405)
+    return errors()
 
 transport_api = Api(app)
 

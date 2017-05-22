@@ -146,10 +146,7 @@ class OrderingProvider(ProviderInterfaceV0):
 
     def fetch_order(self, ordernum):
         orders = Order.where({'orderid': ordernum})
-        if len(orders) == 1:
-            return orders.pop()
-        else:
-            return {}
+        return orders
 
     def place_order(self, new_order, user):
         """

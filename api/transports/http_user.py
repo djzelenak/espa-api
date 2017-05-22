@@ -22,13 +22,13 @@ from flask import request
 from flask.ext.httpauth import HTTPBasicAuth
 from flask.ext.restful import Resource
 
-from werkzeug.exceptions import BadRequest
 
 from functools import wraps
 
 espa = APIv1()
 auth = HTTPBasicAuth()
 cache = memcache.Client(['127.0.0.1:11211'], debug=0)
+
 
 def user_ip_address():
     """
@@ -200,12 +200,7 @@ class ListOrders(Resource):
 
     @staticmethod
     def get(version, email=None):
-        try:
-            filters = request.get_json(force=True)
-        except BadRequest as e:
-            # no json this time # FIXME: Should this fail?
-            filters = {}
-
+        filters = request.get_json(force=True)
         if email:
             search = dict(email=str(email), filters=filters)
         else:
@@ -240,10 +235,12 @@ class Ordering(Resource):
     decorators = [auth.login_required, greylist, version_filter]
 
     @staticmethod
-    def get(version, ordernum):
+    def get(version, ordernum=None):
         user = flask.g.user
-        order = espa.fetch_order(ordernum)
-        response = OrderResponse(**order.as_dict())
+        if ordernum is None:
+            ordernum = request.get_json(force=True).get('orderid')
+        orders = espa.fetch_order(ordernum)
+        response = OrderResponse(**orders[0].as_dict())
         response.code = 200
         if 'order-status' in request.url:
             response.limit = ('orderid', 'status')
@@ -281,9 +278,9 @@ class Ordering(Resource):
             msg = ('Order cancellation is not available yet')
             message = MessagesResponse(errors=[msg], code=400)
             return message()
-        order = espa.fetch_order(update.get('orderid'))
-        assert(order.user_id == user.id)
-        order = espa.cancel_order(order.id, remote_addr)
+        orders = espa.fetch_order(update.get('orderid'))
+        assert(orders[0].user_id == user.id)
+        order = espa.cancel_order(orders[0].id, remote_addr)
         message = OrderResponse(**order.as_dict())
         message.limit = ('orderid', 'status')
         message.code = 202
