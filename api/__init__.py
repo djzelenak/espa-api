@@ -52,7 +52,7 @@ class ValidationException(Exception):
     """Exceptions when there is an error with validating an order
 
     example:
-    "3 validation errors:": [
+    "3 validation errors": [
       "Value u'' for field '<obj>.tm5.products[0]' cannot be blank'",
       "Value u'' for field '<obj>.tm5.products[0]' is not in the enumeration: ['source_metadata', 'l1', 'toa', 'bt', 'cloud', 'sr', 'lst', 'swe', 'sr_ndvi', 'sr_evi', 'sr_savi', 'sr_msavi', 'sr_ndmi', 'sr_nbr', 'sr_nbr2', 'stats']",
       "Value [u''] for field '<obj>.tm5.products' Requested products are not available"
@@ -64,12 +64,13 @@ class ValidationException(Exception):
         super(ValidationException, self).__init__(msg)
 
         err_ls = msg.split('\n')
-        self.response = {err_ls[0]: []}
+        err_key = err_ls[0].replace(':', '')
+        self.response = {err_key: []}
 
         for err in err_ls[1:]:
             if err:
                 err = re.sub(r'<obj>.', '', err)
-                self.response[err_ls[0]].append(err)
+                self.response[err_key].append(err)
 
 
 class InventoryException(Exception):
