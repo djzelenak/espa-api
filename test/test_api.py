@@ -79,16 +79,17 @@ class TestAPI(unittest.TestCase):
             self.assertFalse(item in return_dict['etm7']['products'])
 
     def test_fetch_user_orders_by_email_val(self):
-        orders = api.fetch_user_orders(self.user.email)
-        self.assertEqual(orders.keys()[0], "orders")
+        orders = api.fetch_user_orders(email=self.user.email)
+        self.assertEqual(self.order.orderid, orders[0].orderid)
 
     def test_fetch_user_orders_by_username_val(self):
-        orders = api.fetch_user_orders(self.user.username)
-        self.assertEqual(orders.keys()[0], "orders")
+        orders = api.fetch_user_orders(username=self.user.username)
+        self.assertEqual(self.order.orderid, orders[0].orderid)
 
     def test_fetch_order_by_orderid_val(self):
         order = api.fetch_order(self.order.orderid)
-        self.assertEqual(order['orderid'], self.order.orderid)
+        self.assertEqual(1, len(order))
+        self.assertEqual(order[0].orderid, self.order.orderid)
 
     def test_fetch_order_by_orderid_invalid(self):
         invalid_orderid = 'invalidorderid'
