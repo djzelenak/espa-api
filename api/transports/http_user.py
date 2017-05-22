@@ -13,8 +13,8 @@ from api.domain.user import User, UserException
 from api.external.ers import (
     ERSApiErrorException, ERSApiConnectionException, ERSApiAuthFailedException)
 from api.transports.http_json import (
-from api import ValidationException, InventoryException
-    MessagesResponse, UserResponse, OrderResponse, OrdersResponse, ItemsResponse)
+    MessagesResponse, UserResponse, OrderResponse, OrdersResponse, ItemsResponse,
+    BadRequestResponse, SystemErrorResponse, AccessDeniedResponse, AuthFailedResponse)
 
 from flask import jsonify
 from flask import make_response
@@ -57,18 +57,16 @@ def greylist(func):
     def decorated(*args, **kwargs):
         black_ls = api_cfg().get('user_blacklist')
         white_ls = api_cfg().get('user_whitelist')
-        denied_response = MessagesResponse(errors=['Access Denied'],
-                                           code=403)
         remote_addr = user_ip_address()
         # prohibited ip's
         if black_ls:
             if remote_addr in black_ls.split(','):
-                return denied_response()
+                return AccessDeniedResponse()
 
         # for when were guarding access
         if white_ls:
             if remote_addr not in white_ls.split(','):
-                return denied_response()
+                return AccessDeniedResponse()
 
         return func(*args, **kwargs)
     return decorated
@@ -98,12 +96,9 @@ def unauthorized():
     if reason not in reasons or reason == 'unknown':
         if reason not in reasons:
             logger.debug('ERR uncaught exception in user authentication')
-        msg = MessagesResponse(errors=["System experienced an exception. "
-                                       "Admins have been notified"],
-                               code=500)
+        msg = SystemErrorResponse
     elif reason == 'auth':
-        msg = MessagesResponse(errors=['Invalid username/password'],
-                               code=401)
+        msg = AuthFailedResponse
     elif reason == 'conn':
         msg = MessagesResponse(warnings=['ERS connection failed'],
                                code=503)
@@ -180,11 +175,12 @@ class VersionInfo(Resource):
                 ver_str = ", ".join(info_dict.keys())
                 msg = "Invalid api version {0}. Options: {1}".format(version, ver_str)
                 response = MessagesResponse(errors=[msg], code=404)
+                return response()
         else:
             response = espa.api_versions()
             return_code = 200
 
-        return response()
+        return response
 
 
 class AvailableProducts(Resource):
@@ -263,75 +259,34 @@ class Ordering(Resource):
     def post(version):
         user = flask.g.user
         message = None
-        try:
-            order = request.get_json(force=True)
-            if order:
-                try:
-                    order = lowercase_all(order)
-                    order = espa.place_order(order, user)
-                    message = OrderResponse(**order.as_dict())
-                    message.limit = ('orderid', 'status')
-                    message.code = 201
-                except ValidationException as e:
-                    logger.info('Invalid order received: {0}\nresponse {1}'
-                                .format(order, e.response))
-                    message = MessagesResponse(errors=[e.response],
-                                               code=400)
-                except InventoryException as e:
-                    logger.info('Requested inputs not available: {0}\n'
-                                'response {1}'.format(order, e.response))
-                    message = MessagesResponse(errors=[e.response],
-                                               code=400)
-                except Exception as e:
-                    logger.debug("exception posting order: {0}\n"
-                                 "user: {1}\n msg: {2}\n trace: {3}"
-                                 .format(order, user.username, e.message,
-                                         traceback.format_exc()))
-                    msg = ("System experienced an exception. "
-                           "Admins have been notified")
-                    message = MessagesResponse(errors=[msg],
-                                               code=500)
-        except BadRequest as e:
-            # request.get_json throws a BadRequest
-            logger.debug("BadRequest, could not parse request into json {}\n"
-                         "user: {}\nform data {}\n"
-                         .format(e.description, user.username, request.form))
-            message = MessagesResponse(errors=['Could not parse request into JSON'],
+        order = request.get_json(force=True)
+        if order:
+            order = lowercase_all(order)
+            order = espa.place_order(order, user)
+            message = OrderResponse(**order.as_dict())
+            message.limit = ('orderid', 'status')
+            message.code = 201
+            return message()
+        else:
+            message = MessagesResponse(errors=['Must supply order JSON'],
                                        code=400)
-        except Exception as e:
-            logger.debug("ERR posting order. user: {0}\n error: {1}"
-                         .format(user.username, e))
-            msg = ("System experienced an exception. "
-                   "Admins have been notified")
-            message = MessagesResponse(errors=[msg], code=500)
-
-        return message()
+            return message()
 
     @staticmethod
     def put(version):
         user = flask.g.user
         remote_addr = user_ip_address()
-        message = MessagesResponse(errors=["BadRequest"],
-                                   code=400)
-        update = request.get_json()
-        try:
-            assert(user.is_staff())  # TODO: plan to be public facing
-            order = espa.fetch_order(update.get('orderid'))
-            assert(order.user_id == user.id)
-            order = espa.cancel_order(order.id, remote_addr)
-            assert(order.status == 'cancelled')
-            message = OrderResponse(**order.as_dict())
-            message.limit = ('orderid', 'status')
-            message.code = 202
-        except BadRequest as e:
-            pass
-        except Exception as e:
-            logger.debug("ERR cancelling order. user: {0}\n error: {1}"
-                         .format(user.username, e))
-            msg = ("System experienced an exception. "
-                   "Admins have been notified")
-            message = MessagesResponse(errors=[msg], code=500)
-
+        update = request.get_json(force=True)
+        if False: #not user.is_staff():  # TODO: plan to be public facing
+            msg = ('Order cancellation is not available yet')
+            message = MessagesResponse(errors=[msg], code=400)
+            return message()
+        order = espa.fetch_order(update.get('orderid'))
+        assert(order.user_id == user.id)
+        order = espa.cancel_order(order.id, remote_addr)
+        message = OrderResponse(**order.as_dict())
+        message.limit = ('orderid', 'status')
+        message.code = 202
         return message()
 
 

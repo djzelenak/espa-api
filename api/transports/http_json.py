@@ -636,3 +636,12 @@ class MessagesResponse(object):
         return resp
 
 
+BadRequestResponse = MessagesResponse(errors=['Could not parse request into JSON'],
+                                      code=400)
+SystemErrorResponse = MessagesResponse(errors=["System experienced an exception. "
+                                               "Admins have been notified"],
+                                       code=500)
+AccessDeniedResponse = MessagesResponse(errors=['Access Denied'],
+                                        code=403)
+AuthFailedResponse = MessagesResponse(errors=['Invalid username/password'],
+                                      code=401)

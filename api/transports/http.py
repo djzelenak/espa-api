@@ -8,6 +8,7 @@ from flask.ext.restful import Api, Resource, reqparse, fields, marshal
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.util import api_cfg
 from api.system.logger import ilogger as logger
+from api import ValidationException, InventoryException
 
 from http_user import Index, VersionInfo, AvailableProducts, ValidationInfo,\
     ListOrders, Ordering, UserInfo, ItemStatus, BacklogStats, PublicSystemStatus
@@ -15,7 +16,7 @@ from http_user import Index, VersionInfo, AvailableProducts, ValidationInfo,\
 from http_production import ProductionVersion, ProductionConfiguration, ProductionOperations, ProductionManagement
 
 from http_admin import Reports, SystemStatus, OrderResets, ProductionStats
-from http_json import MessagesResponse
+from http_json import MessagesResponse, BadRequestResponse, SystemErrorResponse
 
 config = ConfigurationProvider()
 
@@ -28,16 +29,27 @@ def page_not_found(e):
     errors = MessagesResponse(errors=['{} not found on the server'
                                       .format(request.path)],
                               code=404)
-    return errors
+    return errors()
 
 
-@app.errorhandler(500)
+@app.errorhandler(Exception)
 def internal_server_error(e):
     logger.debug('Internal Server Error: {}'.format(e))
-    errors = MessagesResponse(errors=["System experienced an exception. "
-                                      "Admins have been notified"],
-                              code=500)
-    return errors
+    return SystemErrorResponse()
+
+
+@app.errorhandler(ValidationException)
+def invalid_order_error(e):
+    message = MessagesResponse(errors=[e.response],
+                               code=400)
+    return message()
+
+
+@app.errorhandler(InventoryException)
+def missing_data_error(e):
+    message = MessagesResponse(errors=[e.response],
+                               code=400)
+    return message()
 
 transport_api = Api(app)
 
