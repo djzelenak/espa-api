@@ -17,7 +17,7 @@ from api.domain.order import Order
 from api.domain.user import User
 from api.providers.production.mocks.production_provider import MockProductionProvider
 from api.providers.production.production_provider import ProductionProvider
-
+from mock import patch
 
 api = APIv1()
 production_provider = ProductionProvider()
@@ -292,12 +292,14 @@ class TestInventory(unittest.TestCase):
         with self.assertRaises(InventoryException):
             api.inventory.check(self.lta_order_bad)
 
+    @patch('api.external.lpdaac.LPDAACService.input_exists', lambda x, y: True)
     def test_lpdaac_good(self):
         """
         Check LPDAAC support from the inventory provider
         """
         self.assertIsNone(api.inventory.check(self.lpdaac_order_good))
 
+    @patch('api.external.lpdaac.LPDAACService.input_exists', lambda x, y: False)
     def test_lpdaac_bad(self):
         """
         Check LPDAAC support from the inventory provider
