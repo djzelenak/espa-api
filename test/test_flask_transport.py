@@ -122,14 +122,18 @@ class TransportTestCase(unittest.TestCase):
         url = "/api/v1/order/" + str(self.orderid)
         response = self.app.get(url, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
-        assert 'orderid' in resp_json.keys()
+        items = {'orderid', 'note', 'order_source', 'order_type', 'product_opts',
+                 'priority', 'completion_date', 'status', 'order_date', 'product_options'}
+        self.assertEqual(items, set(resp_json))
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_order_status_by_ordernum(self):
         url = "/api/v1/order-status/" + str(self.orderid)
         response = self.app.get(url, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
-        assert 'orderid' in resp_json.keys()
+        self.assertEqual({'orderid', 'status'}, set(resp_json))
+        self.assertEqual(self.orderid, resp_json.get('orderid'))
+        self.assertEqual('ordered', resp_json.get('status'))
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_item_status_by_ordernum(self):
