@@ -1,4 +1,7 @@
 ## Change Notes
+###### June 2017 
+* Remove CFMask product (pixel_qa comming soon)
+* Clean up API responses (HTTP Codes, Messages)
 ###### April 2017
 * Restrict ordering of pre-collection landsat inputs
 ###### March 2017
