@@ -29,11 +29,6 @@ class ProviderInterfaceV0(object):
         return
 
     @abc.abstractmethod
-    def order_status(self, orderid):
-        """Return order processing status"""
-        return
-
-    @abc.abstractmethod
     def cancel_order(self, orderid, request_ip_address):
         """Kill an order in progress"""
         return
@@ -54,9 +49,6 @@ class MockOrderingProvider(object):
         pass
 
     def view_order(self, orderid):
-        pass
-
-    def order_status(self, orderid):
         pass
 
     def item_status(self, orderid, itemid='ALL'):

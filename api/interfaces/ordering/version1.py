@@ -153,26 +153,6 @@ class API(object):
 
         return response
 
-    def order_status(self, orderid):
-        """Shows an order status
-
-        Orders contain additional information such as date ordered, date completed,
-        current status and so on.
-
-        Args:
-            orderid (str): id of the order
-
-        Raises:
-            OrderNotFound if the order did not exist
-        """
-        try:
-            response = self.ordering.order_status(orderid)
-        except:
-            logger.debug("ERR version1 order_status arg: {0}\nexception {1}".format(orderid, traceback.format_exc()))
-            response = default_error_message
-
-        return response
-
     def item_status(self, orderid, itemid='ALL', username=None, filters=None):
         """Shows an individual item status
 

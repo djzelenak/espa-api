@@ -174,11 +174,6 @@ class OrderingProvider(ProviderInterfaceV0):
         result = Order.create(order_dict)
         return result
 
-    def order_status(self, orderid):
-        resp = Order.where({'orderid': orderid})
-        if len(resp) == 1:
-            return resp[0]
-
     def cancel_order(self, orderid, request_ip_address):
         """
         Cancels an order, and all scenes contained within it
