@@ -169,19 +169,22 @@ class TestValidation(unittest.TestCase):
         """
         Most common issue of orders resizing MODIS to 30m pixels, without setting the extents
         """
-        modis_order = {'mod09a1': {'inputs': 'mod09a1.a2016305.h11v04.006.2016314200836',
+        modis_order = {'mod09a1': {'inputs': ['mod09a1.a2016305.h11v04.006.2016314200836'],
                                    'products': ['l1']},
                        'resampling_method': 'cc',
                        'resize': {'pixel_size': 30,
                                   'pixel_size_units': 'meters'},
                        'format': 'gtiff'}
 
-        exc = 'pixel count value is greater than maximum size of'
+        exc = 'pixel count is greater than maximum size of'
+        exc_key = '1 validation errors'
 
         try:
             api.validation(modis_order, self.staffuser.username)
         except Exception as e:
-            assert(exc in str(e))
+            self.assertIn(exc_key, e.response)
+            self.assertIsInstance(e.response[exc_key], list)
+            self.assertIn(exc, str(e.response[exc_key]))
         else:
             self.fail('Failed MODIS pixel resize test')
 
