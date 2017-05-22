@@ -31,6 +31,20 @@ class MockOrder(object):
     def __repr__(self):
         return "MockOrder:{0}".format(self.__dict__)
 
+    def as_dict(self):
+        return {
+                  "completion_date": self.completion_date,
+                  "note": self.note,
+                  "order_date": self.order_date,
+                  "order_source": self.order_source,
+                  "order_type": self.order_type,
+                  "orderid": self.orderid,
+                  "priority": self.priority,
+                  "product_options": self.product_options,
+                  "product_opts": self.product_opts,
+                  "status": self.status
+                }
+
     def generate_testing_order(self, user_id):
         user = User.find(user_id)
         # need to monkey with the email, otherwise we get collisions with each
