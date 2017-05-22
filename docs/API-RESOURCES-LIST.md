@@ -78,7 +78,7 @@ These endpoints are the only access to the real-time status of the final output 
 
 HTTP Method	| URI	| Action
 ---|---|---
-[GET](#apiItemStats)  |  `/api/v0/item-status/<ordernum>`  |  Retrieve the status and details for all products in an order.
+[GET](#apiItemStats)  |  `/api/v0/item-status/<ordernum>`  |  Retrieve the status and details for all products in an order. Accepts JSON filters.
 [GET](#apiProdStats)  |  `/api/v0/item-status/<ordernum>/<itemnum>`  |  Retrieve status and details for a particular product in an order
 
 
