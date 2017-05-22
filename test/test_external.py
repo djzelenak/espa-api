@@ -127,20 +127,26 @@ class TestOnlineCache(unittest.TestCase):
     """
     Tests for dealing with the distribution cache
     """
-    def setUp(self):
+    @patch('api.external.onlinecache.OnlineCache.execute_command', mockonlinecache.list)
+    @patch('api.external.onlinecache.sshcmd')
+    def setUp(self, MockSSHCmd):
+        MockSSHCmd.return_value = MagicMock()
         self.cache = onlinecache.OnlineCache()
 
+    @patch('api.external.onlinecache.OnlineCache.execute_command', mockonlinecache.list)
     def test_cache_listorders(self):
         results = self.cache.list()
 
         self.assertTrue(results)
 
+    @patch('api.external.onlinecache.OnlineCache.execute_command', mockonlinecache.capacity)
     def test_cache_capcity(self):
         results = self.cache.capacity()
 
         self.assertTrue('capacity' in results)
 
-    @patch('api.external.onlinecache.OnlineCache.delete', mockonlinecache.delete)
+    @patch('api.external.onlinecache.OnlineCache.exists', lambda x, y, z: True)
+    @patch('api.external.onlinecache.OnlineCache.execute_command', mockonlinecache.delete)
     def test_cache_deleteorder(self):
         results = self.cache.delete('bilbo')
         self.assertTrue(results)
