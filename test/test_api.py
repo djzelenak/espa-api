@@ -97,17 +97,19 @@ class TestAPI(unittest.TestCase):
     def test_fetch_order_status_invalid(self):
         invalid_orderid = 'invalidorderid'
         response = api.order_status(invalid_orderid)
-        self.assertEqual(response.keys(), ['msg'])
+        self.assertIsNone(response)
 
     def test_fetch_item_status_valid(self):
         response = api.item_status(self.order.orderid)
-        self.assertEqual(response.keys(), ['orderid'])
-        self.assertIsInstance(response['orderid'], dict)
+        self.assertEqual(set(response), {self.order.orderid})
+        self.assertIsInstance(response[self.order.orderid], list)
+        self.assertEqual(set([s.name for s in self.order.scenes()]),
+                         set([s.name for s in response[self.order.orderid]]))
 
     def test_fetch_item_status_invalid(self):
         invalid_orderid = 'invalidorderid'
         response = api.order_status(invalid_orderid)
-        self.assertEqual(response.keys(), ['msg'])
+        self.assertIsNone(response)
 
 
 class TestValidation(unittest.TestCase):
