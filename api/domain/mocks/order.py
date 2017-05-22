@@ -33,16 +33,16 @@ class MockOrder(object):
 
     def as_dict(self):
         return {
-                  "completion_date": self.completion_date,
-                  "note": self.note,
-                  "order_date": self.order_date,
-                  "order_source": self.order_source,
-                  "order_type": self.order_type,
-                  "orderid": self.orderid,
-                  "priority": self.priority,
-                  "product_options": self.product_options,
-                  "product_opts": self.product_opts,
-                  "status": self.status
+                  "completion_date": '',
+                  "note": '',
+                  "order_date": '',
+                  "order_source": '',
+                  "order_type": '',
+                  "orderid": '',
+                  "priority": '',
+                  "product_options": '',
+                  "product_opts": '',
+                  "status": ''
                 }
 
     def generate_testing_order(self, user_id):
