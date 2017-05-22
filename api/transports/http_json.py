@@ -115,22 +115,17 @@ class UserResponse(object):
 
 class SceneResponse(object):
     def __init__(self, name, note, status, completion_date, cksum_download_url,
-                 product_dload_url, code=None):
+                 product_dload_url, log_file_contents):
         self.name = name
         self.note = note
         self.status = status
         self.completion_date = completion_date
         self.cksum_download_url = cksum_download_url
         self.product_dload_url = product_dload_url
-        self.code = code
+        self.log_file_contents = log_file_contents
 
     def __repr__(self):
-        pass
-
-    def __call__(self):
-        if self.code is None:
-            raise ValueError('SceneResponse must set response_code')
-        return make_response(jsonify(self.as_json()), self.code)
+        return str(self.as_json())
 
     @property
     def name(self):
@@ -148,6 +143,8 @@ class SceneResponse(object):
 
     @note.setter
     def note(self, value):
+        if value is None:
+            value = ''
         if not isinstance(value, basestring):
             raise TypeError('Expected String')
         self._note = value
@@ -168,6 +165,8 @@ class SceneResponse(object):
 
     @completion_date.setter
     def completion_date(self, value):
+        if value is None:
+            value = ''
         if not isinstance(value, basestring):
             raise TypeError('Expected String')
         self._completion_date = value
@@ -178,6 +177,8 @@ class SceneResponse(object):
 
     @cksum_download_url.setter
     def cksum_download_url(self, value):
+        if value is None:
+            value = ''
         if not isinstance(value, basestring):
             raise TypeError('Expected String')
         self._cksum_download_url = value
@@ -188,9 +189,69 @@ class SceneResponse(object):
 
     @product_dload_url.setter
     def product_dload_url(self, value):
+        if value is None:
+            value = ''
         if not isinstance(value, basestring):
             raise TypeError('Expected String')
         self._product_dload_url = value
+
+    @property
+    def log_file_contents(self):
+        return self._log_file_contents
+
+    @log_file_contents.setter
+    def log_file_contents(self, value):
+        if value is None:
+            value = ''
+        if not isinstance(value, basestring):
+            raise TypeError('Expected String')
+        self._log_file_contents = value
+
+    def as_dict(self):
+        return {"cksum_download_url": self.cksum_download_url,
+                "completion_date": self.completion_date,
+                "name": self.name,
+                "note": self.note,
+                "product_dload_url": self.product_dload_url,
+                "status": self.status,
+                "log_file_contents": self.log_file_contents}
+
+
+class ItemsResponse(object):
+    def __init__(self, orders, limit=None, code=None):
+        self.orders = orders
+        self.limit = limit
+        self.code = code
+
+    def __repr__(self):
+        return repr(self.as_json())
+
+    def __call__(self):
+        if self.code is None:
+            raise ValueError('ItemsResponse must set response_code')
+        return make_response(jsonify(self.as_json()), self.code)
+
+    @property
+    def orders(self):
+        return self._orders
+
+    @orders.setter
+    def orders(self, value):
+        if not isinstance(value, dict):
+            raise TypeError('Expected dict')
+        if not all([isinstance(v, list) for k, v in value.items()]):
+            raise TypeError('Expected dict of lists')
+        self._orders = {k: [SceneResponse(**s.as_dict()) for s in v] for k,v in value.items()}
+
+    @property
+    def limit(self):
+        return self._limit
+
+    @limit.setter
+    def limit(self, value):
+        if value and not isinstance(value, tuple):
+            raise TypeError('Expected tuple')
+        self._limit = value
 
     @property
     def code(self):
@@ -198,7 +259,7 @@ class SceneResponse(object):
 
     @code.setter
     def code(self, value):
-        valid_codes = (200, 201)
+        valid_codes = (200,)
         if value is not None:
             if not isinstance(value, int):
                 raise TypeError('HTTP Response Code is always an integer')
@@ -208,13 +269,13 @@ class SceneResponse(object):
         self._code = value
 
     def as_json(self):
-        return {"cksum_download_url": self.cksum_download_url,
-                "completion_date": self.completion_date,
-                "name": self.name,
-                "note": self.note,
-                "product_dload_url": self.product_dload_url,
-                "status": self.status}
-
+        resp = {k: [{sk: sv for sk, sv in s.as_dict().items()} for s in v]
+                for k, v in self.orders.items()}
+        if self.limit:
+            resp = {k: [{sk: sv for sk, sv in s.items()
+                         if sk in self.limit} for s in v]
+                    for k, v in resp.items()}
+        return resp
 
 
 class OrderResponse(object):

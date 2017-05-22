@@ -13,8 +13,8 @@ from api.domain.user import User, UserException
 from api.external.ers import (
     ERSApiErrorException, ERSApiConnectionException, ERSApiAuthFailedException)
 from api.transports.http_json import (
-    MessagesResponse, UserResponse, OrderResponse, OrdersResponse)
 from api import ValidationException, InventoryException
+    MessagesResponse, UserResponse, OrderResponse, OrdersResponse, ItemsResponse)
 
 from flask import jsonify
 from flask import make_response
@@ -349,9 +349,16 @@ class ItemStatus(Resource):
     decorators = [auth.login_required, greylist, version_filter]
 
     @staticmethod
-    def get(version, orderid, itemnum='ALL'):
+    def get(version, orderid=None, itemnum='ALL'):
         user = flask.g.user
-        return espa.item_status(orderid, itemnum, user.username)
+        filters = request.get_json(force=True, silent=True)
+        item_status = espa.item_status(orderid, itemnum, user.username,
+                                filters=filters)
+        message = ItemsResponse(item_status, code=200)
+        if not user.is_staff():
+            message.limit = ('name', 'status', 'note', 'completion_date',
+                             'product_dload_url', 'cksum_download_url')
+        return message()
 
 
 class BacklogStats(Resource):
