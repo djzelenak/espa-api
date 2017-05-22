@@ -113,7 +113,8 @@ class TransportTestCase(unittest.TestCase):
         url = "/api/v1/list-orders/" + str(self.user.email)
         response = self.app.get(url, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
-        assert resp_json.keys() == ['orders']
+        self.assertIsInstance(resp_json, list)
+        self.assertListEqual(resp_json, [self.orderid])
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_order_by_ordernum(self):
