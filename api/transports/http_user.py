@@ -200,7 +200,7 @@ class ListOrders(Resource):
 
     @staticmethod
     def get(version, email=None):
-        filters = request.get_json(force=True)
+        filters = request.get_json(force=True, silent=True)
         if email:
             search = dict(email=str(email), filters=filters)
         else:
