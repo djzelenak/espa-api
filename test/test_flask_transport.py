@@ -56,6 +56,9 @@ class TransportTestCase(unittest.TestCase):
             self.itemorderid = db[0][0]
 
         self.base_order = lowercase_all(testorders.build_base_order())
+        self.sensors = [k for k in self.base_order.keys() if isinstance(self.base_order[k], dict) and 'inputs' in self.base_order[k]]
+        self.inputs = {s: self.base_order[s]['inputs'] for s in self.sensors}
+        self.input_names_all = set([s[0] for k, s in self.inputs.items()])
 
     def tearDown(self):
         # clean up orders
@@ -133,14 +136,17 @@ class TransportTestCase(unittest.TestCase):
         url = "/api/v1/item-status/%s" % self.itemorderid
         response = self.app.get(url, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
-        assert 'orderid' in resp_json.keys()
+        all_names = set([s['name'].lower() for s in resp_json[self.orderid]])
+        all_names -= {'plot'}
+        self.assertEqual(self.input_names_all, all_names)
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_item_status_by_ordernum_itemnum(self):
         url = "/api/v1/item-status/%s/%s" % (self.itemorderid, self.itemid)
         response = self.app.get(url, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
-        assert 'orderid' in resp_json.keys()
+        all_names = set([s['name'].lower() for s in resp_json[self.orderid]])
+        self.assertEqual({self.itemid.lower()}, all_names)
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_current_user(self):
