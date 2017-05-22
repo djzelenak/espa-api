@@ -80,11 +80,13 @@ class TestAPI(unittest.TestCase):
 
     def test_fetch_user_orders_by_email_val(self):
         orders = api.fetch_user_orders(email=self.user.email)
-        self.assertEqual(self.order.orderid, orders[0].orderid)
+        self.assertTrue(len(orders) > 1)
+        self.assertIn(self.order.orderid, [o.orderid for o in orders])
 
     def test_fetch_user_orders_by_username_val(self):
         orders = api.fetch_user_orders(username=self.user.username)
-        self.assertEqual(self.order.orderid, orders[0].orderid)
+        self.assertTrue(len(orders) > 1)
+        self.assertIn(self.order.orderid, [o.orderid for o in orders])
 
     def test_fetch_order_by_orderid_val(self):
         order = api.fetch_order(self.order.orderid)
