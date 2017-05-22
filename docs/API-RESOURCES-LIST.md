@@ -66,7 +66,7 @@ HTTP Method	| URI	| Action
 HTTP Method	| URI	| Action
 ---|---|---
 [POST](#apiSubmitOrder)  |  `/api/v0/order ` |  Accepts requests for processing. The order is validated, and an orderid is returned.
-[PUT](#apiUpdateOrder)  |  `/api/v0/order ` |  
+[PUT](#apiUpdateOrder)  |  `/api/v0/order ` |  Update an order with a JSON body.
 [GET](#apiStatus)  |  `/api/v0/order-status/<ordernum>`  |  Retrieves a submitted orders status
 [GET](#apiOrderDetails)  |  `/api/v0/order/<ordernum>`  |  Retrieves details for a submitted order. Some information may be omitted from this response depending on access privileges.
 [GET](#apiOrders)  |  `/api/v0/list-orders`  |  List orders for the authenticated user.
@@ -623,7 +623,7 @@ Returns:
 
 **PUT /api/v0/order**<a id="apiUpdateOrder"></a>
 
-Accepts requests for process from an HTTP POST with a JSON body.  The body is validated and any errors are returned to the caller.  Otherwise, an orderid is returned.
+Update an order with a JSON body. 
 
 ```json
 
@@ -1174,4 +1174,5 @@ curl --user username:password https://espa.cr.usgs.gov/api/v0/order-schema
                           "type": "object"}},
  "set_ItemCount": ["inputs", 5000],
  "type": "object"}
-```
+``` 
+
