@@ -101,7 +101,3 @@ For a more detailed list of available User API operations, see the
 
 For a language-specific (python) example, please see [an API Demo](examples/api_demo.py). 
 
-## Fixing Issues
-
-If you think you have found a bug, please see our [Contributing guide](.github/CONTRIBUTING.md)
-before opening a new issue.
