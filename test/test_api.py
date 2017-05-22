@@ -34,8 +34,10 @@ class TestAPI(unittest.TestCase):
         order_id = self.mock_order.generate_testing_order(user_id)
         self.order = Order.find(order_id)
         self.user = User.find(user_id)
-        self.product_id = 'LT50150401987120XXX02'
-        self.staff_product_id = 'LE70450302003206EDC01'
+        self.product_id = 'LT05_L1TP_032028_20120425_20160830_01_T1'
+        self.sensor_id = 'tm5_collection'
+        self.staff_product_id = 'LE07_L1TP_010028_20050420_20160925_01_T1'
+        self.staff_sensor = 'etm7_collection'
 
         staff_user_id = self.mock_user.add_testing_user()
         self.staff_user = User.find(staff_user_id)
@@ -62,21 +64,21 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(set(api.api_versions().keys()), set(['v0', 'v1']))
 
     def test_get_available_products_key_val(self):
-        self.assertEqual(api.available_products(self.product_id, self.user.username).keys()[0], "tm5")
+        self.assertEqual(api.available_products(self.product_id, self.user.username).keys()[0], self.sensor_id)
 
     def test_get_available_products_by_staff(self):
         # staff should see all available products
         self.user.update('is_staff', True)
         return_dict = api.available_products(self.staff_product_id, self.staff_user.username)
         for item in self.restricted['all']['role']:
-            self.assertTrue(item in return_dict['etm7']['products'])
+            self.assertTrue(item in return_dict[self.staff_sensor]['products'])
 
     def test_get_available_products_by_public(self):
         # public should not see products listed in api/domain.restricted.yaml
         self.user.update('is_staff', False)
         return_dict = api.available_products(self.staff_product_id, self.user.username)
         for item in self.restricted['all']['role']:
-            self.assertFalse(item in return_dict['etm7']['products'])
+            self.assertFalse(item in return_dict[self.staff_sensor]['products'])
 
     def test_fetch_user_orders_by_email_val(self):
         orders = api.fetch_user_orders(email=self.user.email)
