@@ -17,6 +17,7 @@ from api.domain.order import Order
 from api.domain.user import User
 from api.providers.production.mocks.production_provider import MockProductionProvider
 from api.providers.production.production_provider import ProductionProvider
+from api.external.mocks import lta as mocklta
 from mock import patch
 
 api = APIv1()
@@ -277,14 +278,14 @@ class TestInventory(unittest.TestCase):
         self.lpdaac_order_good = {'mod09a1': {'inputs': [self.lpdaac_prod_good]}}
         self.lpdaac_order_bad = {'mod09a1': {'inputs': [self.lpdaac_prod_bad]}}
 
-
-
+    @patch('api.external.lta.requests.post', mocklta.get_verify_scenes_response)
     def test_lta_good(self):
         """
         Check LTA support from the inventory provider
         """
         self.assertIsNone(api.inventory.check(self.lta_order_good))
 
+    @patch('api.external.lta.requests.post', mocklta.get_verify_scenes_response_invalid)
     def test_lta_bad(self):
         """
         Check LTA support from the inventory provider

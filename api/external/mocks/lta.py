@@ -130,6 +130,26 @@ def get_verify_scenes_response(url, data, headers):
     return response
 
 
+def get_verify_scenes_response_invalid(url, data, headers):
+    response = MockRequestsResponse()
+    response.content = ('<?xml version="1.0" encoding="UTF-8"?>\n<validSceneList xmlns="http://earthexplorer.usgs.gov/s'
+                        'chema/validSceneList" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation'
+                        '="http://earthexplorer.usgs.gov/schema/validSceneList https://eedevmast.cr.usgs.gov/OrderWrapp'
+                        'erServicedevmast/validSceneList.xsd">\n')
+
+    root = xml.fromstring(data)
+    scenes = root.getchildren()
+    for s in list(scenes):
+        response.content += ('<sceneId  sensor="{s}" valid="false">{t}</sceneId>\n'
+                             .format(s=s.attrib['sensor'], t=s.text))
+
+    response.content += '</validSceneList>\n'
+    response.ok = True
+    response.status_code = 200
+    response.reason = 'OK'
+    return response
+
+
 def get_order_scenes_response_main(url, data, headers=None):
     if 'submitOrder' in url:
         return get_order_scenes_response(data)
