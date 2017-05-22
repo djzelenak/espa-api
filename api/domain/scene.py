@@ -103,7 +103,19 @@ class Scene(object):
                     self.id = None
 
     def __repr__(self):
-        return 'Scene: {}'.format(self.__dict__)
+        return 'Scene: {}'.format(self.as_dict())
+
+    def as_dict(self):
+        return {
+            "name": self.name,
+            "note": self.note,
+            "status": self.status,
+            "completion_date": self.completion_date,
+            "cksum_download_url": self.cksum_download_url,
+            "product_dload_url": self.product_dload_url,
+            "log_file_contents": self.log_file_contents,
+            "id": self.id
+        }
 
     @classmethod
     def get(cls, col_name, scene_name, orderid):

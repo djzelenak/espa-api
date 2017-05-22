@@ -115,7 +115,7 @@ class UserResponse(object):
 
 class SceneResponse(object):
     def __init__(self, name, note, status, completion_date, cksum_download_url,
-                 product_dload_url, log_file_contents):
+                 product_dload_url, log_file_contents, id):
         self.name = name
         self.note = note
         self.status = status
@@ -123,6 +123,7 @@ class SceneResponse(object):
         self.cksum_download_url = cksum_download_url
         self.product_dload_url = product_dload_url
         self.log_file_contents = log_file_contents
+        self.id = id
 
     def __repr__(self):
         return str(self.as_json())
@@ -136,6 +137,16 @@ class SceneResponse(object):
         if not isinstance(value, basestring):
             raise TypeError('Expected String')
         self._name = value
+
+    @property
+    def id(self):
+        return self._id
+
+    @id.setter
+    def id(self, value):
+        if not isinstance(value, int):
+            raise TypeError('Expected integer')
+        self._id = value
 
     @property
     def note(self):
@@ -214,7 +225,8 @@ class SceneResponse(object):
                 "note": self.note,
                 "product_dload_url": self.product_dload_url,
                 "status": self.status,
-                "log_file_contents": self.log_file_contents}
+                "log_file_contents": self.log_file_contents,
+                "id": self.id}
 
 
 class ItemsResponse(object):
