@@ -37,8 +37,7 @@ class MockOrder(object):
         # test creating a new scratch order with the same user
         rand = str(random.randint(1, 99))
         user.email = rand + user.email
-        orderid = self.ordering_provider.place_order(self.base_order, user)
-        order = Order.find(orderid)
+        order = self.ordering_provider.place_order(self.base_order, user)
         return order.id
 
     def generate_ee_testing_order(self, user_id, partial=False):
