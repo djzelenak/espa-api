@@ -17,10 +17,8 @@ from api.domain.mocks.order import MockOrder
 from api.domain.mocks.user import MockUser
 
 from api.interfaces.ordering.mocks.version1 import MockAPI
-from api.providers.ordering.mocks.ordering_provider import MockOrderingProvider
 
 mock_api = MockAPI()
-mock_ordering_provider = MockOrderingProvider()
 
 
 class TransportTestCase(unittest.TestCase):
@@ -100,7 +98,6 @@ class TransportTestCase(unittest.TestCase):
         assert "etm" in resp_json.keys()
 
     @patch('api.domain.user.User.get', MockUser.get)
-    @patch('api.providers.ordering.ordering_provider.OrderingProvider.fetch_user_orders', mock_ordering_provider.fetch_user_orders)
     def test_get_available_orders_user(self):
         url = "/api/v1/list-orders"
         response = self.app.get(url, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
