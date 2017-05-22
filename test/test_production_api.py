@@ -249,7 +249,9 @@ class TestProductionAPI(unittest.TestCase):
 
     @patch('api.external.onlinecache.delete', mock_production_provider.respond_true)
     @patch('api.notification.emails.send_purge_report', mock_production_provider.respond_true)
-    @patch('api.external.onlinecache.capacity', onlinecache.capacity)
+    @patch('api.external.onlinecache.capacity', onlinecache.mock_capacity)
+    @patch('api.external.onlinecache.exists', onlinecache.mock_exists)
+    @patch('api.external.onlinecache.delete', onlinecache.mock_delete)
     def test_production_purge_orders(self):
         new_completion_date = datetime.datetime.now() - datetime.timedelta(days=12)
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
