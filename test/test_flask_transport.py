@@ -36,7 +36,7 @@ class TransportTestCase(unittest.TestCase):
 
         self.sceneids = self.mock_order.scene_names_list(self.order_id)[0:2]
 
-        token = ''.format(self.user.username, 'foo')
+        token = ':'.join((self.user.username, 'foo'))
         auth_string = "Basic {}".format(base64.b64encode(token))
         self.headers = {"Authorization": auth_string}
 
