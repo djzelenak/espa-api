@@ -176,6 +176,8 @@ class SceneResponse(object):
 
     @completion_date.setter
     def completion_date(self, value):
+        if isinstance(value, datetime.datetime):
+                value = str(value)
         if value is None:
             value = ''
         if not isinstance(value, basestring):
