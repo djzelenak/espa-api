@@ -91,6 +91,7 @@ transport_api.add_resource(Ordering,
                            '/api/v<version>/order-status/<ordernum>')
 
 transport_api.add_resource(ItemStatus,
+                           '/api/v<version>/item-status',
                            '/api/v<version>/item-status/<orderid>',
                            '/api/v<version>/item-status/<orderid>/<itemnum>')
 

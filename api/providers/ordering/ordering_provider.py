@@ -218,51 +218,32 @@ class OrderingProvider(ProviderInterfaceV0):
                         .format([(s.name, s.status) for s in scenes]))
         return Order.find(orderid)
 
-
-    def item_status(self, orderid, itemid='ALL', username=None):
-        response = {}
-        sql = "select oo.orderid, os.id scene_id, os.name, os.status, os.completion_date, os.note, " \
-              "os.product_dload_url, os.cksum_download_url, os.log_file_contents " \
-              "from ordering_order oo left join ordering_scene os on oo.id = " \
-              "os.order_id where oo.orderid = %s"
+    def item_status(self, orderid, itemid='ALL', username=None, filters=None):
         user = User.by_username(username)
 
-        if itemid is not "ALL":
-            argtup = (orderid, itemid)
-            sql += " AND os.name = %s;"
+        if not isinstance(filters, dict):
+            if filters is None:
+                filters = dict()
+            else:
+                raise TypeError('supplied filters invalid')
+
+        if orderid:
+            orders = Order.where({'orderid': orderid})
         else:
-            argtup = (str(orderid))
-            sql += ";"
+            orders = Order.where({'user_id': user.id})
 
-        with db_instance() as db:
-            db.select(sql, argtup)
-            items = [_ for _ in db.fetcharr]
+        search = dict()
+        if 'status' in filters:
+            search.update(status=(filters.get('status'),))
 
-        if items:
-            id = items[0]['orderid']
-            response['orderid'] = {id: []}
-            for item in items:
-                try:
-                    ts = item['completion_date'].isoformat()
-                except AttributeError:
-                    # completion_date not yet set
-                    ts = ''
+        if 'name' in filters:
+            search.update(name=(filters.get('name'),))
+        elif itemid is not "ALL":
+            search.update(name=(itemid,))
 
-                i = {'scene_id': item['scene_id'],
-                     'name': item['name'],
-                     'status': item['status'],
-                     'completion_date': ts,
-                     'note': item['note'],
-                     'product_dload_url': item['product_dload_url'],
-                     'cksum_download_url': item['cksum_download_url']}
-
-                if user and user.is_staff():
-                    i['log_file_contents'] = item['log_file_contents']
-
-                response['orderid'][id].append(i)
-        else:
-            response['msg'] = 'sorry, no items matched orderid %s , itemid %s' % (orderid, itemid)
-
+        response = dict()
+        for order in orders:
+            response[order.orderid] = order.scenes(search)
         return response
 
     def get_system_status(self):
