@@ -1,5 +1,6 @@
 ## Change Notes
 ###### June 2017 
+* Put all errors/warnings in "messages" JSON field
 * Remove CFMask product (pixel_qa comming soon)
 * Clean up API responses (HTTP Codes, Messages)
 ###### April 2017
