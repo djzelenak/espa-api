@@ -189,7 +189,12 @@ class AvailableProducts(Resource):
     @staticmethod
     def get(version, prod_id=None):
         if prod_id is None:
-            prod_list = request.get_json(force=True)['inputs']
+            body = request.get_json(force=True, silent=True)
+            if body is None or (isinstance(body, dict) and body.get('inputs') is None):
+                message = MessagesResponse(errors=['No input products supplied'],
+                                           code=400)
+                return message()
+            prod_list = body.get('inputs')
         if prod_id:
             prod_list = [prod_id]
         return espa.available_products(prod_list, auth.username())
