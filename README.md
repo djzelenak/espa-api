@@ -42,8 +42,9 @@ simple HTTP communications through the programming language of their choice.
 
 For example, to find what products ESPA can produce for a given Landsat 
 acquisition: 
-```json
-curl  --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/available-products/LC08_L1TP_029030_20161008_20170220_01_T1
+```bash
+curl  --user <erosusername>:<erospassword> \
+    https://espa.cr.usgs.gov/api/v0/available-products/LC08_L1TP_029030_20161008_20170220_01_T1
 ```
 ```json
 // Response: 
@@ -64,8 +65,9 @@ curl  --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/avail
 
 Then, if the acquisition can be processed into a desired product, create a 
 processing order request, including at minimum the output formatting:
-```json
-curl  --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/order -d '
+```bash
+curl  --user <erosusername>:<erospassword> \
+    -d '
 {
   "note": "this is going to be sweet...",
   "format": "gtiff",
@@ -73,7 +75,7 @@ curl  --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/order
         "inputs": ["LC08_L1TP_029030_20161008_20170220_01_T1"], 
         "products": ["sr_ndvi"]
     }
-}'
+}' https://espa.cr.usgs.gov/api/v0/order 
 ```
 ```json
 // Response: 
@@ -85,12 +87,9 @@ curl  --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/order
 
 Finally, use this order-ID to determine when the scene has completed processing, 
 and get the download URL while the output is still on disk:
-```json
-curl --user <erosusername>:<erospassword> -X GET https://espa.cr.usgs.gov/api/v0/item-status/espa-production@email.com-05222017-185100-725 -d '
-{
-  "name": "LC08_L1TP_029030_20161008_20170220_01_T1", 
-  "status": "complete"
-}'
+```bash
+curl --user <erosusername>:<erospassword> \
+    https://espa.cr.usgs.gov/api/v0/item-status/espa-production@email.com-05222017-185100-725
 ```
 ```json
 // Response: 
