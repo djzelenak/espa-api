@@ -225,15 +225,15 @@ class TransportTestCase(unittest.TestCase):
         self.assertIn('messages', resp_json)
         self.assertIn("errors", resp_json['messages'])
 
-    # Waiting for DB mock-ups to be finished
+    @patch('api.domain.user.User.get', MockUser.get)
+    @patch('api.interfaces.ordering.version1.API.place_order', MockOrder.place_order)
     def test_post_order(self):
-        pass
-        # url = '/api/v1/order'
-        #
-        # header = copy.deepcopy(self.headers)
-        #
-        #
-        # response = self.app.get(url)
+        url = '/api/v1/order'
+        data = {'etm7_collection': {'inputs': [''], 'products': ['']}}
+        response = self.app.post(url, headers=self.headers, data=json.dumps(data), environ_base={'REMOTE_ADDR': '127.0.0.1'})
+        resp_json = json.loads(response.get_data())
+        self.assertEqual(201, response.status_code)
+        self.assertEqual({'orderid', 'status'}, set(resp_json.keys()))
 
 if __name__ == '__main__':
     unittest.main()

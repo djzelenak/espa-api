@@ -118,3 +118,13 @@ class MockOrder(object):
         scene_names = scene_names[0:number]
         list_of_tuples = [(order.orderid, s) for s in scene_names]
         return list_of_tuples
+
+    @classmethod
+    def place_order(cls, order, user):
+        self = MockOrder()
+        # need to monkey with the email, otherwise we get collisions with each
+        # test creating a new scratch order with the same user
+        rand = str(random.randint(1, 99))
+        user.email = rand + user.email
+        order = self.ordering_provider.place_order(self.base_order, user)
+        return order
