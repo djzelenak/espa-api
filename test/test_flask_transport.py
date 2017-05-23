@@ -209,6 +209,14 @@ class TransportTestCase(unittest.TestCase):
         response = self.app.post(url, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         self.assertEqual(405, response.status_code)
 
+    def test_messages_field_acc_denied(self):
+        url = '/api/v1/available-products/'
+        response = self.app.get(url, environ_base={'REMOTE_ADDR': '127.0.0.1'})
+        resp_json = json.loads(response.get_data())
+        self.assertEqual(401, response.status_code)
+        self.assertIn('messages', resp_json)
+        self.assertIn('errors', resp_json['messages'])
+
     # Waiting for DB mock-ups to be finished
     def test_post_order(self):
         pass
