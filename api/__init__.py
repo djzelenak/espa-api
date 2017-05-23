@@ -61,8 +61,6 @@ class ValidationException(Exception):
     """
 
     def __init__(self, msg):
-        super(ValidationException, self).__init__(msg)
-
         err_ls = msg.split('\n')
         err_key = err_ls[0].replace(':', '')
         self.response = {err_key: []}
@@ -71,6 +69,8 @@ class ValidationException(Exception):
             if err:
                 err = re.sub(r'<obj>.', '', err)
                 self.response[err_key].append(err)
+
+        super(ValidationException, self).__init__(str(self.response))
 
 
 class InventoryException(Exception):

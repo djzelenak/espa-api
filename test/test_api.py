@@ -204,31 +204,17 @@ class TestValidation(unittest.TestCase):
         """
         exc_type = ValidationException
         invalid_order = copy.deepcopy(self.base_order)
-        c = 0  # For initial debugging
 
         for proj in testorders.good_test_projections:
             invalid_order['projection'] = {proj: testorders.good_test_projections[proj]}
 
-            invalid_list = testorders.InvalidOrders(invalid_order, self.base_schema, abbreviated=True)
+            invalid_list = testorders.InvalidOrders(invalid_order, self.base_schema, abbreviated=False)
 
             for order, test, exc in invalid_list:
-                # issues getting assertRaisesRegExp to work correctly
-                with self.assertRaises(exc_type):
-                    try:
-                        c += 1
-                        api.validation(order, self.staffuser.username)
-                    except exc_type as e:
-                        if str(exc) in str(e):
-                            raise
-                        else:
-                            self.fail('\n\nExpected in exception message:\n{}'
-                                      '\n\nException message raised:\n{}'
-                                      '\n\nUsing test {}'.format(str(exc), str(e), test))
-                    else:
-                        self.fail('\n{} Exception was not raised\n'
-                                  '\nExpected exception message:\n{}\n'
-                                  '\nUsing test: {}'.format(exc_type, str(exc), test))
-        #print c  # For initial debugging
+                # empty lists cause assertRaisesRegExp to fail
+                exc = str(exc).replace('[', '\[')
+                with self.assertRaisesRegexp(exc_type, exc):
+                    api.validation(order, self.staffuser.username)
 
     def test_validate_sr_restricted_human_readable(self):
         """
