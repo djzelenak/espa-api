@@ -56,12 +56,17 @@ class OrderValidatorV0(validictory.SchemaValidator):
             if not self.validate_type_object(self.data_source['projection']):
                 return
             if 'lonlat' in self.data_source['projection']:
-                if 'image_extents' in self.data_source and self.data_source['image_extents']['units'] != 'dd':
-                    msg = ('{}:{} must be "dd" for projection "lonlat", not "{}"'
-                           .format(path, fieldname,
-                                   self.data_source['image_extents']['units']))
-                    self._errors.append(msg)
-                    return
+                if 'image_extents' in self.data_source:
+                    if not self.validate_type_object(self.data_source['image_extents']):
+                        return
+                    if not 'units' in self.data_source['image_extents']:
+                        return
+                    if self.data_source['image_extents']['units'] != 'dd':
+                        msg = ('{}:{} must be "dd" for projection "lonlat", not "{}"'
+                               .format(path, fieldname,
+                                       self.data_source['image_extents']['units']))
+                        self._errors.append(msg)
+                        return
 
         if 'resize' in self.data_source:
             if not self.validate_type_object(self.data_source['resize']):
