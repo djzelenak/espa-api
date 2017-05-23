@@ -142,7 +142,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
             self._errors.append(msg)
         elif cmin < 1:
             msg = ('{}:{} pixel count value falls below acceptable threshold'
-                   'of 1 pixel'.format(path, fieldname, cmin))
+                   ' of 1 pixel'.format(path, fieldname, cmin))
             self._errors.append(msg)
 
     @staticmethod
