@@ -128,3 +128,10 @@ class MockOrder(object):
         user.email = rand + user.email
         order = self.ordering_provider.place_order(self.base_order, user)
         return order
+
+    @classmethod
+    def cancel_order(cls, orderid, request_address):
+        order = Order.find(orderid)
+        order.status = 'cancelled'
+        order.save()
+        return order

@@ -235,6 +235,16 @@ class TransportTestCase(unittest.TestCase):
         self.assertEqual(201, response.status_code)
         self.assertEqual({'orderid', 'status'}, set(resp_json.keys()))
 
+    @patch('api.domain.user.User.get', MockUser.get)
+    @patch('api.interfaces.ordering.version1.API.cancel_order', MockOrder.cancel_order)
+    def test_cancel_order(self):
+        url = '/api/v1/order'
+        data = {'orderid': self.orderid, 'status': 'cancelled'}
+        response = self.app.put(url, headers=self.headers, data=json.dumps(data), environ_base={'REMOTE_ADDR': '127.0.0.1'})
+        resp_json = json.loads(response.get_data())
+        self.assertEqual(data, resp_json)
+        self.assertEqual(202, response.status_code)
+
 if __name__ == '__main__':
     unittest.main()
 
