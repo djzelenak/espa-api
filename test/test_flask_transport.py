@@ -217,6 +217,14 @@ class TransportTestCase(unittest.TestCase):
         self.assertIn('messages', resp_json)
         self.assertIn('errors', resp_json['messages'])
 
+    def test_not_found(self):
+        url = '/api/v1/not-valid'
+        response = self.app.get(url, environ_base={'REMOTE_ADDR': '127.0.0.1'})
+        resp_json = json.loads(response.get_data())
+        self.assertEqual(404, response.status_code)
+        self.assertIn('messages', resp_json)
+        self.assertIn("errors", resp_json['messages'])
+
     # Waiting for DB mock-ups to be finished
     def test_post_order(self):
         pass
