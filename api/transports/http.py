@@ -39,12 +39,6 @@ def no_results_found(e):
                             code=200)()
 
 
-@app.errorhandler(Exception)
-def internal_server_error(e):
-    logger.debug('Internal Server Error: {}'.format(e))
-    return SystemErrorResponse()
-
-
 @app.errorhandler(ValidationException)
 def invalid_order_error(e):
     message = MessagesResponse(errors=[e.response],
@@ -70,6 +64,12 @@ def method_not_allowed(e):
                                       .format(request.path, request.__dict__)],
                               code=405)
     return errors()
+
+
+@app.errorhandler(Exception)
+def internal_server_error(e):
+    logger.debug('Internal Server Error: {}'.format(e))
+    return SystemErrorResponse()
 
 transport_api = Api(app)
 
