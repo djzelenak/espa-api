@@ -549,11 +549,12 @@ class InvalidOrders(object):
         """
         If stats restrictions are in place, remove valid stats products from order
         """
+        order = copy.deepcopy(self.valid_order)
         results = []
         if stats:
             new_order = {}
-            for item in self.valid_order:
-                new_order[item] = self.valid_order[item]
+            for item in order:
+                new_order[item] = order[item]
                 if isinstance(new_order[item], dict) and 'inputs' in new_order[item].keys():
                     new_order[item]['products'] = ['l1', 'stats']
 
