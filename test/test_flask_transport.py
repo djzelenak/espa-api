@@ -187,6 +187,13 @@ class TransportTestCase(unittest.TestCase):
         resp_json = json.loads(response.get_data())
         assert 'properties' in resp_json.keys()
 
+    @patch('api.domain.user.User.get', MockUser.get)
+    def test_bad_method(self):
+        url = '/api/v1/available-products/'
+        data = {'inputs': ['bad_id']}
+        response = self.app.post(url, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
+        self.assertEqual(405, response.status_code)
+
     # Waiting for DB mock-ups to be finished
     def test_post_order(self):
         pass
