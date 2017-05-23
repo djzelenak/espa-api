@@ -236,11 +236,11 @@ class Emails(object):
         '''.format(start_capacity=start_capacity['capacity'],
                    start_used=start_capacity['used'],
                    start_available=start_capacity['available'],
-                   start_percent_free=start_capacity['percent_free'],
+                   start_percent_free=start_capacity['percent_used'],
                    end_capacity=end_capacity['capacity'],
                    end_used=end_capacity['used'],
                    end_available=end_capacity['available'],
-                   end_percent_free=end_capacity['percent_free'],
+                   end_percent_free=end_capacity['percent_used'],
                    purged_orders=order_str)
 
         now = datetime.datetime.now()
