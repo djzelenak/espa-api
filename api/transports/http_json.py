@@ -349,9 +349,10 @@ class OrderResponse(object):
     def completion_date(self, value):
         if isinstance(value, datetime.datetime):
                 value = str(value)
-        if value is not None:
-            if not isinstance(value, basestring):
-                raise TypeError('Expected String')
+        if value is None:
+            value = ''
+        if not isinstance(value, basestring):
+            raise TypeError('Expected String')
         self._completion_date = value
 
     @property
