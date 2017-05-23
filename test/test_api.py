@@ -224,34 +224,19 @@ class TestValidation(unittest.TestCase):
         exc_type = ValidationException
         invalid_list = {'olitirs8_collection': {'inputs': ['lc08_l1tp_031043_20160225_20170224_01_t1'],
                                      'products': ['sr'],
-                                     'err_msg': 'Requested {} products are restricted by date. '
-                                                'Remove <obj>.{} scenes: {}'},
+                                     'err_msg': 'Requested {} products are restricted by date'},
                         'oli8_collection': {'inputs': ['lo08_l1tp_021049_20150304_20170227_01_t1'],
                                  'products': ['sr'],
-                                 'err_msg': 'Requested {} products are not available. '
-                                            'Remove <obj>.{} scenes: {}'}}
+                                 'err_msg': 'Requested {} products are not available'}}
 
         for stype in invalid_list:
             invalid_order = copy.deepcopy(self.base_order)
             invalid_order[stype]['inputs'] = invalid_list[stype]['inputs']
             invalid_order[stype]['products'] = invalid_list[stype]['products']
-            uppercase_products = map(str.upper, invalid_order[stype]['inputs'])
             for p in invalid_order[stype]['products']:
-                err_message = invalid_list[stype]['err_msg'].format(p, stype, uppercase_products)
-                with self.assertRaises(exc_type):
-                    try:
-                        api.validation.validate(invalid_order, self.staffuser.username)
-                    except exc_type as e:
-                        if str(err_message) in str(e):
-                            raise
-                        else:
-                            self.fail('\n\nExpected in exception message:\n{}'
-                                      '\n\nException message raised:\n{}'
-                                      .format(str(err_message), str(e)))
-                    else:
-                        self.fail('\n{} Exception was not raised\n'
-                                  '\nExpected exception message:\n{}\n'
-                                  .format(exc_type, str(err_message)))
+                err_message = invalid_list[stype]['err_msg'].format(p)
+                with self.assertRaisesRegexp(exc_type, err_message):
+                    api.validation.validate(invalid_order, self.staffuser.username)
 
 
 class TestInventory(unittest.TestCase):
