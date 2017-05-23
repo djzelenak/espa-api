@@ -174,8 +174,8 @@ class OrderValidatorV0(validictory.SchemaValidator):
         if isinstance(value, dict):
             if single:
                 if len(value) > 1:
-                    msg = ('{}: {} field only accepts one object, not {}',
-                           path, fieldname, len(value))
+                    msg = ('{} field only accepts one object, not {}'
+                           .format(path, len(value)))
                     self._errors.append(msg)
 
     def validate_enum(self, x, fieldname, schema, path, options=None):
@@ -188,7 +188,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
                 options = options(x)
             if value not in options:
                 if not (value == '' and schema.get('blank', self.blank_by_default)):
-                    msg = ("Not available: {} products for {} scenes. "
+                    msg = ("Not available: {} products for {}. "
                            "Please choose from available products: {}"
                            .format(value, path.split('.products')[0], options))
                     self._errors.append(msg)
@@ -226,7 +226,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
         if isinstance(value, (int, long, float, Decimal)):
             if not val_range[0] <= abs(value) <= val_range[1]:
                 msg = ('Absolute value of {} must fall between {} and {}'
-                       .format(fieldname, val_range[0], val_range[1]))
+                       .format(path, val_range[0], val_range[1]))
                 self._errors.append(msg)
 
     def validate_ps_dd_rng(self, x, fieldname, schema, path, val_range):
@@ -238,7 +238,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
                 if x['pixel_size_units'] == 'dd':
                     if not val_range[0] <= value <= val_range[1]:
                         msg = ('Value of {} must fall between {} and {}'
-                               .format(fieldname, val_range[0], val_range[1]))
+                               .format(path, val_range[0], val_range[1]))
                         self._errors.append(msg)
 
     def validate_ps_meter_rng(self, x, fieldname, schema, path, val_range):
@@ -249,8 +249,8 @@ class OrderValidatorV0(validictory.SchemaValidator):
             if 'pixel_size_units' in x:
                 if x['pixel_size_units'] == 'meters':
                     if not val_range[0] <= value <= val_range[1]:
-                        msg = ('{} value must fall between {} and {}'
-                               .format(fieldname, val_range[0], val_range[1]))
+                        msg = ('Value of {} must fall between {} and {}'
+                               .format(path, val_range[0], val_range[1]))
                         self._errors.append(msg)
 
     def validate_stats(self, x, fieldname, schema, path, stats):
@@ -273,9 +273,13 @@ class OrderValidatorV0(validictory.SchemaValidator):
         if sensor not in stats['sensors']:
             return
 
-        if not set(stats['products']) & set(x['products']):
-            msg = ('You must request valid products for statistics: {}'
-                   .format(stats['products']))
+        if x.get('products'):
+            if not set(stats['products']) & set(x['products']):
+                msg = ('You must request valid products for statistics: {}'
+                       .format(stats['products']))
+                self._errors.append(msg)
+        else:
+            msg = "Required field 'products' missing"
             self._errors.append(msg)
 
     def validate_restricted(self, x, fieldname, schema, path, restricted):
