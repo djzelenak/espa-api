@@ -69,19 +69,21 @@ class TransportTestCase(unittest.TestCase):
 
     def test_get_api_response_type(self):
         response = self.app.get('/api', headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
-        assert response.content_type == 'application/json'
+        self.assertEqual(response.content_type, 'application/json')
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_api_response_content(self):
         response = self.app.get('/api', headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
         self.assertEqual(set(['v1', 'v0']), set(resp_json.keys()))
+        self.assertEqual(200, response.status_code)
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_api_info_response_content(self):
         response = self.app.get('/api/v1', headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
-        assert "Version 1" in resp_json['description']
+        self.assertIn("Version 1", resp_json['description'])
+        self.assertEqual(200, response.status_code)
 
     @patch('api.domain.user.User.get', MockUser.get)
     @patch('api.providers.ordering.ordering_provider.OrderingProvider.available_products', mock_api.available_products)
@@ -89,7 +91,8 @@ class TransportTestCase(unittest.TestCase):
         url = '/api/v1/available-products/' + ",".join(self.sceneids)
         response = self.app.get(url, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
-        assert "etm" in resp_json.keys()
+        self.assertIn("etm", resp_json.keys())
+        self.assertEqual(200, response.status_code)
 
     @patch('api.domain.user.User.get', MockUser.get)
     @patch('api.providers.ordering.ordering_provider.OrderingProvider.available_products', mock_api.available_products)
@@ -98,7 +101,8 @@ class TransportTestCase(unittest.TestCase):
         data_dict = {'inputs': self.sceneids}
         response = self.app.get(url, data=json.dumps(data_dict), headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
-        assert "etm" in resp_json.keys()
+        self.assertIn('etm', resp_json.keys())
+        self.assertEqual(200, response.status_code)
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_available_orders_user(self):
@@ -107,6 +111,7 @@ class TransportTestCase(unittest.TestCase):
         resp_json = json.loads(response.get_data())
         self.assertIsInstance(resp_json, list)
         self.assertListEqual(resp_json, [self.orderid])
+        self.assertEqual(200, response.status_code)
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_available_orders_email(self):
@@ -116,6 +121,7 @@ class TransportTestCase(unittest.TestCase):
         resp_json = json.loads(response.get_data())
         self.assertIsInstance(resp_json, list)
         self.assertListEqual(resp_json, [self.orderid])
+        self.assertEqual(200, response.status_code)
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_order_by_ordernum(self):
@@ -125,6 +131,7 @@ class TransportTestCase(unittest.TestCase):
         items = {'orderid', 'note', 'order_source', 'order_type', 'product_opts',
                  'priority', 'completion_date', 'status', 'order_date', 'product_options'}
         self.assertEqual(items, set(resp_json))
+        self.assertEqual(200, response.status_code)
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_order_status_by_ordernum(self):
@@ -134,6 +141,7 @@ class TransportTestCase(unittest.TestCase):
         self.assertEqual({'orderid', 'status'}, set(resp_json))
         self.assertEqual(self.orderid, resp_json.get('orderid'))
         self.assertEqual('ordered', resp_json.get('status'))
+        self.assertEqual(200, response.status_code)
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_item_status_by_ordernum(self):
@@ -143,6 +151,7 @@ class TransportTestCase(unittest.TestCase):
         all_names = set([s['name'].lower() for s in resp_json[self.orderid]])
         all_names -= {'plot'}
         self.assertEqual(self.input_names_all, all_names)
+        self.assertEqual(200, response.status_code)
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_item_status_by_ordernum_itemnum(self):
@@ -151,41 +160,47 @@ class TransportTestCase(unittest.TestCase):
         resp_json = json.loads(response.get_data())
         all_names = set([s['name'].lower() for s in resp_json[self.orderid]])
         self.assertEqual({self.itemid.lower()}, all_names)
+        self.assertEqual(200, response.status_code)
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_current_user(self):
         url = "/api/v1/user"
         response = self.app.get(url, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
-        assert 'username' in resp_json.keys()
+        self.assertIn('username', resp_json.keys())
+        self.assertEqual(200, response.status_code)
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_projections(self):
         url = '/api/v1/projections'
         response = self.app.get(url, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
-        assert 'aea' in resp_json.keys()
+        self.assertIn('aea', resp_json.keys())
+        self.assertEqual(200, response.status_code)
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_formats(self):
         url = '/api/v1/formats'
         response = self.app.get(url, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
-        assert 'formats' in resp_json.keys()
+        self.assertIn('formats', resp_json.keys())
+        self.assertEqual(200, response.status_code)
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_resampling(self):
         url = '/api/v1/resampling-methods'
         response = self.app.get(url, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
-        assert 'resampling_methods' in resp_json.keys()
+        self.assertIn('resampling_methods', resp_json.keys())
+        self.assertEqual(200, response.status_code)
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_order_schema(self):
         url = '/api/v1/order-schema'
         response = self.app.get(url, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
-        assert 'properties' in resp_json.keys()
+        self.assertIn('properties', resp_json.keys())
+        self.assertEqual(200, response.status_code)
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_bad_method(self):
