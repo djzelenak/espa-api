@@ -67,15 +67,14 @@ Then, if the acquisition can be processed into a desired product, create a
 processing order request, including at minimum the output formatting:
 ```bash
 curl  --user <erosusername>:<erospassword> \
-    -d '
-{
-  "note": "this is going to be sweet...",
-  "format": "gtiff",
-  "olitirs8_collection": {
-        "inputs": ["LC08_L1TP_029030_20161008_20170220_01_T1"], 
-        "products": ["sr_ndvi"]
-    }
-}' https://espa.cr.usgs.gov/api/v0/order 
+    -d '{
+          "note": "this is going to be sweet...",
+          "format": "gtiff",
+          "olitirs8_collection": {
+                "inputs": ["LC08_L1TP_029030_20161008_20170220_01_T1"], 
+                "products": ["sr_ndvi"]
+            }
+        }' https://espa.cr.usgs.gov/api/v0/order 
 ```
 ```json
 // Response: 
