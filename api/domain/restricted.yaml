@@ -3,6 +3,7 @@ all:
     role:
         - lst
         - swe
+        - cloud
         - pixel_qa
         - restricted_prod
     ordering:
