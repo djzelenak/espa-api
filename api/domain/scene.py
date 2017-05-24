@@ -431,21 +431,22 @@ class Scene(object):
                                  .format(e.message))
 
         return ret
-    
-    def cancel(self):
+
+    @staticmethod
+    def cancel_opts(self):
         """
-        Performs consistent cancellation from various providers
-        
-        :return: bool
+        Options for consistent cancellation from various providers
+
+        :return: dict
         """
-        self.status = 'cancelled'
-        self.note = 'Cancelled by user'
-        self.log_file_contents = ''
-        self.product_distro_location = ''
-        self.product_dload_url = ''
-        self.cksum_distro_location = ''
-        self.cksum_download_url = ''
-        self.job_name = ''
-        # download_size is left as an indication it was already completed
-        self.save()
-        return True
+        updates = {'status': 'cancelled',
+                   'note': 'Cancelled',
+                   # download_size left alone if already completed
+                   'log_file_contents': '',
+                   'product_distro_location': '',
+                   'product_dload_url': '',
+                   'cksum_distro_location': '',
+                   'cksum_download_url': '',
+                   'job_name': ''
+                   }
+        return updates

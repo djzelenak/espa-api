@@ -111,7 +111,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             else:
                 logger.debug('ERR file was not found: {}'
                              .format(completed_file_location))
-            scene.cancel()
+            Scene.bulk_update((scene.id,), Scene.cancel_opts())
             return True  # TODO: proc False?
 
         scene.status = 'complete'
@@ -239,7 +239,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         order = Order.find(orderid)
         scene = Scene.by_name_orderid(name, order.id)
         if order.status == 'cancelled':
-            scene.cancel()
+            Scene.bulk_update((scene.id,), Scene.cancel_opts())
             return True  # TODO: proc False?
         if processing_loc:
             scene.processing_location = processing_loc
@@ -740,7 +740,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 scene = scene[0]
                 if scene.status == 'complete':
                     status = 'C'
-                elif scene.status == 'unavailable':
+                elif scene.status in ('unavailable', 'cancelled'):
                     status = 'R'
                 else:
                     status = 'I'
@@ -778,6 +778,21 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         except Exception as e:
             raise ProductionProviderException("error with handle_retry_products: {}".format(e))
 
+        return True
+
+    @staticmethod
+    def handle_cancelled_orders():
+        """ Find all orders without cancelled order email sent, and sends them
+        :return: True
+        """
+        orders = Order.where({'status': 'cancelled',
+                              'completion_email_sent': None})
+        for order in orders:
+            if not order.completion_email_sent:
+                onlinecache.delete(order.orderid)
+                if order.order_source == 'espa':
+                    emails.Emails().send_order_cancelled_email(order.orderid)
+                    order.update('completion_email_sent', datetime.datetime.now())
         return True
 
     def handle_onorder_landsat_products(self):
@@ -1203,6 +1218,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         self.handle_retry_products()
         self.load_ee_orders()
         self.handle_failed_ee_updates()
+        self.handle_cancelled_orders()
         self.handle_submitted_products()
         self.calc_scene_download_sizes()
         self.finalize_orders()

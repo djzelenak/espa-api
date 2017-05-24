@@ -3,6 +3,7 @@ import os
 
 from api.domain import sensor
 from api.domain.order import Order
+from api.domain.scene import Scene
 from api.domain.user import User
 from api.util.dbconnect import db_instance
 from api.util import julian_date_check
@@ -192,23 +193,13 @@ class OrderingProvider(ProviderInterfaceV0):
         killable_scene_states = ('submitted', 'oncache', 'onorder',
                                  'error', 'unavailable', 'complete')
         scenes = order.scenes(sql_dict={'status': killable_scene_states})
-        for product in scenes:
-            product.cancel()
-            if product.ee_unit_id:
-                lta.update_order_status(order.ee_order_id,
-                                        product.ee_unit_id, 'R')
+        Scene.bulk_update([s.id for s in scenes], Scene.cancel_opts())
+
         order.status = 'cancelled'
-        onlinecache.delete(order.orderid)
-        emails.Emails().send_order_cancelled_email(orderid, request_ip_address)
-        order.completion_email_sent = datetime.datetime.now()
         order.save()
         logger.info('Request to cancel {} from {} successful.'
                     .format(orderid, request_ip_address))
-        scenes = order.scenes(sql_dict={'status !=': 'cancelled'})
-        if len(scenes):
-            logger.info('Scenes missing cancellation: {}'
-                        .format([(s.name, s.status) for s in scenes]))
-        return Order.find(orderid)
+        return order
 
     def item_status(self, orderid, itemid='ALL', username=None, filters=None):
         user = User.by_username(username)
