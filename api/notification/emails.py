@@ -90,7 +90,7 @@ class Emails(object):
         '''Finds all the orders that have not had their initial emails sent and
         sends them'''
 
-        orders = Order.where({'status': 'ordered'})
+        orders = Order.where({'status': 'ordered', 'initial_email_sent IS': None})
         for o in orders:
             if not o.initial_email_sent:
                 self.send_initial(o.orderid)
