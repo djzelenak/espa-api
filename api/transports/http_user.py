@@ -240,6 +240,11 @@ class ListOrders(Resource):
                 user = User.where({'username': email})
             if len(user) == 1:
                 search = dict(email=str(email), filters=filters)
+            else:
+                response = MessagesResponse(warnings=["User {} not found"
+                                                      .format(email)],
+                                            code=200)
+                return response()
 
         response = OrdersResponse(espa.fetch_user_orders(**search))
         response.limit = ('orderid',)
