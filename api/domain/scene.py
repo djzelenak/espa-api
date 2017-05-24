@@ -433,7 +433,7 @@ class Scene(object):
         return ret
 
     @staticmethod
-    def cancel_opts(self):
+    def cancel_opts():
         """
         Options for consistent cancellation from various providers
 
