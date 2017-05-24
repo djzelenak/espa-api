@@ -427,7 +427,7 @@ curl --user <erosusername>:<erospassword> -d '{"olitirs8_collection": {
 ```
 **PUT /api/v0/order**<a id="apiUpdateOrder"></a>
 
-**COMMING SOON**
+**COMING SOON**
 
 Update an order with a JSON body. 
 
