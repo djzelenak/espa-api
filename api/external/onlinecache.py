@@ -149,8 +149,9 @@ class OnlineCache(object):
             raise OnlineCacheException(exception)
 
         if 'stderr' in result and result['stderr']:
-            logger.debug('Error executing command: {} '
-                         'stderror returned: {}'.format(cmd, result['stderr']))
+            if not silent:
+                logger.debug('Error executing command: {} '
+                             'stderror returned: {}'.format(cmd, result['stderr']))
 
             raise OnlineCacheException(result['stderr'])
 
