@@ -1,9 +1,9 @@
 ## Change Notes
 ###### June 2017 
-* **COMMING SOON** Ability to cancel orders
+* **COMING SOON** Ability to cancel orders
 * Put all errors/warnings in "messages" JSON field
-* Remove CFMask product (pixel_qa comming soon)
-* Clean up API responses (HTTP Codes, Messages)
+* Remove CFMask product (pixel_qa coming soon)
+* Bug fixes for API responses (HTTP Codes, Messages)
 ###### April 2017
 * Restrict ordering of pre-collection landsat inputs
 ###### March 2017
@@ -14,4 +14,3 @@
 * Allow MODIS Collection 6 product ordering
 * Change email subject line prefix to "USGS ESPA"
 * Catch OSError if product download not found
-
