@@ -233,10 +233,14 @@ class ListOrders(Resource):
     @staticmethod
     def get(version, email=None):
         filters = request.get_json(force=True, silent=True)
-        if email:
-            search = dict(email=str(email), filters=filters)
-        else:
-            search = dict(username=auth.username(), filters=filters)
+        search = dict(username=auth.username(), filters=filters)
+        if email:  # Allow user collaboration
+            user = User.where({'email': email})
+            if not len(user):
+                user = User.where({'username': email})
+            if len(user) == 1:
+                search = dict(email=str(email), filters=filters)
+
         response = OrdersResponse(espa.fetch_user_orders(**search))
         response.limit = ('orderid',)
         response.code = 200
