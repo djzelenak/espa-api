@@ -222,6 +222,29 @@ class TransportTestCase(unittest.TestCase):
         self.assertIn('errors', resp_json['messages'])
 
     @patch('api.domain.user.User.get', MockUser.get)
+    def test_bad_validation_inputs(self):
+        url = '/api/v1/order'
+        data = '{"inputs": []}'
+        response = self.app.post(url, data=data, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
+        resp_json = json.loads(response.get_data())
+        self.assertEqual(400, response.status_code)
+        self.assertIn('messages', resp_json)
+        self.assertIn('errors', resp_json['messages'])
+        self.assertIn('Schema errors',
+                      resp_json['messages']['errors'][0])
+
+    @patch('api.domain.user.User.get', MockUser.get)
+    def test_bad_validation_sensor_inputs(self):
+        url = '/api/v1/order'
+        data = '{"etm7_collection": {"inputs": ["LE07_L1TP_010028_20050420_20160925_01_T1"]}}'
+        response = self.app.post(url, data=data, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
+        resp_json = json.loads(response.get_data())
+        self.assertEqual(400, response.status_code)
+        self.assertIn('messages', resp_json)
+        self.assertIn('errors', resp_json['messages'])
+        self.assertIn('2 validation errors', resp_json['messages']['errors'][0])
+
+    @patch('api.domain.user.User.get', MockUser.get)
     def test_bad_data_avail_inputs(self):
         url = '/api/v1/available-products/'
         data = '{"bad": []}'
