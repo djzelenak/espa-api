@@ -786,7 +786,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         :return: True
         """
         orders = Order.where({'status': 'cancelled',
-                              'completion_email_sent': None})
+                              'completion_email_sent IS': None})
         for order in orders:
             if not order.completion_email_sent:
                 if onlinecache.exists(order.orderid):
