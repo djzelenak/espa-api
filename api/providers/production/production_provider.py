@@ -789,7 +789,8 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                               'completion_email_sent': None})
         for order in orders:
             if not order.completion_email_sent:
-                onlinecache.delete(order.orderid)
+                if onlinecache.exists(order.orderid):
+                    onlinecache.delete(order.orderid)
                 if order.order_source == 'espa':
                     emails.Emails().send_order_cancelled_email(order.orderid)
                     order.update('completion_email_sent', datetime.datetime.now())
