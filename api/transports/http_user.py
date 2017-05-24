@@ -12,6 +12,7 @@ from api.util import lowercase_all
 from api.domain.user import User, UserException
 from api.external.ers import (
     ERSApiErrorException, ERSApiConnectionException, ERSApiAuthFailedException)
+from api import ValidationException, InventoryException
 from api.transports.http_json import (
     MessagesResponse, UserResponse, OrderResponse, OrdersResponse, ItemsResponse,
     BadRequestResponse, SystemErrorResponse, AccessDeniedResponse, AuthFailedResponse,
@@ -313,10 +314,18 @@ class Ordering(Resource):
             return BadRequestResponse()
         if order:
             order = lowercase_all(order)
-            order = espa.place_order(order, user)
-            message = OrderResponse(**order.as_dict())
-            message.limit = ('orderid', 'status')
-            message.code = 201
+            try:
+                order = espa.place_order(order, user)
+            except ValidationException as e:
+                message = MessagesResponse(errors=[e.response],
+                                           code=400)
+            except InventoryException as e:
+                message = MessagesResponse(errors=[e.response],
+                                           code=400)
+            else:
+                message = OrderResponse(**order.as_dict())
+                message.limit = ('orderid', 'status')
+                message.code = 201
             return message()
         else:
             message = MessagesResponse(errors=['Must supply order JSON'],

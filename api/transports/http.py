@@ -8,7 +8,6 @@ from flask.ext.restful import Api, Resource, reqparse, fields, marshal
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.util import api_cfg
 from api.system.logger import ilogger as logger
-from api import ValidationException, InventoryException
 
 from http_user import Index, VersionInfo, AvailableProducts, ValidationInfo,\
     ListOrders, Ordering, UserInfo, ItemStatus, BacklogStats, PublicSystemStatus
@@ -36,21 +35,6 @@ def page_not_found(e):
 def no_results_found(e):
     return MessagesResponse(warnings=['No results found.'],
                             code=200)()
-
-
-@app.errorhandler(ValidationException)
-def invalid_order_error(e):
-    message = MessagesResponse(errors=[e.response],
-                               code=400)
-    return message()
-
-
-@app.errorhandler(InventoryException)
-def missing_data_error(e):
-    message = MessagesResponse(errors=[e.response],
-                               code=400)
-    return message()
-
 
 @app.errorhandler(Exception)
 def internal_server_error(e):
