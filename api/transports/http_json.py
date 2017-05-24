@@ -662,3 +662,6 @@ AccessDeniedResponse = MessagesResponse(errors=['Access Denied'],
                                         code=403)
 AuthFailedResponse = MessagesResponse(errors=['Invalid username/password'],
                                       code=401)
+# flask-restful otherwise overrides and handles 405 responses
+BadMethodResponse = MessagesResponse(errors=['Invalid method. Try GET instead'],
+                                      code=405)

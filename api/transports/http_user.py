@@ -14,13 +14,15 @@ from api.external.ers import (
     ERSApiErrorException, ERSApiConnectionException, ERSApiAuthFailedException)
 from api.transports.http_json import (
     MessagesResponse, UserResponse, OrderResponse, OrdersResponse, ItemsResponse,
-    BadRequestResponse, SystemErrorResponse, AccessDeniedResponse, AuthFailedResponse)
+    BadRequestResponse, SystemErrorResponse, AccessDeniedResponse, AuthFailedResponse,
+    BadMethodResponse)
 
 from flask import jsonify
 from flask import make_response
 from flask import request
 from flask.ext.httpauth import HTTPBasicAuth
 from flask.ext.restful import Resource
+from werkzeug.exceptions import BadRequest
 
 
 from functools import wraps
@@ -160,6 +162,14 @@ class Index(Resource):
     def get():
         return 'Welcome to the ESPA API, please direct requests to /api'
 
+    @staticmethod
+    def post(version):
+        return BadMethodResponse()
+
+    @staticmethod
+    def put(version):
+        return BadMethodResponse()
+
 
 class VersionInfo(Resource):
     decorators = [auth.login_required, greylist]
@@ -182,6 +192,14 @@ class VersionInfo(Resource):
 
         return response
 
+    @staticmethod
+    def post(version):
+        return BadMethodResponse()
+
+    @staticmethod
+    def put(version):
+        return BadMethodResponse()
+
 
 class AvailableProducts(Resource):
     decorators = [auth.login_required, greylist, version_filter]
@@ -199,6 +217,14 @@ class AvailableProducts(Resource):
             prod_list = [prod_id]
         return espa.available_products(prod_list, auth.username())
 
+    @staticmethod
+    def post(version):
+        return BadMethodResponse()
+
+    @staticmethod
+    def put(version):
+        return BadMethodResponse()
+
 
 class ListOrders(Resource):
     decorators = [auth.login_required, greylist, version_filter]
@@ -214,6 +240,14 @@ class ListOrders(Resource):
         response.limit = ('orderid',)
         response.code = 200
         return response()
+
+    @staticmethod
+    def post(version):
+        return BadMethodResponse()
+
+    @staticmethod
+    def put(version):
+        return BadMethodResponse()
 
 
 class ValidationInfo(Resource):
@@ -235,6 +269,14 @@ class ValidationInfo(Resource):
 
         return response
 
+    @staticmethod
+    def post(version):
+        return BadMethodResponse()
+
+    @staticmethod
+    def put(version):
+        return BadMethodResponse()
+
 
 class Ordering(Resource):
     decorators = [auth.login_required, greylist, version_filter]
@@ -243,7 +285,13 @@ class Ordering(Resource):
     def get(version, ordernum=None):
         user = flask.g.user
         if ordernum is None:
-            ordernum = request.get_json(force=True).get('orderid')
+            body = request.get_json(force=True, silent=True)
+            if body is None or (isinstance(body, dict) and body.get('orderid') is None):
+                message = MessagesResponse(errors=['No orderid supplied'],
+                                           code=400)
+                return message()
+            else:
+                ordernum = body.get('orderid')
         orders = espa.fetch_order(ordernum)
         response = OrderResponse(**orders[0].as_dict())
         response.code = 200
@@ -256,12 +304,13 @@ class Ordering(Resource):
                                   'product_opts')
         return response()
 
-
     @staticmethod
     def post(version):
         user = flask.g.user
         message = None
-        order = request.get_json(force=True)
+        order = request.get_json(force=True, silent=True)
+        if order is None:
+            return BadRequestResponse()
         if order:
             order = lowercase_all(order)
             order = espa.place_order(order, user)
@@ -278,12 +327,23 @@ class Ordering(Resource):
     def put(version):
         user = flask.g.user
         remote_addr = user_ip_address()
-        update = request.get_json(force=True)
+
+        body = request.get_json(force=True)
+        if body is None or (isinstance(body, dict) and body.get('orderid') is None):
+            message = MessagesResponse(errors=['No orderid supplied'],
+                                       code=400)
+            return message()
+        elif isinstance(body, dict) and body.get('status') != 'cancelled':
+            message = MessagesResponse(errors=['Invalid status supplied'],
+                                       code=400)
+            return message()
+        else:
+            orderid, status = body.get('orderid'), body.get('status')
         if False: #not user.is_staff():  # TODO: plan to be public facing
             msg = ('Order cancellation is not available yet')
             message = MessagesResponse(errors=[msg], code=400)
             return message()
-        orders = espa.fetch_order(update.get('orderid'))
+        orders = espa.fetch_order(orderid)
         assert(orders[0].user_id == user.id)
         order = espa.cancel_order(orders[0].id, remote_addr)
         message = OrderResponse(**order.as_dict())
@@ -301,6 +361,14 @@ class UserInfo(Resource):
         user.code = 200
         return user()
 
+    @staticmethod
+    def post(version):
+        return BadMethodResponse()
+
+    @staticmethod
+    def put(version):
+        return BadMethodResponse()
+
 
 class ItemStatus(Resource):
     decorators = [auth.login_required, greylist, version_filter]
@@ -317,6 +385,14 @@ class ItemStatus(Resource):
                              'product_dload_url', 'cksum_download_url')
         return message()
 
+    @staticmethod
+    def post(version):
+        return BadMethodResponse()
+
+    @staticmethod
+    def put(version):
+        return BadMethodResponse()
+
 
 class BacklogStats(Resource):
     decorators = [auth.login_required, greylist, version_filter]
@@ -325,6 +401,14 @@ class BacklogStats(Resource):
     def get(version):
         return espa.get_backlog()
 
+    @staticmethod
+    def post(version):
+        return BadMethodResponse()
+
+    @staticmethod
+    def put(version):
+        return BadMethodResponse()
+
 
 class PublicSystemStatus(Resource):
     decorators = [auth.login_required, greylist, version_filter]
@@ -332,3 +416,11 @@ class PublicSystemStatus(Resource):
     @staticmethod
     def get(version):
         return espa.get_system_status()
+
+    @staticmethod
+    def post(version):
+        return BadMethodResponse()
+
+    @staticmethod
+    def put(version):
+        return BadMethodResponse()

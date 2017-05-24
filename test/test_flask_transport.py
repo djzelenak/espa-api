@@ -205,9 +205,32 @@ class TransportTestCase(unittest.TestCase):
     @patch('api.domain.user.User.get', MockUser.get)
     def test_bad_method(self):
         url = '/api/v1/available-products/'
-        data = {'inputs': ['bad_id']}
         response = self.app.post(url, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
+        resp_json = json.loads(response.get_data())
         self.assertEqual(405, response.status_code)
+        self.assertIn('messages', resp_json)
+        self.assertIn('errors', resp_json['messages'])
+
+    @patch('api.domain.user.User.get', MockUser.get)
+    def test_bad_data(self):
+        url = '/api/v1/order'
+        data = '{"inputs": [}'
+        response = self.app.post(url, data=data, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
+        resp_json = json.loads(response.get_data())
+        self.assertEqual(400, response.status_code)
+        self.assertIn('messages', resp_json)
+        self.assertIn('errors', resp_json['messages'])
+
+    @patch('api.domain.user.User.get', MockUser.get)
+    def test_bad_data_avail_inputs(self):
+        url = '/api/v1/available-products/'
+        data = '{"bad": []}'
+        response = self.app.get(url, data=data, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
+        resp_json = json.loads(response.get_data())
+        self.assertEqual(400, response.status_code)
+        self.assertIn('messages', resp_json)
+        self.assertIn('errors', resp_json['messages'])
+        self.assertIn('No input products supplied', resp_json['messages']['errors'][0])
 
     def test_messages_field_acc_denied(self):
         url = '/api/v1/available-products/'
