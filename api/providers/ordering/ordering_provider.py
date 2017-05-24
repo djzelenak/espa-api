@@ -193,7 +193,11 @@ class OrderingProvider(ProviderInterfaceV0):
         killable_scene_states = ('submitted', 'oncache', 'onorder',
                                  'error', 'unavailable', 'complete')
         scenes = order.scenes(sql_dict={'status': killable_scene_states})
-        Scene.bulk_update([s.id for s in scenes], Scene.cancel_opts())
+        if len(scenes) > 0:
+            Scene.bulk_update([s.id for s in scenes], Scene.cancel_opts())
+        else:
+            logger.info('No scenes to cancel for order {}'
+                        .format(orderid, request_ip_address))
 
         order.status = 'cancelled'
         order.save()
