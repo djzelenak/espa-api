@@ -16,10 +16,10 @@ HTTP Method	| URI	| Action
 ---|---|---
 [GET](#api)  |  `/api/`  |  Lists all available versions of the api.
 [GET](#apiOps)  |  `/api/v0`  |  Lists all available api operations.
-[GET](#apiProj)  |  `/api/v0/projections`  |  Lists and describes available projections. This is a dump of the schema defined that constrains projection info.
-[GET](#apiFormats)  |  `/api/v0/formats`  |  Lists all available output formats
+[GET](#apiProj)  |  `/api/v0/projections`  |  Lists and describes available projections, and their ordering constraints (min/max values, etc.).
+[GET](#apiFormats)  |  `/api/v0/formats`  |  Lists all available output filetype formats
 [GET](#apiResamp)  |  `/api/v0/resampling-methods`  |  Lists all available resampling methods
-[GET](#apiOrderSchema)  |  `/api/v0/order-schema`  |  Retrieves order schema definition
+[GET](#apiOrderSchema)  |  `/api/v0/order-schema`  |  Retrieves entire order schema definition
 [GET](#apiProdsPost)  |  `/api/v0/available-products`  |  Lists available products (`"toa","sr",...`) for the supplied inputs
 
 **Note**: The `available-products` resource maps the input IDs by sensor, or lists as `"not_implemented"` if the values cannot be ordered or determined.
