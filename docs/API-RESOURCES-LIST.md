@@ -421,7 +421,7 @@ curl --user <erosusername>:<erospassword> -d '{"olitirs8_collection": {
 ```json
 // Response: 
 {
-    "orderid": "espa-jproduction@email.com-05232017-150628-847", 
+    "orderid": "espa-production@email.com-05232017-150628-847", 
     "status": "ordered"
 }
 ```
@@ -434,13 +434,13 @@ Update an order with a JSON body.
 ```bash
 curl --user <erosusername>:<erospassword> \
     -X PUT \
-    -d '{"orderid": "espa-jproduction@email.com-05232017-150628-847", "status": "cancelled"}' \
+    -d '{"orderid": "espa-production@email.com-05232017-150628-847", "status": "cancelled"}' \
     https://espa.cr.usgs.gov/api/v0/order
 ```
 ```json
 // Response:
 {
-    "orderid": "espa-jproduction@email.com-05232017-150628-847", 
+    "orderid": "espa-production@email.com-05232017-150628-847", 
     "status": "cancelled"
 }
 ```
