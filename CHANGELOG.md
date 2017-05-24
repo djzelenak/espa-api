@@ -4,6 +4,8 @@
 * Put all errors/warnings in "messages" JSON field
 * Remove CFMask product (pixel_qa coming soon)
 * Bug fixes for API responses (HTTP Codes, Messages)
+* Add JSON filters to available-products, orders, and item-status
+* Remove `POST` http method from available-products 
 ###### April 2017
 * Restrict ordering of pre-collection landsat inputs
 ###### March 2017
