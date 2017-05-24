@@ -57,7 +57,7 @@ class OnlineCache(object):
             path = os.path.join(self.orderpath, orderid)
 
         try:
-            result = self.execute_command('ls -d {0}'.format(path))
+            result = self.execute_command('ls -d {0}'.format(path), silent=True)
             ret = tuple(x.rstrip() for x in result['stdout'])
             return ret[-1] == path
         except OnlineCacheException as e:
@@ -133,7 +133,7 @@ class OnlineCache(object):
 
         return results
 
-    def execute_command(self, cmd):
+    def execute_command(self, cmd, silent=False):
         """
         Execute the given command on the cache
 
@@ -143,8 +143,9 @@ class OnlineCache(object):
         try:
             result = self.client.execute(cmd)
         except Exception, exception:
-            logger.debug('Error executing command: {} '
-                         'Raised exception: {}'.format(cmd, exception))
+            if not silent:
+                logger.debug('Error executing command: {} '
+                             'Raised exception: {}'.format(cmd, exception))
             raise OnlineCacheException(exception)
 
         if 'stderr' in result and result['stderr']:
