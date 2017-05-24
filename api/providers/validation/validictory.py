@@ -561,7 +561,8 @@ class ValidationProvider(ValidationInterfaceV0):
         except validictory.MultipleValidationError as e:
             raise ValidationException(e.message)
         except validictory.SchemaError as e:
-            raise ValidationException(e.message)
+            message = 'Schema errors:\n' + e.message
+            raise ValidationException(message)
 
         return self.massage_formatting(order)
 
