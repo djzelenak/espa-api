@@ -3,7 +3,7 @@
 This is an API for interacting with the ESPA ordering system. 
 
 For questions regarding this source code, or the ESPA project, please use the
-[Landsat Contact Us](https://landsat.usgs.gov/contactus.php) page and specify
+[Landsat Contact Us](https://landsat.usgs.gov/contact) page and specify
 USGS ESPA in the "Subject" section.
 
 ## Related Pages
