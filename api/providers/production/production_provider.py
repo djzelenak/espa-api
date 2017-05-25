@@ -17,6 +17,7 @@ import urllib
 import json
 import socket
 import os
+import time
 import yaml
 
 from cStringIO import StringIO
@@ -1303,3 +1304,34 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         return True
 
+    def resubmit_orphaned_scenes(self):
+        """
+        WARNING: THIS WILL BE BLOCKING FOR 10.5 MINUTES TO COMPLETE
+
+        This will reset all orphaned states, re-check for new orphaned twice
+            (at least 10 minutes apart), and then re-submit any found orphaned
+
+        :return: bool
+        """
+        updates = {'reported_orphan': None, 'orphaned': None}
+        scenes = Scene.where({'reported_orphan is not': None})
+        if len(scenes):
+            Scene.bulk_update([s.id for s in scenes], updates)
+        scenes = Scene.where({'orphaned is not': None})
+        if len(scenes):
+            Scene.bulk_update([s.id for s in scenes], updates)
+
+        seconds = 630  # 10.5 minutes separation
+        assert(self.catch_orphaned_scenes())
+        logger.info('Will sleep for {} seconds'.format(seconds))
+        time.sleep(seconds)
+        assert(self.catch_orphaned_scenes())
+
+        scenes = Scene.where({'orphaned': True,
+                              'status': ('queued', 'processing')})
+        updates.update(status='submitted')
+        if len(scenes):
+            Scene.bulk_update([s.id for s in scenes], updates)
+        logger.info('Re-submitted {} orphaned scenes'.format(len(scenes)))
+
+        return True
