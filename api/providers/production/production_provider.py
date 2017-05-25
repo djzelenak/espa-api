@@ -140,7 +140,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 cache_key = 'lta.cannot.update'
                 lta_conn_failed_10mins = cache.get(cache_key)
                 if lta_conn_failed_10mins:
-                    logger.debug('Problem updating LTA order: {}'.format(e))
+                    logger.warn('Problem updating LTA order: {}'.format(e))
                 cache.set(cache_key, datetime.datetime.now())
                 scene.failed_lta_status_update = 'C'
 
@@ -186,7 +186,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 cache_key = 'lta.cannot.update'
                 lta_conn_failed_10mins = cache.get(cache_key)
                 if lta_conn_failed_10mins:
-                    logger.debug('Problem updating LTA order: {}'.format(e))
+                    logger.warn('Problem updating LTA order: {}'.format(e))
                 cache.set(cache_key, datetime.datetime.now())
                 scene.failed_lta_status_update = 'R'
 
@@ -220,7 +220,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     except Exception, e:
                         # perhaps this doesn't need to be elevated to 'debug' status
                         # as its a fairly regular occurrence
-                        logger.debug('Problem updating LTA order: {}'.format(e))
+                        logger.warn('Problem updating LTA order: {}'.format(e))
                         p.update('failed_lta_status_update', 'R')
         except Exception, e:
             raise ProductionProviderException(e)
@@ -1195,6 +1195,9 @@ class ProductionProvider(ProductionProviderInterfaceV0):
     @staticmethod
     def handle_failed_ee_updates():
         scenes = Scene.where({'failed_lta_status_update IS NOT': None})
+        n_failed = len(scenes)
+        if n_failed:
+            logger.debug('Failed LTA status count: {} scenes'.format(n_failed))
         for s in scenes:
             try:
                 lta.update_order_status(s.order_attr('ee_order_id'), s.ee_unit_id,
