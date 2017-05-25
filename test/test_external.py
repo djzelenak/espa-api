@@ -10,8 +10,10 @@ from api.external.mocks import hadoop as mockhadoop
 from api.external import lta
 from api.external.mocks import lta as mocklta
 from api.external.hadoop import HadoopHandler
+from api.external.mocks import inventory as mockinventory
 
 from api.external import lpdaac
+from api.external import inventory
 
 class TestLPDAAC(unittest.TestCase):
     def setUp(self):
@@ -94,6 +96,21 @@ class TestLTA(unittest.TestCase):
     def test_update_order_incomplete(self):
         resp = lta.update_order_status('failure', self.lta_unit_number, 'C')
         self.assertFalse(resp.success)
+
+
+class TestInventory(unittest.TestCase):
+    """
+    Provide testing for the EarthExplorer JSON API (Machine-2-Machine)
+    """
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    @patch('api.external.inventory.requests.post', mockinventory.login)
+    def test_api_login(self):
+        token = inventory.get_session()
 
 
 class TestNLAPS(unittest.TestCase):
