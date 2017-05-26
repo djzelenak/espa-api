@@ -490,6 +490,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             logger.warn('Retrieving {0} landsat download urls for cid:{1}'
                          .format(len(landsat), cid))
 
+            landsat_urls = dict()
             if len(landsat) > 0:
                 start = datetime.datetime.now()
                 auth_token = inventory.get_cached_session()
