@@ -14,6 +14,7 @@ from api.external.mocks import inventory as mockinventory
 
 from api.external import lpdaac
 from api.external import inventory
+from api import ProductNotImplemented
 
 class TestLPDAAC(unittest.TestCase):
     def setUp(self):
@@ -154,6 +155,10 @@ class TestInventory(unittest.TestCase):
     def test_clear_user_context(self):
         success = inventory.clear_user_context(self.token)
         self.assertTrue(success)
+
+    def test_id_sensor_limits(self):
+        with self.assertRaisesRegexp(ProductNotImplemented, 'is not a supported sensor product'):
+            _ = inventory.convert(self.token, ['bad_id_yo'])
 
 
 class TestNLAPS(unittest.TestCase):
