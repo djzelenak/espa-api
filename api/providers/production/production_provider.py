@@ -933,8 +933,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 scene.status = 'error'
                 scene.note = 'product download not found'
                 scene.save()
-                logger.debug("scene download size re-calcing failed, {}"
-                             .format(scene.product_distro_location))
+                logger.debug('"Completed" product not found: {}'.format(scene.product_distro_location))
 
         return True
 
