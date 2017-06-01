@@ -213,26 +213,18 @@ class LTAService(object):
         return results
 
     @staticmethod
-    def build_data_use_str(products, customizations=None, oformat='',
-                           resampling='', reprojection=''):
+    def build_data_use_str(product_opts, sensor_name):
         """
         Used to identify higher level products that this data is used to create,
             this creates a comma-delimited list for DMID to determine their
             desired demographics insights on data download volume
 
-        :param products: Products requested for ESPA processing (sr, swe, ...)
-        :type products: list
-        :param customizations: Customizations to be performed (pix resize, ...)
-        :type customizations: list
-        :param oformat: Output file format (gtiff, hdf-eos2, ...)
-        :type oformat: str
-        :param resampling: Re-sampling method (nn, cc, ...)
-        :type resampling: str
-        :param reprojection: Output geographic projection (UTM, AEA, ...)
-        :type reprojection: str
+        :param product_opts: Processing opts for ESPA processing (all sensors)
+        :type product_opts: dict
+        :param sensor_name: Specific sensor to pull from `product_opts`
+        :type sensor_name: str
         :return: str
         """
-        params = list()
         # TODO: Use the new named tuple from sensor.py
         products_lut = {'l1': 'l1', 'source_metadata': 'l1m',
                         'pixel_qa': 'l2qa', 'toa': 'toa', 'bt': 'bt',
@@ -248,14 +240,23 @@ class LTAService(object):
         resample_lut = {'nn': 's:nn', 'cc': 's:cc', 'bil': 's:bil'}
         reproject_lut = {'aea': 'r:aea', 'utm': 'r:utm', 'sinu': 'r:sinu',
                          'ps': 'r:ps', 'lonlat': 'r:lonlat'}
+
+        params = list()
+        products = product_opts[sensor_name]['products']
         params += [products_lut[p] for p in products]
-        params += [customize_lut[c] for c in customizations]
+        for ckey in ['image_extents', 'resize']:
+            if product_opts.get(ckey):
+                params.append(customize_lut[ckey])
+        oformat = product_opts.get('format', None)
         if oformat:
             params.append(format_lut[oformat])
+        resampling = product_opts.get('resampling_method', None)
         if resampling:
             params.append(resample_lut[resampling])
+        reprojection = product_opts.get('projection', None)
         if reprojection:
-            params.append(reproject_lut[reprojection])
+            params.append(reproject_lut[reprojection.keys()[0]])
+
         data_use_str = ','.join(list(set(params)))
         return data_use_str
 
