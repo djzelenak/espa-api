@@ -147,17 +147,34 @@ class TestInventory(unittest.TestCase):
             _ = inventory.set_user_context(self.token, self.contact_id)
 
     def test_build_usage_code(self):
-        products = ['l1', 'toa', 'sr', 'sr_ndvi', 'sr_nbr']
-        customizations = ['image_extents']
-        reprojection = 'aea'
-        resampling = 'cc'
-        output_format = 'gtiff'
-        use_str = inventory.LTAService.build_data_use_str(products, oformat=output_format, customizations=customizations,
-                                                          resampling=resampling, reprojection=reprojection)
+        product_opts = {
+              "projection": {
+                "utm": {
+                  "zone_ns": "north",
+                  "zone": 11
+                }
+              },
+              "format": "envi",
+              "resampling_method": "cc",
+              "olitirs8_collection": {
+                "inputs": [
+                  "LC08_L1TP_047027_20131014_20170308_01_T1"
+                ],
+                "products": [
+                  "toa", "sr_ndvi", "sr_msavi"
+                ]
+              },
+              "resize": {
+                "pixel_size_units": "meters",
+                "pixel_size": 2000
+              }
+        }
+        sensor_name = 'olitirs8_collection'
+        expected = ['toa', 'sr:idx', 'px_rs', 'f:ev', 's:cc', 'r:utm']
+        use_str = inventory.LTAService.build_data_use_str(product_opts, sensor_name)
         usages = use_str.split(',')
-        self.assertEqual(8, len(usages))
-        self.assertIn('sr:idx', usages)
-        self.assertIn('r:aea', usages)
+        self.assertEqual(len(expected), len(usages))
+        self.assertEqual(set(expected), set(usages))
 
 
 class TestCachedInventory(unittest.TestCase):
