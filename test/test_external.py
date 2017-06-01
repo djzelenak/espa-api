@@ -146,6 +146,19 @@ class TestInventory(unittest.TestCase):
         with self.assertRaisesRegexp(inventory.LTAError, expected):
             _ = inventory.set_user_context(self.token, self.contact_id)
 
+    def test_build_usage_code(self):
+        products = ['l1', 'toa', 'sr', 'sr_ndvi', 'sr_nbr']
+        customizations = ['image_extents']
+        reprojection = 'aea'
+        resampling = 'cc'
+        output_format = 'gtiff'
+        use_str = inventory.LTAService.build_data_use_str(products, oformat=output_format, customizations=customizations,
+                                                          resampling=resampling, reprojection=reprojection)
+        usages = use_str.split(',')
+        self.assertEqual(8, len(usages))
+        self.assertIn('sr:idx', usages)
+        self.assertIn('r:aea', usages)
+
 
 class TestCachedInventory(unittest.TestCase):
     """
