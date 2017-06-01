@@ -433,20 +433,6 @@ class LTACachedService(LTAService):
         if not success:
             raise LTAError('ID conversion not cached')
 
-    def get_download(self, id_list):
-        cache_keys = [self.MD_KEY_FMT.format(resource='download', id=i)
-                      for i in id_list]
-        entries = self.cache.get_multi(cache_keys)
-        entries = {k.split(',')[1][:-1]: v for k, v in entries.items()}
-        return entries
-
-    def set_download(self, id_pairs):
-        cache_keys = {self.MD_KEY_FMT.format(resource='download', id=i): e
-                      for i, e in id_pairs.items()}
-        success = self.cache.set_multi(cache_keys)
-        if not success:
-            raise LTAError('Download URL not cached')
-
     # ---------------------------------------------------------------+
     # Handlers to balance fetching cached/external values as needed  |
     def cached_login(self):
