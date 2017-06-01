@@ -483,19 +483,6 @@ class LTACachedService(LTAService):
         results = {k: k in entities.keys() for k in id_list}
         return results
 
-    def cached_get_download_urls(self, id_list):
-        entities = self.get_download(id_list)
-        if len(entities) > 0:
-            diff = set(id_list) - set(entities)
-            if diff:
-                fetched = self.get_download_urls(list(diff))
-                self.set_download(entities)
-                entities.update(fetched)
-        else:
-            entities = self.get_download_urls(id_list)
-            self.set_download(entities)
-        return entities
-
 
 class LTAUser(object):
     def __init__(self, username, password):
@@ -647,7 +634,3 @@ def get_cached_convert(token, product_ids):
 
 def get_cached_verify_scenes(token, product_ids):
     return LTACachedService(token).cached_verify_scenes(product_ids)
-
-
-def get_cached_download_urls(token, product_ids):
-    return LTACachedService(token).cached_get_download_urls(product_ids)
