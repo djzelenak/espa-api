@@ -368,6 +368,11 @@ class Ordering(Resource):
             logger.debug(msg + '\nOrigin: {}'.format(remote_addr))
             message = MessagesResponse(errors=[msg], code=403)
             return message()
+        if orders[0].status != 'ordered':
+            msg = ('Order {} is already in a "{}" state'
+                   .format(orderid, orders[0].status))
+            message = MessagesResponse(errors=[msg], code=400)
+            return message()
         order = espa.cancel_order(orders[0].id, remote_addr)
         message = OrderResponse(**order.as_dict())
         message.limit = ('orderid', 'status')
