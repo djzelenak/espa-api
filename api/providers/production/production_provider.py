@@ -1124,13 +1124,14 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         """
         scenes = Scene.where({'status': 'complete', 'download_size': 0})
         for scene in scenes:
-            try:
+            if os.path.exists(scene.product_distro_location):
                 scene.update('download_size', os.path.getsize(scene.product_distro_location))
-            except OSError, e:
+            else:
                 scene.status = 'error'
                 scene.note = 'product download not found'
                 scene.save()
-                logger.debug("scene download size re-calcing failed, msg: {}: {}".format(e.strerror, e.filename))
+                logger.debug("scene download size re-calcing failed, {}"
+                             .format(scene.product_distro_location))
 
         return True
 
