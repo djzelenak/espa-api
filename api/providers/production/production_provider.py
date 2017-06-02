@@ -747,6 +747,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     status = 'R'
                 else:
                     status = 'I'
+                    continue  # No need to update scenes in progress
                 try:
                     lta.update_order_status(eeorder, s['unit_num'], status)
                 except Exception, e:
