@@ -356,7 +356,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         logger.info("\n\n*** set_product_error: orderid {0}, "
                     "scene id {1} , scene name {2},\n"
-                    "error {4},\n"
+                    "error {4!r},\n"
                     "resolution {3}\n\n".format(order.orderid, product.id,
                                                 product.name, resolution, error))
 
@@ -734,8 +734,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         :param order_id: order id used in the system
         """
         missing_scenes = []
+        scenes = Scene.where({'order_id': order_id,
+                              'ee_unit_id': tuple([s['unit_num'] for s in ee_scenes])})
         for s in ee_scenes:
-            scene = Scene.where({'order_id': order_id, 'ee_unit_id': s['unit_num']})
+            scene = [so for so in scenes if so.ee_unit_id == s['unit_num']]
 
             if scene:
                 scene = scene[0]
@@ -745,6 +747,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     status = 'R'
                 else:
                     status = 'I'
+                    continue  # No need to update scenes in progress
                 try:
                     lta.update_order_status(eeorder, s['unit_num'], status)
                 except Exception, e:
