@@ -3,7 +3,7 @@
 This is an API for interacting with the ESPA ordering system. 
 
 For questions regarding this source code, or the ESPA project, please use the
-[Landsat Contact Us](https://landsat.usgs.gov/contactus.php) page and specify
+[Landsat Contact Us](https://landsat.usgs.gov/contact) page and specify
 USGS ESPA in the "Subject" section.
 
 ## Related Pages
@@ -42,66 +42,72 @@ simple HTTP communications through the programming language of their choice.
 
 For example, to find what products ESPA can produce for a given Landsat 
 acquisition: 
+```bash
+curl  --user <erosusername>:<erospassword> \
+    https://espa.cr.usgs.gov/api/v0/available-products/LC08_L1TP_029030_20161008_20170220_01_T1
+```
 ```json
-curl  --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/available-products/LC08_L1TP_029030_20161008_20170220_01_T1
+// Response: 
 {
-    "olitirs8": {
-        "inputs": ["LC08_L1TP_029030_20161008_20170220_01_T1"], 
+    "olitirs8_collection": {
+        "inputs": [
+            "LC08_L1TP_029030_20161008_20170220_01_T1"
+        ], 
         "products": [
-            "source_metadata", "l1", "toa", "bt", "cloud", 
-            "sr", "lst", "swe", "sr_ndvi", "sr_evi", "sr_savi",
-            "sr_msavi", "sr_ndmi", "sr_nbr", "sr_nbr2", "stats"
+            "source_metadata", "l1", "toa", "bt", 
+            "sr", "sr_ndvi", "sr_evi", "sr_savi", "sr_msavi", "sr_ndmi", "sr_nbr", "sr_nbr2", 
+            "stats"
         ]
     }
 }
+
 ```
 
 Then, if the acquisition can be processed into a desired product, create a 
 processing order request, including at minimum the output formatting:
+```bash
+curl  --user <erosusername>:<erospassword> \
+    -d '{
+          "note": "this is going to be sweet...",
+          "format": "gtiff",
+          "olitirs8_collection": {
+                "inputs": ["LC08_L1TP_029030_20161008_20170220_01_T1"], 
+                "products": ["sr_ndvi"]
+            }
+        }' https://espa.cr.usgs.gov/api/v0/order 
+```
 ```json
-curl  --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/order -d '
+// Response: 
 {
-  "note": "this is going to be sweet...",
-  "format": "gtiff",
-  "olitirs8": {
-        "inputs": ["LC08_L1TP_029030_20161008_20170220_01_T1"], 
-        "products": ["sr_ndvi"]
-    }
-}'
-
-{
-  "orderid": "eros@email.com-01011997-000000-000",
+  "orderid": "espa-production@email.com-05222017-185100-725",
   "status": "ordered"
 }
 ```
 
 Finally, use this order-ID to determine when the scene has completed processing, 
 and get the download URL while the output is still on disk:
+```bash
+curl --user <erosusername>:<erospassword> \
+    https://espa.cr.usgs.gov/api/v0/item-status/espa-production@email.com-05222017-185100-725
+```
 ```json
-curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/item-status/eros@email.com-01011997-000000-000/LC08_L1TP_029030_20161008_20170220_01_T1
+// Response: 
 {
-    "orderid": {
-        "eros@email.com-01011997-000000-000": [
-            {
-                "cksum_download_url": "https://.../orders/.../LC080290302016100801T1-SC20170329224231.md5",
-                "completion_date": "1997-01-01T23:59:59.908435",
-                "name": "LC08_L1TP_029030_20161008_20170220_01_T1",
-                "note": "''",
-                "product_dload_url": "https://.../orders/.../LC080290302016100801T1-SC20170329224231.tar.gz",
-                "scene_id": 00000001,
-                "status": "complete"
-            }
-        ]
+  "espa-production@email.com-05222017-185100-725": [
+    {
+      "cksum_download_url": "https://.../orders/.../LC080290302016100801T1-SC20170329224231.md5",
+      "completion_date": "1997-01-01T23:59:59.908435",
+      "name": "LC08_L1TP_029030_20161008_20170220_01_T1",
+      "note": "",
+      "product_dload_url": "https://.../orders/.../LC080290302016100801T1-SC20170329224231.tar.gz",
+      "status": "complete"
     }
+  ]
 }
 ```
 
-For a more detailed list of available User API operations, see the 
+For a more detailed list of User API operations, see the 
 [Available Resources List](docs/API-RESOURCES-LIST.md). 
 
-For a language-specific (python) example, please see [an API Demo](examples/api_demo.py). 
+For a language-specific (python) example, please see [an API Demo](examples/api_demo.ipynb). 
 
-## Fixing Issues
-
-If you think you have found a bug, please see our [Contributing guide](.github/CONTRIBUTING.md)
-before opening a new issue.

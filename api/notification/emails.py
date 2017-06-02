@@ -13,6 +13,8 @@ from cStringIO import StringIO
 from email.mime.text import MIMEText
 from smtplib import SMTP
 
+from validate_email import validate_email
+
 from api.domain.order import Order
 from api.domain.scene import Scene
 from api.providers.configuration.configuration_provider import ConfigurationProvider
@@ -37,18 +39,17 @@ class Emails(object):
         '''Sends an email to a receipient on the behalf of espa'''
 
         def _validate(email):
-            if not self.validate_email(email):
+            if not validate_email(email):
                 raise TypeError("Invalid email address provided:%s" % email)
 
         to_header = recipient
-
-        if type(recipient) in (list, tuple):
+        if isinstance(recipient, (list, tuple)):
             for r in recipient:
                 _validate(r)
-
             to_header = ','.join(recipient)
-        elif type(recipient) in (str, unicode):
+        elif isinstance(recipient, basestring):
             _validate(recipient)
+            recipient = [recipient]
         else:
             raise ValueError("Unsupported datatype for recipient:%s"
                              % type(recipient))
@@ -62,23 +63,6 @@ class Emails(object):
         s.quit()
 
         return True
-
-    def validate_email(self, email_addr):
-        '''Compares incoming email address against regular expression
-        to make sure its at least formatted like an email
-
-        Keyword args:
-        email -- String to validate as an email address
-
-        Return:
-        True if the string is a properly formatted email address
-        False if not
-        '''
-        #pattern = '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$'
-        #some clown used a single quote in his email address... sigh.
-        email_addr = email_addr.replace("'", "\'")
-        pattern = r'^[A-Za-z0-9._%+-\\\']+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
-        return re.match(pattern, email_addr.strip())
 
     def send_gzip_error_email(self, product_id):
         '''Sends an email to our people telling them to reprocess
@@ -106,7 +90,7 @@ class Emails(object):
         '''Finds all the orders that have not had their initial emails sent and
         sends them'''
 
-        orders = Order.where({'status': 'ordered'})
+        orders = Order.where({'status': 'ordered', 'initial_email_sent IS': None})
         for o in orders:
             if not o.initial_email_sent:
                 self.send_initial(o.orderid)
@@ -189,6 +173,44 @@ class Emails(object):
 
         return self.__send(recipient=email, subject=subject, body=body)
 
+    def send_order_cancelled_email(self, order_id):
+        if isinstance(order_id, Order):
+            order = order_id
+        else:
+            order = Order.find(order_id)
+
+        if not isinstance(order, Order):
+            msg = 'order must be str of orderid, int of pk or instance of Order'
+            raise TypeError(msg)
+
+        email = order.user_email()
+        orderid = str(order.orderid).strip()
+        n_scenes_cancelled = len(order.scenes({'status': 'cancelled'}))
+        n_scenes_running = len(order.scenes()) - n_scenes_cancelled
+
+        email_template = (
+            "Your order {orderid} has been cancelled.\n"
+            "A total of {n_scenes} scenes have been stopped.\n"
+            "{running_message}\n\n\n\n"
+            "Please contact Customer Services at 1-800-252-4547 or "
+            "email custserv@usgs.gov with any questions.\n\n"
+            "This is an automated email.\n\n"
+            "-------------------------------------------\n\n"
+            "{contact_footer}"
+        )
+        running_message = ('({n} scenes could not be immediately halted, but '
+                           'will finish in a cancelled state)'
+                           .format(n=n_scenes_running)
+                           if n_scenes_running else '')
+        information = dict(n_scenes=n_scenes_cancelled,
+                           running_message=running_message,
+                           contact_footer=contact_footer,
+                           orderid=orderid)
+        email_msg = email_template.format(**information)
+        subject = ('USGS ESPA Processing order {orderid} cancelled'
+                   .format(orderid=orderid))
+
+        return self.__send(recipient=email, subject=subject, body=email_msg)
 
     def send_purge_report(self, start_capacity, end_capacity, orders):
         buffer = StringIO()
@@ -206,41 +228,24 @@ class Emails(object):
         Capacity:{end_capacity} Used:{end_used} Available:{end_available} Percent Used:{end_percent_free}
 
         ===================================
-        Past 24 Hours
-        Orders Placed:not available
-        Orders Completed:not available
-        Scenes Placed:not available
-        Scenes Completed:not available
-
-        Past 7 Days
-        Orders Placed:not available
-        Orders Completed:not available
-        Scenes Placed:not available
-        Scenes Completed:not available
-
-        ===================================
-        Open orders:not available
-        Open scenes:not available
-
-        ===================================
         Purged orders
           {purged_orders}
         ========== End of report ==========
         '''.format(start_capacity=start_capacity['capacity'],
                    start_used=start_capacity['used'],
                    start_available=start_capacity['available'],
-                   start_percent_free=start_capacity['percent_free'],
+                   start_percent_free=start_capacity['percent_used'],
                    end_capacity=end_capacity['capacity'],
                    end_used=end_capacity['used'],
                    end_available=end_capacity['available'],
-                   end_percent_free=end_capacity['percent_free'],
+                   end_percent_free=end_capacity['percent_used'],
                    purged_orders=order_str)
 
         now = datetime.datetime.now()
         subject = 'Purged orders for {month}-{day}-{year}'.format(day=now.day,
                                                                   month=now.month,
                                                                   year=now.year)
-        recipients = config.get('email.purge_report_list')
+        recipients = config.get('email.purge_report_list').split(',')
         return self.__send(recipient=recipients, subject=subject, body=body)
 
 def send_purge_report(start_capacity, end_capacity, orders):

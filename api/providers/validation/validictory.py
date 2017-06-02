@@ -3,6 +3,7 @@ from decimal import Decimal
 import copy
 import yaml
 import re
+import os
 
 import validictory
 from validictory.validator import RequiredFieldValidationError, SchemaError, DependencyValidationError
@@ -12,6 +13,8 @@ from api import ValidationException
 import api.providers.ordering.ordering_provider as ordering
 import api.domain.sensor as sn
 
+from api import __location__
+
 
 class OrderValidatorV0(validictory.SchemaValidator):
     def __init__(self, *args, **kwargs):
@@ -20,7 +23,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
         self.data_source = None
         self.base_schema = None
         self._itemcount = None
-        with open('api/domain/restricted.yaml') as f:
+        with open(os.path.join(__location__, 'domain/restricted.yaml')) as f:
             self.restricted = yaml.load(f.read())
 
     def validate(self, data, schema):
@@ -53,10 +56,17 @@ class OrderValidatorV0(validictory.SchemaValidator):
             if not self.validate_type_object(self.data_source['projection']):
                 return
             if 'lonlat' in self.data_source['projection']:
-                if 'image_extents' in self.data_source and self.data_source['image_extents']['units'] != 'dd':
-                    self._error('must be "dd" for projection "lonlat"', self.data_source['image_extents']['units'],
-                                fieldname, path=path)
-                    return
+                if 'image_extents' in self.data_source:
+                    if not self.validate_type_object(self.data_source['image_extents']):
+                        return
+                    if not 'units' in self.data_source['image_extents']:
+                        return
+                    if self.data_source['image_extents']['units'] != 'dd':
+                        msg = ('{}:{} must be "dd" for projection "lonlat", not "{}"'
+                               .format(path, fieldname,
+                                       self.data_source['image_extents']['units']))
+                        self._errors.append(msg)
+                        return
 
         if 'resize' in self.data_source:
             if not self.validate_type_object(self.data_source['resize']):
@@ -127,11 +137,13 @@ class OrderValidatorV0(validictory.SchemaValidator):
         cmax = max(count_ls)
         cmin = min(count_ls)
         if cmax > pixel_count:
-            self._error(': pixel count value is greater than maximum size of {} pixels'.format(pixel_count),
-                        cmax, fieldname, path=path)
+            msg = ('{}:{} pixel count is greater than maximum size of {}'
+                   ' pixels'.format(path, fieldname, cmax))
+            self._errors.append(msg)
         elif cmin < 1:
-            self._error(': pixel count value falls below acceptable threshold, check extent parameters',
-                        cmin, fieldname, path=path)
+            msg = ('{}:{} pixel count value falls below acceptable threshold'
+                   ' of 1 pixel'.format(path, fieldname, cmin))
+            self._errors.append(msg)
 
     @staticmethod
     def calc_extent(xmax, ymax, xmin, ymin, extent_units, resize_units, resize_pixel):
@@ -167,8 +179,9 @@ class OrderValidatorV0(validictory.SchemaValidator):
         if isinstance(value, dict):
             if single:
                 if len(value) > 1:
-                    self._error(': field only accepts one object',
-                                len(value), fieldname, path=path)
+                    msg = ('{} field only accepts one object, not {}'
+                           .format(path, len(value)))
+                    self._errors.append(msg)
 
     def validate_enum(self, x, fieldname, schema, path, options=None):
         '''
@@ -180,13 +193,10 @@ class OrderValidatorV0(validictory.SchemaValidator):
                 options = options(x)
             if value not in options:
                 if not (value == '' and schema.get('blank', self.blank_by_default)):
-                    if 'response-readable' in self.data_source:
-                        self._errors.append("Not available: {} products for {} scenes. "
-                                            "Please choose from available products: {}"
-                                            .format(value, path.split('.products')[0], options))
-                    else:
-                        self._error("is not in the enumeration: {options!r}", value, fieldname,
-                                    options=options, path=path)
+                    msg = ("Not available: {} products for {}. "
+                           "Please choose from available products: {}"
+                           .format(value, path.split('.products')[0], options))
+                    self._errors.append(msg)
 
     def validate_pattern(self, x, fieldname, schema, path, pattern=None):
         '''
@@ -196,12 +206,8 @@ class OrderValidatorV0(validictory.SchemaValidator):
         if (isinstance(value, basestring) and
             (isinstance(pattern, basestring) and not re.match(pattern, value)
              or not isinstance(pattern, basestring) and not pattern.match(value))):
-            if 'response-readable' in self.data_source:
                 self._errors.append("Remove unrecognized input ID: {} ({} must match regex {})"
                                     .format(value.upper(), path.split('.inputs')[0], pattern))
-            else:
-                self._error("does not match regular expression '{pattern}'", value, fieldname,
-                            pattern=pattern, path=path)
 
 
     def validate_enum_keys(self, x, fieldname, schema, path, valid_list):
@@ -215,8 +221,8 @@ class OrderValidatorV0(validictory.SchemaValidator):
 
             for field in value:
                 if field not in valid_list:
-                    self._error('Unknown key: Allowed keys {}'.format(valid_list),
-                                field, fieldname, path=path)
+                    msg = ('Unknown key {}: Allowed keys {}'.format(field, valid_list))
+                    self._errors.append(msg)
 
     def validate_abs_rng(self, x, fieldname, schema, path, val_range):
         """Validates that the absolute value of a field falls within a given range"""
@@ -224,8 +230,9 @@ class OrderValidatorV0(validictory.SchemaValidator):
 
         if isinstance(value, (int, long, float, Decimal)):
             if not val_range[0] <= abs(value) <= val_range[1]:
-                self._error('Absolute value must fall between {} and {}'.format(val_range[0], val_range[1]),
-                            value, fieldname, path=path)
+                msg = ('Absolute value of {} must fall between {} and {}'
+                       .format(path, val_range[0], val_range[1]))
+                self._errors.append(msg)
 
     def validate_ps_dd_rng(self, x, fieldname, schema, path, val_range):
         """Validates the pixel size given for Decimal Degrees is within a given range"""
@@ -235,8 +242,9 @@ class OrderValidatorV0(validictory.SchemaValidator):
             if 'pixel_size_units' in x:
                 if x['pixel_size_units'] == 'dd':
                     if not val_range[0] <= value <= val_range[1]:
-                        self._error('Value must fall between {} and {}'.format(val_range[0], val_range[1]),
-                                    value, fieldname, path=path)
+                        msg = ('Value of {} must fall between {} and {}'
+                               .format(path, val_range[0], val_range[1]))
+                        self._errors.append(msg)
 
     def validate_ps_meter_rng(self, x, fieldname, schema, path, val_range):
         """Validates the pixel size given for Meters is within a given range"""
@@ -246,8 +254,9 @@ class OrderValidatorV0(validictory.SchemaValidator):
             if 'pixel_size_units' in x:
                 if x['pixel_size_units'] == 'meters':
                     if not val_range[0] <= value <= val_range[1]:
-                        self._error('Value must fall between {} and {}'.format(val_range[0], val_range[1]),
-                                    value, fieldname, path=path)
+                        msg = ('Value of {} must fall between {} and {}'
+                               .format(path, val_range[0], val_range[1]))
+                        self._errors.append(msg)
 
     def validate_stats(self, x, fieldname, schema, path, stats):
         """
@@ -269,23 +278,14 @@ class OrderValidatorV0(validictory.SchemaValidator):
         if sensor not in stats['sensors']:
             return
 
-        if not set(stats['products']) & set(x['products']):
-            self._error('You must request valid products for statistics',
-                        stats['products'], fieldname, path=path)
-
-    def validate_required_collection(self, x, fieldname, schema, path, required_collection):
-        ''' TODO: REMOVE THIS AFTER PRE-COLLECTION HAVE FINISHED PROCESSING '''
-        if not required_collection:
-            return
-
-        restricted_ordering = self.restricted['all']['ordering']
-        # path is like <obj>.mod09a1.inputs
-        sensor_id = path.split('.')[1]
-        scene_ids = x.get(fieldname)
-
-        if sensor_id in restricted_ordering:
-            self._error('Pre-Collection Landsat scene-IDs are no longer accepted',
-                        scene_ids, fieldname, path=path)
+        if x.get('products'):
+            if not set(stats['products']) & set(x['products']):
+                msg = ('You must request valid products for statistics: {}'
+                       .format(stats['products']))
+                self._errors.append(msg)
+        else:
+            msg = "Required field 'products' missing"
+            self._errors.append(msg)
 
     def validate_restricted(self, x, fieldname, schema, path, restricted):
         """Validate that the requested products are available by date or role"""
@@ -309,10 +309,15 @@ class OrderValidatorV0(validictory.SchemaValidator):
 
         not_implemented = avail_prods.pop('not_implemented', None)
         date_restricted = avail_prods.pop('date_restricted', None)
+        ordering_restricted = avail_prods.pop('ordering_restricted', None)
 
         # Check for to make sure there is only one sensor type in there
         if len(avail_prods) > 1:
             return
+
+        if not_implemented:
+            self._errors.append("Requested IDs are not recognized. Remove: {}"
+                                .format(not_implemented))
 
         if date_restricted:
             restr_prods = date_restricted.keys()
@@ -322,16 +327,21 @@ class OrderValidatorV0(validictory.SchemaValidator):
                     date_restricted.pop(key, None)
 
             if date_restricted:
-                if 'response-readable' in self.data_source:
-                    for product_type in date_restricted:
-                        msg = (r'<br>See <a href="https://landsat.usgs.gov/landsat-surface-reflectance-high-'
-                               r'level-data-products">Caveats and Constraints</a> for more details.')
-                        self._errors.append("Requested {} products are restricted by date. Remove {} scenes: {} {}"
-                                            .format(product_type, path.split('.products')[0],
-                                                    [x.upper() for x in date_restricted[product_type]], msg))
-                else:
-                    self._error('Requested products are restricted by date',
-                                date_restricted, fieldname, path=path)
+                for product_type in date_restricted:
+                    msg = ("Requested {} products are restricted by date. "
+                           "Remove {} scenes: {}"
+                           .format(product_type, path.split('.products')[0],
+                                   [x.upper()
+                                    for x in date_restricted[product_type]]))
+                    self._errors.append(msg)
+
+        if ordering_restricted:
+            restr_sensors = ordering_restricted.keys()
+
+            for sensor in restr_sensors:
+                msg = ("Requested sensor is restricted from ordering. "
+                       "Remove: {}".format(sensor))
+                self._errors.append(msg)
 
         prods = []
         for key in avail_prods:
@@ -348,15 +358,13 @@ class OrderValidatorV0(validictory.SchemaValidator):
                     dif.remove(d)
 
         if dif:
-            if 'response-readable' in self.data_source:
-                for d in dif:
-                    if type(x) == dict:
-                        scene_ids = [s.upper() for s in x['inputs']]
-                        self._errors.append("Requested {} products are not available. Remove {} scenes: {}"
-                                            .format(d, path.split('.products')[0], scene_ids))
-            else:
-                self._error('Requested products are not available',
-                            dif, fieldname, path=path)
+            for d in dif:
+                if type(x) == dict:
+                    scene_ids = [s.upper() for s in x['inputs']]
+                    msg = ("Requested {} products are not available. "
+                           "Remove {} scenes: {}"
+                           .format(d, path.split('.products')[0], scene_ids))
+                    self._errors.append(msg)
 
     def validate_oneormoreobjects(self, x, fieldname, schema, path, key_list):
         """Validates that at least one value is present from the list"""
@@ -367,8 +375,8 @@ class OrderValidatorV0(validictory.SchemaValidator):
                 if key in val:
                     return
 
-            self._error('No requests for products were submitted', None, None, path=path,
-                        exctype=RequiredFieldValidationError)
+            msg = 'No requests for products were submitted'
+            self._errors.append(msg)
 
     def validate_set_ItemCount(self, x, fieldname, schema, path, (key, val)):
         """Sets item count limits for multiple arrays across a potential order"""
@@ -393,8 +401,9 @@ class OrderValidatorV0(validictory.SchemaValidator):
         self._itemcount[key]['count'] += len(vals)
 
         if self._itemcount[key]['count'] > self._itemcount[key]['max']:
-            self._error('Count exceeds size limit of {max} for {key}', None, None,
-                        exctype=DependencyValidationError, max=self._itemcount[key]['max'], key=key)
+            msg = ('Count exceeds size limit of {max} for {key}'
+                   .format(max=self._itemcount[key]['max'], key=key))
+            self._errors.append(msg)
 
 
 class BaseValidationSchema(object):
@@ -495,7 +504,6 @@ class BaseValidationSchema(object):
                                                 'properties': resize},
                                      'resampling_method': {'type': 'string',
                                                            'enum': resampling_methods},
-                                     'response-readable': {'type': 'boolean'},
                                      'plot_statistics': {'type': 'boolean'},
                                      'note': {'type': 'string',
                                               'required': False,
@@ -509,7 +517,6 @@ class BaseValidationSchema(object):
                                                         'required': True,
                                                         'ItemCount': 'inputs',
                                                         'uniqueItems': True,
-                                                        'required_collection': True,
                                                         'minItems': 1,
                                                         'items': {'type': 'string',
                                                                   'pattern': _sensor_reg[key][0]}},
@@ -554,7 +561,8 @@ class ValidationProvider(ValidationInterfaceV0):
         except validictory.MultipleValidationError as e:
             raise ValidationException(e.message)
         except validictory.SchemaError as e:
-            raise ValidationException(e.message)
+            message = 'Schema errors:\n' + e.message
+            raise ValidationException(message)
 
         return self.massage_formatting(order)
 
@@ -575,8 +583,6 @@ class ValidationProvider(ValidationInterfaceV0):
         stats = False
         if 'plot_statistics' in order and order['plot_statistics']:
             stats = True
-
-        _ = order.pop('response-readable', None)
 
         for key in order:
             if key in prod_keys:

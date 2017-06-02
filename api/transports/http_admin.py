@@ -9,6 +9,7 @@ from api.domain import default_error_message, admin_api_operations
 from api.interfaces.admin.version1 import API as APIv1
 from api.system.logger import ilogger as logger
 from api.domain.user import User
+from api.transports.http_json import MessagesResponse
 
 from flask import jsonify
 from flask import make_response
@@ -22,6 +23,22 @@ auth = HTTPBasicAuth()
 cache = memcache.Client(['127.0.0.1:11211'], debug=0)
 
 
+def user_ip_address():
+    """
+    Try to get the User's originating IP address, across proxies
+
+    :return: string
+    """
+    is_web_redirect = ('X-Forwarded-For' in request.headers
+                       and request.remote_addr == '127.0.0.1')
+    if is_web_redirect:
+        remote_addr =  request.headers.getlist('X-Forwarded-For'
+                                               )[0].rpartition(' ')[-1]
+    else:
+        remote_addr = request.remote_addr or 'untrackable'
+    return remote_addr
+
+
 def whitelist(func):
     """
     Provide a decorator to enact a white filter on an endpoint
@@ -31,15 +48,15 @@ def whitelist(func):
     """
     def decorated(*args, **kwargs):
         white_ls = espa.get_admin_whitelist()
-        if 'X-Forwarded-For' in request.headers:
-            remote_addr = request.headers.getlist('X-Forwarded-For')[0].rpartition(' ')[-1]
-        else:
-            remote_addr = request.remote_addr or 'untrackable'
+        denied_response = MessagesResponse(errors=['Access Denied'], code=403)
+        remote_addr = user_ip_address()
 
-        if remote_addr in white_ls:
+        if ((remote_addr in white_ls or request.remote_addr in white_ls)
+                and remote_addr != 'untrackable'):
             return func(*args, **kwargs)
         else:
-            return make_response(jsonify({'msg': 'Access Denied'}), 403)
+            logger.warn('*** Not in whitelist ({1}): {0}'.format(remote_addr, white_ls))
+            return denied_response()
     return decorated
 
 
@@ -49,15 +66,15 @@ def stats_whitelist(func):
     """
     def decorated(*args, **kwargs):
         white_ls = espa.get_stat_whitelist()
-        if 'X-Forwarded-For' in request.headers:
-            remote_addr = request.headers.getlist('X-Forwarded-For')[0].rpartition(' ')[-1]
-        else:
-            remote_addr = request.remote_addr or 'untrackable'
+        denied_response = MessagesResponse(errors=['Access Denied'], code=403)
+        remote_addr = user_ip_address()
 
-        if remote_addr in white_ls:
+        if ((remote_addr in white_ls or request.remote_addr in white_ls)
+                and remote_addr != 'untrackable'):
             return func(*args, **kwargs)
         else:
-            return make_response(jsonify({'msg': 'Access Denied'}), 403)
+            logger.warn('*** Not in whitelist ({1}): {0}'.format(remote_addr, white_ls))
+            return denied_response()
     return decorated
 
 
@@ -71,14 +88,18 @@ def version_filter(func):
         if url_version in versions:
             return func(*args, **kwargs)
         else:
-            msg = 'Invalid API version %s' % url_version
-            return make_response(jsonify({'msg': msg}), 404)
+            msg = MessagesResponse(errors=['Invalid API version {}'
+                                           .format(url_version)],
+                                   code=404)
+            return msg()
     return decorated
 
 
 @auth.error_handler
 def unauthorized():
-    return make_response(jsonify({'msg': 'Invalid username/password'}), 403)
+    msg = MessagesResponse(errors=['Invalid username/password'],
+                           code=401)
+    return msg()
 
 
 @auth.verify_password
@@ -103,6 +124,8 @@ def verify_user(username, password):
         cache.set(cache_key, cache_entry, 7200)
 
         user = User(*user_entry)
+        if not user.is_staff:
+            return False
         flask.g.user = user  # Replace usage with cached version
     except Exception:
         logger.info('Invalid login attempt, username: {}'.format(username))
@@ -154,22 +177,19 @@ class SystemStatus(Resource):
         data = request.get_json(force=True)
         try:
             response = espa.update_system_status(data)
-            if response == default_error_message:
-                message = {'status': 500, 'message': 'internal server error'}
+            if response is not True:
+                resp = MessagesResponse(errors=['internal server error'],
+                                        code=500)
             elif isinstance(response, dict) and response.keys() == ['msg']:
-                message = {'status': 400, 'message': response['msg']}
+                resp = MessagesResponse(errors=response['msg'],
+                                        code=400)
             else:
-                message = {'status': 200, 'message': 'success'}
-
-            resp = jsonify(message)
-            resp.status_code = message['status']
-            return resp
-        except:
+                return 'success'
+        except Exception as e:
             logger.debug("ERROR updating system status: {0}".format(traceback.format_exc()))
-            message = {'status': 500, 'message': 'internal server error'}
-            resp = jsonify(message)
-            resp.status_code = 500
-            return resp
+            resp = MessagesResponse(errors=['internal server error'],
+                                    code=500)
+        return resp()
 
 
 class OrderResets(Resource):
@@ -181,5 +201,5 @@ class OrderResets(Resource):
         _to_whole = request.url.split('/')[-2]
         # eg 'unavailable'
         _to_state = _to_whole.split('_')[-1]
-        return espa.error_to(orderid, _to_state)
+        return str(espa.error_to(orderid, _to_state))
 

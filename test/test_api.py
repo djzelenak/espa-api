@@ -8,7 +8,7 @@ from api.util import lowercase_all
 from api.util.dbconnect import db_instance
 import version0_testorders as testorders
 from api.providers.validation.validictory import BaseValidationSchema
-from api import ValidationException, InventoryException
+from api import ValidationException, InventoryException, __location__
 
 import os
 from api.domain.mocks.order import MockOrder
@@ -17,7 +17,8 @@ from api.domain.order import Order
 from api.domain.user import User
 from api.providers.production.mocks.production_provider import MockProductionProvider
 from api.providers.production.production_provider import ProductionProvider
-
+from api.external.mocks import lta as mocklta
+from mock import patch
 
 api = APIv1()
 production_provider = ProductionProvider()
@@ -34,8 +35,11 @@ class TestAPI(unittest.TestCase):
         order_id = self.mock_order.generate_testing_order(user_id)
         self.order = Order.find(order_id)
         self.user = User.find(user_id)
-        self.product_id = 'LT50150401987120XXX02'
-        self.staff_product_id = 'LE70450302003206EDC01'
+        self.product_id = 'LT05_L1TP_032028_20120425_20160830_01_T1'
+        self.sensor_id = 'tm5_collection'
+        self.staff_product_id = 'LE07_L1TP_010028_20050420_20160925_01_T1'
+        self.staff_sensor = 'etm7_collection'
+        self.global_product_id = 'LE70450302003206EDC01'
 
         staff_user_id = self.mock_user.add_testing_user()
         self.staff_user = User.find(staff_user_id)
@@ -47,7 +51,7 @@ class TestAPI(unittest.TestCase):
         user_scene = self.order.scenes()[0]
         user_scene.update('name', self.staff_product_id)
 
-        with open('api/domain/restricted.yaml') as f:
+        with open(os.path.join(__location__, 'domain/restricted.yaml')) as f:
             self.restricted = yaml.load(f.read())
             self.restricted['all']['role'].remove('restricted_prod')
 
@@ -62,52 +66,55 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(set(api.api_versions().keys()), set(['v0', 'v1']))
 
     def test_get_available_products_key_val(self):
-        self.assertEqual(api.available_products(self.product_id, self.user.username).keys()[0], "tm5")
+        self.assertEqual(api.available_products(self.product_id, self.user.username).keys()[0], self.sensor_id)
 
     def test_get_available_products_by_staff(self):
         # staff should see all available products
         self.user.update('is_staff', True)
         return_dict = api.available_products(self.staff_product_id, self.staff_user.username)
         for item in self.restricted['all']['role']:
-            self.assertTrue(item in return_dict['etm7']['products'])
+            self.assertTrue(item in return_dict[self.staff_sensor]['products'])
 
     def test_get_available_products_by_public(self):
         # public should not see products listed in api/domain.restricted.yaml
         self.user.update('is_staff', False)
         return_dict = api.available_products(self.staff_product_id, self.user.username)
         for item in self.restricted['all']['role']:
-            self.assertFalse(item in return_dict['etm7']['products'])
+            self.assertFalse(item in return_dict[self.staff_sensor]['products'])
+
+    def test_get_available_products_global_restriction(self):
+        # testing of landsat pre-collection restricted
+        self.user.update('is_staff', False)
+        return_dict = api.available_products(self.global_product_id, self.user.username)
+        self.assertIn('ordering_restricted', return_dict)
+        self.assertEqual(return_dict['ordering_restricted']['etm7'], [self.global_product_id])
 
     def test_fetch_user_orders_by_email_val(self):
-        orders = api.fetch_user_orders(self.user.email)
-        self.assertEqual(orders.keys()[0], "orders")
+        orders = api.fetch_user_orders(email=self.user.email)
+        self.assertTrue(len(orders) > 1)
+        self.assertIn(self.order.orderid, [o.orderid for o in orders])
 
     def test_fetch_user_orders_by_username_val(self):
-        orders = api.fetch_user_orders(self.user.username)
-        self.assertEqual(orders.keys()[0], "orders")
+        orders = api.fetch_user_orders(username=self.user.username)
+        self.assertTrue(len(orders) > 1)
+        self.assertIn(self.order.orderid, [o.orderid for o in orders])
 
     def test_fetch_order_by_orderid_val(self):
         order = api.fetch_order(self.order.orderid)
-        self.assertEqual(order['orderid'], self.order.orderid)
+        self.assertEqual(1, len(order))
+        self.assertEqual(order[0].orderid, self.order.orderid)
 
-    def test_fetch_order_status_valid(self):
-        response = api.order_status(self.order.orderid)
-        self.assertEqual(response.keys(), ['orderid', 'status'])
-
-    def test_fetch_order_status_invalid(self):
+    def test_fetch_order_by_orderid_invalid(self):
         invalid_orderid = 'invalidorderid'
-        response = api.order_status(invalid_orderid)
-        self.assertEqual(response.keys(), ['msg'])
+        response = api.fetch_order(invalid_orderid)
+        self.assertEqual(response, list())
 
     def test_fetch_item_status_valid(self):
         response = api.item_status(self.order.orderid)
-        self.assertEqual(response.keys(), ['orderid'])
-        self.assertIsInstance(response['orderid'], dict)
-
-    def test_fetch_item_status_invalid(self):
-        invalid_orderid = 'invalidorderid'
-        response = api.order_status(invalid_orderid)
-        self.assertEqual(response.keys(), ['msg'])
+        self.assertEqual(set(response), {self.order.orderid})
+        self.assertIsInstance(response[self.order.orderid], list)
+        self.assertEqual(set([s.name for s in self.order.scenes()]),
+                         set([s.name for s in response[self.order.orderid]]))
 
 
 class TestValidation(unittest.TestCase):
@@ -162,19 +169,22 @@ class TestValidation(unittest.TestCase):
         """
         Most common issue of orders resizing MODIS to 30m pixels, without setting the extents
         """
-        modis_order = {'mod09a1': {'inputs': 'mod09a1.a2016305.h11v04.006.2016314200836',
+        modis_order = {'mod09a1': {'inputs': ['mod09a1.a2016305.h11v04.006.2016314200836'],
                                    'products': ['l1']},
                        'resampling_method': 'cc',
                        'resize': {'pixel_size': 30,
                                   'pixel_size_units': 'meters'},
                        'format': 'gtiff'}
 
-        exc = 'pixel count value is greater than maximum size of'
+        exc = 'pixel count is greater than maximum size of'
+        exc_key = '1 validation errors'
 
         try:
             api.validation(modis_order, self.staffuser.username)
         except Exception as e:
-            assert(exc in str(e))
+            self.assertIn(exc_key, e.response)
+            self.assertIsInstance(e.response[exc_key], list)
+            self.assertIn(exc, str(e.response[exc_key]))
         else:
             self.fail('Failed MODIS pixel resize test')
 
@@ -194,42 +204,18 @@ class TestValidation(unittest.TestCase):
         """
         exc_type = ValidationException
         invalid_order = copy.deepcopy(self.base_order)
-        c = 0  # For initial debugging
 
         for proj in testorders.good_test_projections:
             invalid_order['projection'] = {proj: testorders.good_test_projections[proj]}
 
-            invalid_list = testorders.InvalidOrders(invalid_order, self.base_schema, abbreviated=True)
+            invalid_list = testorders.InvalidOrders(invalid_order, self.base_schema, abbreviated=False)
 
             for order, test, exc in invalid_list:
-                # issues getting assertRaisesRegExp to work correctly
-                with self.assertRaises(exc_type):
-                    try:
-                        c += 1
-                        api.validation(order, self.staffuser.username)
-                    except exc_type as e:
-                        if str(exc) in str(e):
-                            raise
-                        else:
-                            self.fail('\n\nExpected in exception message:\n{}'
-                                      '\n\nException message raised:\n{}'
-                                      '\n\nUsing test {}'.format(str(exc), str(e), test))
-                    else:
-                        self.fail('\n{} Exception was not raised\n'
-                                  '\nExpected exception message:\n{}\n'
-                                  '\nUsing test: {}'.format(exc_type, str(exc), test))
-        #print c  # For initial debugging
-
-    def test_validate_allow_human_readable(self):
-        """
-        Assert that adding response-readable to the JSON request is accepted
-        """
-        valid_order = copy.deepcopy(self.base_order)
-        valid_order['response-readable'] = True
-        try:
-            good = api.validation.validate(valid_order, self.staffuser.username)
-        except ValidationException as e:
-            self.fail('Raised ValidationException: {}'.format(e.message))
+                # empty lists cause assertRaisesRegExp to fail
+                exc = str(exc).replace('[', '\[')
+                print('\n\n\n {} \n\n\n'.format(exc))
+                with self.assertRaisesRegexp(exc_type, exc):
+                    api.validation(order, self.staffuser.username)
 
     def test_validate_sr_restricted_human_readable(self):
         """
@@ -238,35 +224,19 @@ class TestValidation(unittest.TestCase):
         exc_type = ValidationException
         invalid_list = {'olitirs8_collection': {'inputs': ['lc08_l1tp_031043_20160225_20170224_01_t1'],
                                      'products': ['sr'],
-                                     'err_msg': 'Requested {} products are restricted by date. '
-                                                'Remove <obj>.{} scenes: {}'},
+                                     'err_msg': 'Requested {} products are restricted by date'},
                         'oli8_collection': {'inputs': ['lo08_l1tp_021049_20150304_20170227_01_t1'],
                                  'products': ['sr'],
-                                 'err_msg': 'Requested {} products are not available. '
-                                            'Remove <obj>.{} scenes: {}'}}
+                                 'err_msg': 'Requested {} products are not available'}}
 
         for stype in invalid_list:
             invalid_order = copy.deepcopy(self.base_order)
             invalid_order[stype]['inputs'] = invalid_list[stype]['inputs']
             invalid_order[stype]['products'] = invalid_list[stype]['products']
-            invalid_order['response-readable'] = True
-            uppercase_products = map(str.upper, invalid_order[stype]['inputs'])
             for p in invalid_order[stype]['products']:
-                err_message = invalid_list[stype]['err_msg'].format(p, stype, uppercase_products)
-                with self.assertRaises(exc_type):
-                    try:
-                        api.validation.validate(invalid_order, self.staffuser.username)
-                    except exc_type as e:
-                        if str(err_message) in str(e):
-                            raise
-                        else:
-                            self.fail('\n\nExpected in exception message:\n{}'
-                                      '\n\nException message raised:\n{}'
-                                      .format(str(err_message), str(e)))
-                    else:
-                        self.fail('\n{} Exception was not raised\n'
-                                  '\nExpected exception message:\n{}\n'
-                                  .format(exc_type, str(err_message)))
+                err_message = invalid_list[stype]['err_msg'].format(p)
+                with self.assertRaisesRegexp(exc_type, err_message):
+                    api.validation.validate(invalid_order, self.staffuser.username)
 
 
 class TestInventory(unittest.TestCase):
@@ -283,14 +253,14 @@ class TestInventory(unittest.TestCase):
         self.lpdaac_order_good = {'mod09a1': {'inputs': [self.lpdaac_prod_good]}}
         self.lpdaac_order_bad = {'mod09a1': {'inputs': [self.lpdaac_prod_bad]}}
 
-
-
+    @patch('api.external.lta.requests.post', mocklta.get_verify_scenes_response)
     def test_lta_good(self):
         """
         Check LTA support from the inventory provider
         """
         self.assertIsNone(api.inventory.check(self.lta_order_good))
 
+    @patch('api.external.lta.requests.post', mocklta.get_verify_scenes_response_invalid)
     def test_lta_bad(self):
         """
         Check LTA support from the inventory provider
@@ -298,12 +268,14 @@ class TestInventory(unittest.TestCase):
         with self.assertRaises(InventoryException):
             api.inventory.check(self.lta_order_bad)
 
+    @patch('api.external.lpdaac.LPDAACService.input_exists', lambda x, y: True)
     def test_lpdaac_good(self):
         """
         Check LPDAAC support from the inventory provider
         """
         self.assertIsNone(api.inventory.check(self.lpdaac_order_good))
 
+    @patch('api.external.lpdaac.LPDAACService.input_exists', lambda x, y: False)
     def test_lpdaac_bad(self):
         """
         Check LPDAAC support from the inventory provider

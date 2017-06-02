@@ -5,14 +5,12 @@ user_api_operations = {
             "/api": {
                 'function': "list versions",
                 'methods': [
-                    "HEAD",
                     "GET"
                 ]
             },
             "/api/v0": {
                 'function': "list operations",
                 'methods': [
-                    "HEAD",
                     "GET"
                 ]
             },
@@ -20,71 +18,58 @@ user_api_operations = {
                 'function': "list available products per sceneid",
                 'comments': "comma separated ids supported",
                 'methods': [
-                    "HEAD",
                     "GET"
                 ]
             },
             "/api/v0/available-products": {
                 'function': "list available products per sceneid",
-                'comments': 'sceneids should be delivered in the product_ids parameter, comma separated if more than one',
+                'comments': 'sceneids should be delivered in the inputs parameter',
                 'methods': [
-                    "HEAD",
-                    "POST"
+                    "GET"
                 ]
             },
             "/api/v0/projections": {
                 'function': "list available projections",
                 'methods': [
-                    "HEAD",
                     "GET"
                 ]
             },
             "/api/v0/formats": {
                 'function': "list available output formats",
                 'methods': [
-                    "HEAD",
                     "GET"
                 ]
             },
             "/api/v0/resampling-methods": {
                 'function': "list available resampling methods",
                 'methods': [
-                    "HEAD",
                     "GET"
                 ]
             },
             "/api/v0/list-orders": {
                 'function': "list orders for authenticated user",
                 'methods': [
-                    "HEAD",
                     "GET"
                 ]
             },
             "/api/v0/list-orders/<email>": {
                 'function': "list orders for supplied email, for user collaboration",
                 'methods': [
-                    "HEAD",
-                    "GET"
-                ]
-            },
-            "/api/v0/list-orders-ext/<email>": {
-                'function': "List extended information about users orders and their statuses. Accepts JSON filters.",
-                'methods': [
-                    "HEAD",
                     "GET"
                 ]
             },
             "/api/v0/order/<ordernum>": {
                 'function': "retrieves a submitted order",
                 'methods': [
-                    "HEAD",
                     "GET"
                 ]
             },
             "/api/v0/order": {
-                'function': "point for accepting processing requests via HTTP POST with JSON body. Errors are returned to user, successful validation returns an orderid",
+                'function': "creating/fetching processing requests via HTTP POST with JSON body",
                 'methods': [
-                    "POST"
+                    "GET",
+                    "POST",
+                    "PUT"
                 ]
             },
         }
@@ -152,13 +137,6 @@ user_api_operations = {
             },
             "/api/v1/list-orders/<email>": {
                 'function': "list orders for supplied email, for user collaboration",
-                'methods': [
-                    "HEAD",
-                    "GET"
-                ]
-            },
-            "/api/v1/list-orders-ext/<email>": {
-                'function': "List extended information about users orders and their statuses. Accepts JSON filters.",
                 'methods': [
                     "HEAD",
                     "GET"

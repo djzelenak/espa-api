@@ -127,6 +127,18 @@ class TestProductionAPI(unittest.TestCase):
                                               'Verify the missing auxillary data products')
         self.assertTrue('retry' == Scene.get('ordering_scene.status', scene.name, order.orderid))
 
+    def test_production_set_product_error_retry_lasrc_segfault(self):
+        """
+        Move a scene status from error to retry based on the error
+        message
+        """
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        scene = order.scenes({'sensor_type': 'landsat'})[-1]
+        production_provider.set_product_error(scene.name, order.orderid,
+                                              'somewhere',
+                                              'runSr  sh: line 1: 1010 Segmentation fault lasrc --xml=')
+        self.assertTrue('retry' == Scene.get('ordering_scene.status', scene.name, order.orderid))
+
     @patch('api.external.lta.update_order_status', lta.update_order_status)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
     def test_update_product_details_update_status(self):
@@ -198,22 +210,7 @@ class TestProductionAPI(unittest.TestCase):
                                               error='solar zenith angle out of range')
         scene = Scene.by_name_orderid(name=scene.name, order_id=order.id)
         self.assertTrue('unavailable' == scene.status)
-        self.assertTrue('cannot be processed due to the extreme solar zenith angle' in scene.note)
-
-    def test_production_set_product_error_unavailable_almost_night(self):
-        """
-        Move a scene status from error to unavailable based on the solar zenith
-        error message
-        """
-        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
-        scene = order.scenes({'name !=': 'plot'})[0]
-        production_provider.set_product_error(name=scene.name,
-                                              orderid=order.orderid,
-                                              processing_loc='L8SRLEXAMPLE',
-                                              error='Solar zenith angle is too large')
-        scene = Scene.by_name_orderid(name=scene.name, order_id=order.id)
-        self.assertTrue('unavailable' == scene.status)
-        self.assertTrue('cannot be processed to surface reflectance' in scene.note)
+        self.assertTrue('cannot be processed due to the high solar zenith angle' in scene.note)
 
     @patch('api.external.lta.update_order_status', lta.update_order_status_fail)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
@@ -252,7 +249,9 @@ class TestProductionAPI(unittest.TestCase):
 
     @patch('api.external.onlinecache.delete', mock_production_provider.respond_true)
     @patch('api.notification.emails.send_purge_report', mock_production_provider.respond_true)
-    @patch('api.external.onlinecache.capacity', onlinecache.capacity)
+    @patch('api.external.onlinecache.capacity', onlinecache.mock_capacity)
+    @patch('api.external.onlinecache.exists', onlinecache.mock_exists)
+    @patch('api.external.onlinecache.delete', onlinecache.mock_delete)
     def test_production_purge_orders(self):
         new_completion_date = datetime.datetime.now() - datetime.timedelta(days=12)
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
@@ -308,6 +307,8 @@ class TestProductionAPI(unittest.TestCase):
         self.assertTrue(order.product_opts == {'format': 'gtiff',
                                                'etm7': {'inputs': ['LE70900652008327EDC00'],
                                                         'products': ['sr']}})
+        key = 'system.load_ee_orders_enabled'
+        self.assertEqual(api.get_production_key(key)[key], 'True')
         production_provider.load_ee_orders()
         reorder = Order.find(order.id)
         self.assertTrue(reorder.product_opts == {'format': 'gtiff',
@@ -397,6 +398,7 @@ class TestProductionAPI(unittest.TestCase):
         self.assertTrue(production_provider.handle_submitted_modis_products())
         self.assertEquals(Scene.find(sid).status, "oncache")
 
+    @patch('api.external.lpdaac.check_lpdaac_available', lpdaac.check_lpdaac_available)
     @patch('api.external.lpdaac.input_exists', lpdaac.input_exists_false)
     def test_production_handle_submitted_modis_products_input_missing(self):
         # handle unavailable scenario
@@ -420,16 +422,15 @@ class TestProductionAPI(unittest.TestCase):
             # creates 21 products for the order. divvy those
             # up between 'complete' and 'unavailable', setting
             # one aside as the 'plot' product
-            if idx % 2 == 0:
-                if idx == 0:
-                    # need to define a plot product
-                    scene.update('status', 'submitted')
-                    scene.update('sensor_type', 'plot')
-                    plot_id = scene.id
-                else:
-                    scene.update('status', 'complete')
+            if scene.sensor_type == 'plot':
+                # need to define a plot product
+                scene.update('status', 'submitted')
+                plot_id = scene.id
             else:
-                scene.update('status', 'unavailable')
+                if idx % 2 == 0:
+                    scene.update('status', 'complete')
+                else:
+                    scene.update('status', 'unavailable')
 
         self.assertTrue(production_provider.handle_submitted_plot_products())
         self.assertEqual(Scene.find(plot_id).status, "oncache")

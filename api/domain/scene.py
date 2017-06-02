@@ -103,7 +103,19 @@ class Scene(object):
                     self.id = None
 
     def __repr__(self):
-        return 'Scene: {}'.format(self.__dict__)
+        return 'Scene: {}'.format(self.as_dict())
+
+    def as_dict(self):
+        return {
+            "name": self.name,
+            "note": self.note,
+            "status": self.status,
+            "completion_date": self.completion_date,
+            "cksum_download_url": self.cksum_download_url,
+            "product_dload_url": self.product_dload_url,
+            "log_file_contents": self.log_file_contents,
+            "id": self.id
+        }
 
     @classmethod
     def get(cls, col_name, scene_name, orderid):
@@ -420,3 +432,21 @@ class Scene(object):
 
         return ret
 
+    @staticmethod
+    def cancel_opts():
+        """
+        Options for consistent cancellation from various providers
+
+        :return: dict
+        """
+        updates = {'status': 'cancelled',
+                   'note': 'Cancelled',
+                   # download_size left alone if already completed
+                   'log_file_contents': '',
+                   'product_distro_location': '',
+                   'product_dload_url': '',
+                   'cksum_distro_location': '',
+                   'cksum_download_url': '',
+                   'job_name': ''
+                   }
+        return updates

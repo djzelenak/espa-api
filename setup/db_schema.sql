@@ -289,7 +289,7 @@ ALTER TABLE ordering_configuration_id_seq OWNER TO espadev;
 CREATE TABLE ordering_configuration (
     id integer DEFAULT nextval('ordering_configuration_id_seq'::regclass) NOT NULL,
     key character varying(255) NOT NULL,
-    value character varying(2048) NOT NULL
+    value character varying(4096) NOT NULL
 );
 
 

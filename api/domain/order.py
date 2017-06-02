@@ -82,7 +82,21 @@ class Order(object):
                     self.id = None
 
     def __repr__(self):
-        return 'Order: {}'.format(self.__dict__)
+        return 'Order: {}'.format(self.as_dict())
+
+    def as_dict(self):
+        return {
+                  "completion_date": self.completion_date,
+                  "note": self.note,
+                  "order_date": self.order_date,
+                  "order_source": self.order_source,
+                  "order_type": self.order_type,
+                  "orderid": self.orderid,
+                  "priority": self.priority,
+                  "product_options": self.product_options,
+                  "product_opts": self.product_opts,
+                  "status": self.status
+                }
 
     @classmethod
     def create(cls, params):
@@ -270,7 +284,7 @@ class Order(object):
         :param email_addr: Email address of the requestor
         :return: An order id string for the ESPA system for ee created orders
         """
-        return '{}-{}'.format(email_addr, eeorder)
+        return 'espa-{}-{}'.format(email_addr, eeorder)
 
     @staticmethod
     def get_default_product_options():
@@ -596,7 +610,7 @@ class Order(object):
         """
         d = datetime.datetime.now()
 
-        return '{}-{}-{}'.format(email, d.strftime('%m%d%Y-%H%M%S'), d.strftime('%f')[:3])
+        return 'espa-{}-{}-{}'.format(email, d.strftime('%m%d%Y-%H%M%S'), d.strftime('%f')[:3])
 
 
 class OptionsConversion(object):
@@ -663,7 +677,8 @@ class OptionsConversion(object):
                 ('include_sr_msavi', 'sr_msavi', True),
                 ('include_sr_evi', 'sr_evi', True),
                 ('include_lst', 'lst', True),
-                ('include_cfmask', 'cloud', True)]
+                ('include_cfmask', 'cloud', True),
+                ('include_pixel_qa', 'pixel_qa', True)]
 
     resample_map = [('cubic', 'cc', None),
                     ('near', 'nn', None),
@@ -822,8 +837,7 @@ class OptionsConversion(object):
                 # No appropriate mapping as it is handled as a dummy
                 # scene in the DB
                 continue
-            # TODO: remove response-readable (should now be removed from order)
-            elif key == 'note' or key == 'response-readable':
+            elif key == 'note':
                 continue
             else:
                 raise ValueError('Unrecognized key: {}'.format(key))

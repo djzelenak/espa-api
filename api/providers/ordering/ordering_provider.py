@@ -1,19 +1,26 @@
 import datetime
+import os
 
 from api.domain import sensor
 from api.domain.order import Order
+from api.domain.scene import Scene
 from api.domain.user import User
 from api.util.dbconnect import db_instance
 from api.util import julian_date_check
 from api.providers.ordering import ProviderInterfaceV0
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.providers.caching.caching_provider import CachingProvider
+# ----------------------------------------------------------------------------------
+from api.external import lta, onlinecache  # TODO: is this the best place for these?
+from api.notification import emails        # TODO: is this the best place for these?
+from api.system.logger import ilogger as logger  # TODO: is this the best place for these?
 
 import copy
 import yaml
 
 cache = CachingProvider()
 config = ConfigurationProvider()
+from api import __location__
 
 
 class OrderingProviderException(Exception):
@@ -43,7 +50,7 @@ class OrderingProvider(ProviderInterfaceV0):
         user = User.by_username(username)
         pub_prods = copy.deepcopy(OrderingProvider.sensor_products(product_id))
 
-        with open('api/domain/restricted.yaml') as f:
+        with open(os.path.join(__location__, 'domain/restricted.yaml')) as f:
                 restricted = yaml.load(f.read())
 
         role = False if user.is_staff() else True
@@ -51,8 +58,9 @@ class OrderingProvider(ProviderInterfaceV0):
         restrict_all = restricted.get('all', {})
         all_role = restrict_all.get('role', [])
         all_by_date = restrict_all.get('by_date', {})
+        all_ordering_rsctd = restrict_all.get('ordering', [])
 
-        upd = {'date_restricted': {}}
+        upd = {'date_restricted': {}, 'ordering_restricted': {}}
         for sensor_type, prods in pub_prods.items():
             if sensor_type == 'not_implemented':
                 continue
@@ -68,6 +76,15 @@ class OrderingProvider(ProviderInterfaceV0):
 
             outs = pub_prods[sensor_type]['products']
             ins = pub_prods[sensor_type]['inputs']
+
+            if sensor_type in all_ordering_rsctd:
+                for sc_id in ins:
+                    if sensor_type in upd['ordering_restricted']:
+                        upd['ordering_restricted'][sensor_type].append(sc_id)
+                    else:
+                        upd['ordering_restricted'][sensor_type] = [sc_id]
+                pub_prods.pop(sensor_type)
+                continue
 
             remove_me = []
             if role:
@@ -99,103 +116,38 @@ class OrderingProvider(ProviderInterfaceV0):
                     continue
 
         if upd['date_restricted']:
-            pub_prods.update(upd)
+            pub_prods.update(date_restricted=upd['date_restricted'])
+        if upd['ordering_restricted']:
+            pub_prods.update(ordering_restricted=upd['ordering_restricted'])
 
         return pub_prods
 
-    def fetch_user_orders(self, uid, filters=None):
-        # deal with unicode uid
-        if isinstance(uid, basestring):
-            uid = str(uid)
-
-        try:
-            user = User.where({'username': uid}).pop()
-        except IndexError:
-            try:
-                user = User.where({'email': uid}).pop()
-            except IndexError:
-                return {'msg': 'sorry, no user matched {0}'.format(uid)}
+    def fetch_user_orders(self, username='', email='', filters=None):
 
         if filters and not isinstance(filters, dict):
-            raise OrderingProviderException('filters param must be of type dict')
-        elif filters:
+            raise OrderingProviderException('filters must be dict')
+
+        if username:
+            user = User.where({'username': username})
+        elif email:
+            user = User.where({'email': email})
+        if len(user) != 1:
+            return list()
+        else:
+            user = user.pop()
+
+        if filters:
             params = dict(filters)
             params.update({'user_id': user.id})
         else:
             params = {'user_id': user.id}
 
-        return {'orders': [o.orderid for o in Order.where(params)]}
-
-    def fetch_user_orders_ext(self, uid, filters={}):
-        orders = self.fetch_user_orders(uid, filters=filters)
-        if 'orders' not in orders.keys():
-            return orders
-        orders_d = orders['orders']
-        output = []
-        for orderid in orders_d:
-            order = Order.find(orderid)
-            products_complete = order.scene_status_count('complete')
-            products_error = order.scene_status_count('error')
-            products_ordered = order.scene_status_count()
-
-            out_d = {'orderid': orderid, 'products_ordered': products_ordered,
-                     'products_complete': products_complete,
-                     'products_error': products_error,
-                     'order_status': order.status, 'order_note': order.note}
-            output.append(out_d)
-        return output
-
-    def fetch_user_orders_feed(self, email):
-        orders = self.fetch_user_orders(email)
-        if 'orders' not in orders.keys():
-            return orders
-
-        cache_key = "{0}_feed".format(email)
-        outd = cache.get(cache_key) or {}
-
-        if not outd:
-            for orderid in orders['orders']:
-                order = Order.find(orderid)
-                scenes = order.scenes({"status": "complete"})
-                if scenes:
-                    outd[order.orderid] = {'orderdate': str(order.order_date)}
-                    scene_list = []
-                    for scene in scenes:
-                        scene_list.append({'name': scene.name,
-                                           'url': scene.product_dload_url,
-                                           'status': scene.status})
-                    outd[order.orderid]['scenes'] = scene_list
-            cache.set(cache_key, outd)
-
-        return outd
+        resp = Order.where(params)
+        return resp
 
     def fetch_order(self, ordernum):
-        sql = "select * from ordering_order where orderid = %s;"
-        out_dict = {}
-        opts_dict = {}
-        scrub_keys = ['initial_email_sent', 'completion_email_sent', 'id', 'user_id',
-                      'ee_order_id', 'email']
-
-        with db_instance() as db:
-            db.select(sql, (str(ordernum)))
-            if db:
-                for key, val in db[0].iteritems():
-                    if isinstance(val, datetime.datetime):
-                        out_dict[key] = val.isoformat()
-                    else:
-                        out_dict[key] = val
-                opts_str = db[0]['product_options']
-                opts_str = opts_str.replace("\n", "")
-                opts_dict = yaml.load(opts_str)
-                out_dict['product_options'] = opts_dict
-            else:
-                out_dict['msg'] = "sorry, no order matched that orderid"
-
-        for k in scrub_keys:
-            if k in out_dict.keys():
-                out_dict.pop(k)
-
-        return out_dict
+        orders = Order.where({'orderid': ordernum})
+        return orders
 
     def place_order(self, new_order, user):
         """
@@ -221,65 +173,64 @@ class OrderingProvider(ProviderInterfaceV0):
                       'product_options': ''}
 
         result = Order.create(order_dict)
-        return result.orderid
+        return result
 
-    def order_status(self, orderid):
-        sql = "select orderid, status from ordering_order where orderid = %s;"
-        response = {}
-        with db_instance() as db:
-            db.select(sql, str(orderid))
-            if db:
-                for i in ['orderid', 'status']:
-                    response[i] = db[0][i]
-            else:
-                response['msg'] = 'sorry, no orders matched orderid %s' % orderid
+    def cancel_order(self, orderid, request_ip_address):
+        """
+        Cancels an order, and all scenes contained within it
 
-        return response
+        :return:
+        """
+        order = Order.where({'id': orderid})
+        if len(order) != 1:
+            raise OrderingProviderException('Order not found')
+        else:
+            order = order.pop()
 
-    def item_status(self, orderid, itemid='ALL', username=None):
-        response = {}
-        sql = "select oo.orderid, os.id scene_id, os.name, os.status, os.completion_date, os.note, " \
-              "os.product_dload_url, os.cksum_download_url, os.log_file_contents " \
-              "from ordering_order oo left join ordering_scene os on oo.id = " \
-              "os.order_id where oo.orderid = %s"
+        logger.info('Received request to cancel {} from {}'
+                    .format(orderid, request_ip_address))
+        # TODO: ADD "queued" to list, when proc can handle exception
+        killable_scene_states = ('submitted', 'oncache', 'onorder',
+                                 'error', 'unavailable', 'complete')
+        scenes = order.scenes(sql_dict={'status': killable_scene_states})
+        if len(scenes) > 0:
+            Scene.bulk_update([s.id for s in scenes], Scene.cancel_opts())
+        else:
+            logger.info('No scenes to cancel for order {}'
+                        .format(orderid, request_ip_address))
+
+        order.status = 'cancelled'
+        order.save()
+        logger.info('Request to cancel {} from {} successful.'
+                    .format(orderid, request_ip_address))
+        return order
+
+    def item_status(self, orderid, itemid='ALL', username=None, filters=None):
         user = User.by_username(username)
 
-        if itemid is not "ALL":
-            argtup = (orderid, itemid)
-            sql += " AND os.name = %s;"
+        if not isinstance(filters, dict):
+            if filters is None:
+                filters = dict()
+            else:
+                raise TypeError('supplied filters invalid')
+
+        if orderid:
+            orders = Order.where({'orderid': orderid})
         else:
-            argtup = (str(orderid))
-            sql += ";"
+            orders = Order.where({'user_id': user.id})
 
-        with db_instance() as db:
-            db.select(sql, argtup)
-            items = [_ for _ in db.fetcharr]
+        search = dict()
+        if 'status' in filters:
+            search.update(status=(filters.get('status'),))
 
-        if items:
-            id = items[0]['orderid']
-            response['orderid'] = {id: []}
-            for item in items:
-                try:
-                    ts = item['completion_date'].isoformat()
-                except AttributeError:
-                    # completion_date not yet set
-                    ts = ''
+        if 'name' in filters:
+            search.update(name=(filters.get('name'),))
+        elif itemid is not "ALL":
+            search.update(name=(itemid,))
 
-                i = {'scene_id': item['scene_id'],
-                     'name': item['name'],
-                     'status': item['status'],
-                     'completion_date': ts,
-                     'note': item['note'],
-                     'product_dload_url': item['product_dload_url'],
-                     'cksum_download_url': item['cksum_download_url']}
-
-                if user and user.is_staff():
-                    i['log_file_contents'] = item['log_file_contents']
-
-                response['orderid'][id].append(i)
-        else:
-            response['msg'] = 'sorry, no items matched orderid %s , itemid %s' % (orderid, itemid)
-
+        response = dict()
+        for order in orders:
+            response[order.orderid] = order.scenes(search)
         return response
 
     def get_system_status(self):

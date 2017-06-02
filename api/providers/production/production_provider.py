@@ -17,6 +17,7 @@ import urllib
 import json
 import socket
 import os
+import time
 import yaml
 
 from cStringIO import StringIO
@@ -87,15 +88,14 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         :param log_file_contents: log file contents from processing
         :return: True
         """
+        order_status = Scene.get('ordering_order.status', name, orderid)
 
         order_id = Scene.get('order_id', name, orderid)
         order_source = Scene.get('order_source', name, orderid)
         base_url = config.url_for('distribution.cache')
 
-        product_file_parts = completed_file_location.split('/')
-        product_file = product_file_parts[len(product_file_parts) - 1]
-        cksum_file_parts = destination_cksum_file.split('/')
-        cksum_file = cksum_file_parts[len(cksum_file_parts) - 1]
+        product_file = os.path.basename(completed_file_location)
+        cksum_file = os.path.basename(destination_cksum_file)
 
         product_dload_url = ('{}/orders/{}/{}'
                              .format(base_url, orderid, product_file))
@@ -103,6 +103,18 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                               .format(base_url, orderid, cksum_file))
 
         scene = Scene.by_name_orderid(name, order_id)
+
+        if order_status == 'cancelled':
+            if os.path.exists(completed_file_location):
+                scene.download_size = os.path.getsize(completed_file_location)
+                onlinecache.delete(orderid, filename=product_file)
+                onlinecache.delete(orderid, filename=cksum_file)
+            else:
+                logger.debug('ERR file was not found: {}'
+                             .format(completed_file_location))
+            Scene.bulk_update([scene.id], Scene.cancel_opts())
+            return True  # TODO: proc False?
+
         scene.status = 'complete'
         scene.processing_location = processing_loc
         scene.product_distro_location = completed_file_location
@@ -129,7 +141,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 cache_key = 'lta.cannot.update'
                 lta_conn_failed_10mins = cache.get(cache_key)
                 if lta_conn_failed_10mins:
-                    logger.debug('Problem updating LTA order: {}'.format(e))
+                    logger.warn('Problem updating LTA order: {}'.format(e))
                 cache.set(cache_key, datetime.datetime.now())
                 scene.failed_lta_status_update = 'C'
 
@@ -175,7 +187,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 cache_key = 'lta.cannot.update'
                 lta_conn_failed_10mins = cache.get(cache_key)
                 if lta_conn_failed_10mins:
-                    logger.debug('Problem updating LTA order: {}'.format(e))
+                    logger.warn('Problem updating LTA order: {}'.format(e))
                 cache.set(cache_key, datetime.datetime.now())
                 scene.failed_lta_status_update = 'R'
 
@@ -209,7 +221,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     except Exception, e:
                         # perhaps this doesn't need to be elevated to 'debug' status
                         # as its a fairly regular occurrence
-                        logger.debug('Problem updating LTA order: {}'.format(e))
+                        logger.warn('Problem updating LTA order: {}'.format(e))
                         p.update('failed_lta_status_update', 'R')
         except Exception, e:
             raise ProductionProviderException(e)
@@ -227,6 +239,9 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         """
         order = Order.find(orderid)
         scene = Scene.by_name_orderid(name, order.id)
+        if order.status == 'cancelled':
+            Scene.bulk_update([scene.id], Scene.cancel_opts())
+            return True  # TODO: proc False?
         if processing_loc:
             scene.processing_location = processing_loc
         if status:
@@ -475,16 +490,20 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             logger.warn('Retrieving {0} landsat download urls for cid:{1}'
                          .format(len(landsat), cid))
 
-            start = datetime.datetime.now()
-            landsat_urls = lta.get_download_urls(landsat, cid)
-            stop = datetime.datetime.now()
-            interval = stop - start
-            logger.warn('Retrieving download urls took {0} seconds'
-                         .format(interval.seconds))
-            logger.warn('Retrieved {0} landsat urls for cid:{1}'.format(len(landsat_urls), cid))
+            landsat_urls = dict()
+            if len(landsat) > 0:
+                start = datetime.datetime.now()
+                landsat_urls = lta.get_download_urls(landsat, cid)
+                stop = datetime.datetime.now()
+                interval = stop - start
+                logger.warn('Retrieving download urls took {0} seconds'
+                             .format(interval.seconds))
+                logger.warn('Retrieved {0} landsat urls for cid:{1}'.format(len(landsat_urls), cid))
 
             modis = [item['name'] for item in cid_items if item['sensor_type'] == 'modis']
-            modis_urls = lpdaac.get_download_urls(modis)
+            modis_urls = dict()
+            if len(modis) > 0:
+                modis_urls = lpdaac.get_download_urls(modis)
 
             logger.warn('Retrieved {0} modis urls for cid:{1}'.format(len(modis_urls), cid))
             for item in cid_items:
@@ -599,15 +618,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 user = cache.get(cache_key)
 
                 if user is None:
-                    username = lta.get_user_name(contactid)
+                    username = str(lta.get_user_name(contactid))
                     # Find or create the user
-                    db_id = User.find_or_create_user(username, email_addr,
-                                                     'from', 'earthexplorer',
-                                                     contactid)
-                    user = User.find(db_id)
-                    if not user.contactid:
-                        user.update('contactid', contactid)
-
+                    user = User(username, email_addr, 'from', 'earthexplorer',
+                                contactid)
                     cache.set(cache_key, user, 60)
 
                 # We have a user now.  Now build the new Order since it
@@ -727,7 +741,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 scene = scene[0]
                 if scene.status == 'complete':
                     status = 'C'
-                elif scene.status == 'unavailable':
+                elif scene.status in ('unavailable', 'cancelled'):
                     status = 'R'
                 else:
                     status = 'I'
@@ -765,6 +779,22 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         except Exception as e:
             raise ProductionProviderException("error with handle_retry_products: {}".format(e))
 
+        return True
+
+    @staticmethod
+    def handle_cancelled_orders():
+        """ Find all orders without cancelled order email sent, and sends them
+        :return: True
+        """
+        orders = Order.where({'status': 'cancelled',
+                              'completion_email_sent IS': None})
+        for order in orders:
+            if not order.completion_email_sent:
+                if onlinecache.exists(order.orderid):
+                    onlinecache.delete(order.orderid)
+                if order.order_source == 'espa':
+                    emails.Emails().send_order_cancelled_email(order.orderid)
+                    order.update('completion_email_sent', datetime.datetime.now())
         return True
 
     def handle_onorder_landsat_products(self):
@@ -1144,9 +1174,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     product.job_name = ''
                     product.save()
 
-                # bulk update product status, delete unnecessary field data
-                logger.info('Deleting {0} from online cache disk'.format(order.orderid))
-                onlinecache.delete(order.orderid)
+                if onlinecache.exists(order.orderid):
+                    # bulk update product status, delete unnecessary field data
+                    logger.info('Deleting {0} from online cache disk'.format(order.orderid))
+                    onlinecache.delete(order.orderid)
             except onlinecache.OnlineCacheException:
                 logger.debug('Could not delete {0} from the online cache'.format(order.orderid))
             except Exception as e:
@@ -1155,6 +1186,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         end_capacity = onlinecache.capacity()
         logger.info('Ending cache capacity:{0}'.format(end_capacity))
 
+        orders = [{o.orderid: len(o.scenes({'status': 'complete'}))} for o in orders]
         if send_email is True:
             logger.info('Sending purge report')
             emails.send_purge_report(start_capacity, end_capacity, orders)
@@ -1164,6 +1196,9 @@ class ProductionProvider(ProductionProviderInterfaceV0):
     @staticmethod
     def handle_failed_ee_updates():
         scenes = Scene.where({'failed_lta_status_update IS NOT': None})
+        n_failed = len(scenes)
+        if n_failed:
+            logger.debug('Failed LTA status count: {} scenes'.format(n_failed))
         for s in scenes:
             try:
                 lta.update_order_status(s.order_attr('ee_order_id'), s.ee_unit_id,
@@ -1188,6 +1223,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         self.handle_retry_products()
         self.load_ee_orders()
         self.handle_failed_ee_updates()
+        self.handle_cancelled_orders()
         self.handle_submitted_products()
         self.calc_scene_download_sizes()
         self.finalize_orders()
@@ -1268,3 +1304,34 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         return True
 
+    def resubmit_orphaned_scenes(self):
+        """
+        WARNING: THIS WILL BE BLOCKING FOR 10.5 MINUTES TO COMPLETE
+
+        This will reset all orphaned states, re-check for new orphaned twice
+            (at least 10 minutes apart), and then re-submit any found orphaned
+
+        :return: bool
+        """
+        updates = {'reported_orphan': None, 'orphaned': None}
+        scenes = Scene.where({'reported_orphan is not': None})
+        if len(scenes):
+            Scene.bulk_update([s.id for s in scenes], updates)
+        scenes = Scene.where({'orphaned is not': None})
+        if len(scenes):
+            Scene.bulk_update([s.id for s in scenes], updates)
+
+        seconds = 630  # 10.5 minutes separation
+        assert(self.catch_orphaned_scenes())
+        logger.info('Will sleep for {} seconds'.format(seconds))
+        time.sleep(seconds)
+        assert(self.catch_orphaned_scenes())
+
+        scenes = Scene.where({'orphaned': True,
+                              'status': ('queued', 'processing')})
+        updates.update(status='submitted')
+        if len(scenes):
+            Scene.bulk_update([s.id for s in scenes], updates)
+        logger.info('Re-submitted {} orphaned scenes'.format(len(scenes)))
+
+        return True

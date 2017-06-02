@@ -8,7 +8,6 @@
 import traceback
 from api.system.logger import ilogger as logger
 from api.domain import default_error_message, user_api_operations
-from api import ValidationException, InventoryException
 
 
 class API(object):
@@ -23,6 +22,7 @@ class API(object):
         self.inventory = self.providers.inventory
         self.validation = self.providers.validation
         self.metrics = self.providers.metrics
+        self.reporting = self.providers.reporting
 
     @staticmethod
     def api_versions():
@@ -85,52 +85,24 @@ class API(object):
 
         return response
 
-    def fetch_user_orders(self, user_id, filters={}):
+    def fetch_user_orders(self, username='', email='', filters={}):
         """ Return orders given a user id
 
         Args:
             user_id (str): The email or username for the user who placed the order.
 
         Returns:
-            dict: of orders with list of order ids
+            list: of orders with list of order ids
         """
         try:
-            response = self.ordering.fetch_user_orders(user_id, filters=filters)
+            response = self.ordering.fetch_user_orders(email=email,
+                                                       username=username,
+                                                       filters=filters)
         except:
-            logger.debug("ERR version1 fetch_user_orders arg: {0}\nexception {1}".format(user_id, traceback.format_exc()))
             response = default_error_message
-
-        return response
-
-    def fetch_user_orders_ext(self, user_id, filters={}):
-        """ Return orders and product details given a user id
-
-        Args:
-            user_id (str): The email or username for the user who placed the order.
-
-        Returns:
-            list: of dictionaries with keys for orders and product details
-        """
-        try:
-            response = self.ordering.fetch_user_orders_ext(user_id, filters=filters)
-        except:
-            logger.debug("ERR version1 fetch_user_orders arg: {0}\nexception {1}".format(user_id, traceback.format_exc()))
-            response = default_error_message
-
-        return response
-
-    def fetch_user_orders_feed(self, email):
-        """
-        returns order and scene details for a user formatted
-        for an rss feed
-        :param email:
-        :return: dict
-        """
-        try:
-            response = self.ordering.fetch_user_orders_feed(email)
-        except:
-            logger.debug("ERR version1 fetch_user_orders_feed email: {0}\nexception: {1}".format(email, traceback.format_exc()))
-            response = default_error_message
+            logger.debug("ERR version1 fetch_user_orders arg: {0}\n"
+                         "exception {1}".format(username or email,
+                                                traceback.format_exc()))
 
         return response
 
@@ -141,12 +113,13 @@ class API(object):
             ordernum (str): the order id of a submitted order
 
         Returns:
-            dict: of order details
+            Order: The requested order
         """
         try:
             response = self.ordering.fetch_order(ordernum)
         except:
-            logger.debug("ERR version1 fetch_order arg: {0}\nexception {1}".format(ordernum, traceback.format_exc()))
+            logger.debug("ERR version1 fetch_order arg: {0}\n"
+                         "exception {1}".format(ordernum, traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -158,7 +131,7 @@ class API(object):
             :keyword order (api.domain.order.Order): The order to be entered into the system
 
         Returns:
-            str: The generated order id
+            Order: The generated order
 
         Raises:
             api.api_exceptions.ValidationException: Error occurred validating params
@@ -173,40 +146,14 @@ class API(object):
             self.metrics.collect(order)
             # capture the order
             response = self.ordering.place_order(order, user)
-        except ValidationException as e:
-            logger.info('Invalid order received: {0}\nresponse {1}'.format(order, e.response))
-            # Need to format the string repr of the exception for end user consumption
-            response = e.response
-        except InventoryException as e:
-            logger.info('Requested inputs not available: {0}\nresponse {1}'.format(order, e.response))
-            response = e.response
         except:
-            logger.debug("ERR version1 place_order arg: {0}\nexception {1}".format(order, traceback.format_exc()))
-            response = default_error_message
+            logger.debug("ERR version1 place_order arg: {0}\n"
+                         "exception {1}".format(order, traceback.format_exc()))
+            raise
 
         return response
 
-    def order_status(self, orderid):
-        """Shows an order status
-
-        Orders contain additional information such as date ordered, date completed,
-        current status and so on.
-
-        Args:
-            orderid (str): id of the order
-
-        Raises:
-            OrderNotFound if the order did not exist
-        """
-        try:
-            response = self.ordering.order_status(orderid)
-        except:
-            logger.debug("ERR version1 order_status arg: {0}\nexception {1}".format(orderid, traceback.format_exc()))
-            response = default_error_message
-
-        return response
-
-    def item_status(self, orderid, itemid='ALL', username=None):
+    def item_status(self, orderid, itemid='ALL', username=None, filters=None):
         """Shows an individual item status
 
         Args:
@@ -221,7 +168,7 @@ class API(object):
             ItemNotFound if the item did not exist
         """
         try:
-            response = self.ordering.item_status(orderid, itemid, username)
+            response = self.ordering.item_status(orderid, itemid, username, filters)
         except:
             logger.debug("ERR version1 item_status itemid {0}  orderid: {1}\nexception {2}".format(itemid, orderid, traceback.format_exc()))
             response = default_error_message
@@ -238,5 +185,33 @@ class API(object):
         except:
             logger.debug("ERR version1 get_system_status. traceback {0}".format(traceback.format_exc()))
             response = default_error_message
+        return response
 
+    def get_backlog(self, user=None):
+        """
+        retrive the global backlog scene count
+        :return: str
+        """
+        try:
+            # TODO: Allow getting user-specific backlog?
+            response = self.reporting.get_stat('stat_backlog_depth')
+        except:
+            logger.debug("ERR version1 get_backlog, traceback: {0}"
+                         .format(traceback.format_exc()))
+            raise
+        return response
+
+    def cancel_order(self, orderid, request_address):
+        """
+
+        :param orderid: Primary Key for Order
+        :param request_address: Remote IP Address
+        :return:
+        """
+        try:
+            response = self.ordering.cancel_order(orderid, request_address)
+        except:
+            logger.debug("ERR version1 cancel_order, traceback: {0}"
+                         .format(traceback.format_exc()))
+            raise
         return response

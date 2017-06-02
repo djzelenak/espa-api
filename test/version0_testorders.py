@@ -140,7 +140,7 @@ class InvalidOrders(object):
         This is directly modeled from validictory exception handling
         and uses the module's exception handlers
         """
-        path = '<obj>.' + '.'.join(path)
+        path = '.'.join(path)
         params['value'] = value
         params['fieldname'] = fieldname
         message = desc.format(**params)
@@ -299,9 +299,9 @@ class InvalidOrders(object):
         results = []
 
         inv = 'NOT VALID ENUM'
-
-        exc = self.build_exception("is not in the enumeration: {options!r}", inv, mapping[-1],
-                                   path=mapping, options=enums)
+        exc = ("Not available: .* products for {}. "
+               "Please choose from available products: {}"
+               .format('.'.join(mapping), enums))
 
         upd = self.build_update_dict(mapping, inv)
         results.append((self.update_dict(order, upd), 'enum', exc))
@@ -395,8 +395,9 @@ class InvalidOrders(object):
 
         for val in test_vals:
             upd = self.build_update_dict(mapping, val)
-            exc = self.build_exception('Absolute value must fall between {} and {}'.format(bounds[0], bounds[1]),
-                                       val, mapping[-1], path=mapping)
+
+            exc = ('Absolute value of {} must fall between {} and {}'
+                   .format('.'.join(mapping), bounds[0], bounds[1]))
             results.append((self.update_dict(order, upd), 'abs_rng', exc))
 
         return results
@@ -415,8 +416,8 @@ class InvalidOrders(object):
         else:
             order['projection'].update({'lonlat': good_test_projections['lonlat']})
 
-        exc = self.build_exception(': field only accepts one object', 2, mapping[-1],
-                                   path=mapping)
+        exc = ("{} field only accepts one object, not {}"
+               .format('.'.join(mapping), 2))
         results.append((order, 'single_obj', exc))
 
         return results
@@ -497,8 +498,8 @@ class InvalidOrders(object):
 
         for val in test_vals:
             upd = self.build_update_dict(mapping[:-1], {'pixel_size': val, 'pixel_size_units': 'dd'})
-            exc = self.build_exception('Value must fall between {} and {}'.format(rng[0], rng[1]),
-                                       val, mapping[-1], path=mapping)
+            exc = ("Value of {} must fall between {} and {}"
+                   .format('.'.join(mapping), rng[0], rng[1]))
             results.append((self.update_dict(order, upd), 'ps_dd_rng', exc))
 
         return results
@@ -517,8 +518,8 @@ class InvalidOrders(object):
 
         for val in test_vals:
             upd = self.build_update_dict(mapping[:-1], {'pixel_size': val, 'pixel_size_units': 'meters'})
-            exc = self.build_exception('Value must fall between {} and {}'.format(rng[0], rng[1]),
-                                       val, mapping[-1], path=mapping)
+            exc = ("Value of {} must fall between {} and {}"
+                   .format('.'.join(mapping), rng[0], rng[1]))
             results.append((self.update_dict(order, upd), 'ps_meter_rng', exc))
 
         return results
@@ -538,9 +539,7 @@ class InvalidOrders(object):
             prods.append('restricted_prod')
 
             upd = self.build_update_dict(mapping, prods)
-            exc = self.build_exception('Requested products are not available',
-                                       ['restricted_prod'], mapping[-1], path=mapping)
-
+            exc = "restricted_prod products are not available. Remove "
             results.append((self.update_dict(order, upd), 'role_restricted', exc))
 
         return results
@@ -549,11 +548,12 @@ class InvalidOrders(object):
         """
         If stats restrictions are in place, remove valid stats products from order
         """
+        order = copy.deepcopy(self.valid_order)
         results = []
         if stats:
             new_order = {}
-            for item in self.valid_order:
-                new_order[item] = self.valid_order[item]
+            for item in order:
+                new_order[item] = order[item]
                 if isinstance(new_order[item], dict) and 'inputs' in new_order[item].keys():
                     new_order[item]['products'] = ['l1', 'stats']
 

@@ -36,7 +36,6 @@ class Errors(object):
         self.conditions.append(self.lta_soap_errors)
         self.conditions.append(self.missing_aux_data)
         self.conditions.append(self.network_errors)
-        self.conditions.append(self.almost_night_scene)
         self.conditions.append(self.night_scene)
         self.conditions.append(self.no_such_file_or_directory)
         self.conditions.append(self.oli_no_sr)
@@ -45,6 +44,7 @@ class Errors(object):
         self.conditions.append(self.ssh_errors)
         self.conditions.append(self.warp_errors)
         self.conditions.append(self.node_space_errors)
+        self.conditions.append(self.lasrc_mystery_segfaults)
 
         #construct the named tuple for the return value of this module
         self.resolution = collections.namedtuple('ErrorResolution',
@@ -172,25 +172,15 @@ class Errors(object):
         reason = 'OLI only scenes cannot be processed to surface reflectance'
         return self.__find_error(error_message, keys, status, reason)
 
-    def almost_night_scene(self, error_message):
-        '''Indicates that LEDAPS/l8sr could not process a scene because the
-        sun was beneath the horizon'''
-
-        keys = ['Solar zenith angle is too large']
-        status = 'unavailable'
-        reason = ('This scene cannot be processed to surface reflectance '
-                  'due to the high solar zenith angle')
-        return self.__find_error(error_message, keys, status, reason)
-
     def night_scene(self, error_message):
         '''Indicates that LEDAPS/l8sr could not process a scene because the
         sun was beneath the horizon'''
 
-        keys = ['solar zenith angle out of range',     # LEDAPS
-                'Solar zenith angle is out of range']  # LaSRC
+        keys = ['solar zenith angle out of range',
+                'Solar zenith angle is out of range',
+                'Solar zenith angle is too large']
         status = 'unavailable'
-        reason = ('This scene cannot be processed '
-                  'due to the extreme solar zenith angle')
+        reason = 'This scene cannot be processed due to the high solar zenith angle'
         return self.__find_error(error_message, keys, status, reason)
 
     def missing_aux_data(self, error_message):
@@ -276,6 +266,14 @@ class Errors(object):
         status = 'retry'
         reason = 'Error writing to disk on processing node, retrying'
         extras = self.__add_retry('node_space_errors')
+        return self.__find_error(error_message, keys, status, reason, extras)
+
+    def lasrc_mystery_segfaults(self, error_message):
+        ''' errors creating directories or transferring statistics '''
+        keys = ['Segmentation fault lasrc']
+        status = 'retry'
+        reason = 'illegal memory location'
+        extras = self.__add_retry('segfault_errors')
         return self.__find_error(error_message, keys, status, reason, extras)
 
 

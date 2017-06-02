@@ -44,6 +44,25 @@ class OnlineCache(object):
             logger.debug('No connection to OnlineCache host: {}'.format(e))
             raise OnlineCacheException(e)
 
+    def exists(self, orderid, filename=None):
+        """ Check if an order [optional filename] exists on the onlinecache
+
+        :param orderid:  associated order to check
+        :param filename: file to check inside of an order
+        :return: bool
+        """
+        if filename:
+            path = os.path.join(self.orderpath, orderid, filename)
+        else:
+            path = os.path.join(self.orderpath, orderid)
+
+        try:
+            result = self.execute_command('ls -d {0}'.format(path), silent=True)
+            ret = tuple(x.rstrip() for x in result['stdout'])
+            return ret[-1] == path
+        except OnlineCacheException as e:
+            return False
+
     def delete(self, orderid, filename=None):
         """
         Removes an order from physical online cache disk
@@ -51,6 +70,11 @@ class OnlineCache(object):
         :param filename: file to delete inside of an order
         :param orderid: associated order to delete
         """
+        if not self.exists(orderid, filename):
+            msg = 'Invalid orderid {} or filename {}'.format(orderid, filename)
+            logger.debug(msg)
+            return False
+
         if filename:
             path = os.path.join(self.orderpath, orderid, filename)
         else:
@@ -105,11 +129,11 @@ class OnlineCache(object):
         results = {'capacity': clean[1],
                    'used': clean[2],
                    'available': clean[3],
-                   'percent_free': clean[4]}
+                   'percent_used': clean[4]}
 
         return results
 
-    def execute_command(self, cmd):
+    def execute_command(self, cmd, silent=False):
         """
         Execute the given command on the cache
 
@@ -119,13 +143,15 @@ class OnlineCache(object):
         try:
             result = self.client.execute(cmd)
         except Exception, exception:
-            logger.debug('Error executing command: {} '
-                         'Raised exception: {}'.format(cmd, exception))
+            if not silent:
+                logger.debug('Error executing command: {} '
+                             'Raised exception: {}'.format(cmd, exception))
             raise OnlineCacheException(exception)
 
         if 'stderr' in result and result['stderr']:
-            logger.debug('Error executing command: {} '
-                         'stderror returned: {}'.format(cmd, result['stderr']))
+            if not silent:
+                logger.debug('Error executing command: {} '
+                             'stderror returned: {}'.format(cmd, result['stderr']))
 
             raise OnlineCacheException(result['stderr'])
 
@@ -133,9 +159,12 @@ class OnlineCache(object):
 
         return result
 
+def exists(orderid):
+    return OnlineCache().exists(orderid)
 
-def delete(orderid):
-    return OnlineCache().delete(orderid)
+
+def delete(orderid, filename=None):
+    return OnlineCache().delete(orderid, filename)
 
 
 def capacity():

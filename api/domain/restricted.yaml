@@ -3,6 +3,8 @@ all:
     role:
         - lst
         - swe
+        - cloud
+        - pixel_qa
         - restricted_prod
     ordering:
         - olitirs8
@@ -10,6 +12,7 @@ all:
         - tm4
         - tm5
         - etm7
+        - restricted_sensor
 
 
 stats:

@@ -2,28 +2,46 @@
 
 import os
 
-from flask import Flask, request
+from flask import Flask, request, make_response, jsonify
 from flask.ext.restful import Api, Resource, reqparse, fields, marshal
 
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.util import api_cfg
+from api.system.logger import ilogger as logger
 
 from http_user import Index, VersionInfo, AvailableProducts, ValidationInfo,\
-    ListOrders, Ordering, UserInfo, ItemStatus
+    ListOrders, Ordering, UserInfo, ItemStatus, BacklogStats, PublicSystemStatus
 
 from http_production import ProductionVersion, ProductionConfiguration, ProductionOperations, ProductionManagement
 
 from http_admin import Reports, SystemStatus, OrderResets, ProductionStats
+from http_json import MessagesResponse, BadRequestResponse, SystemErrorResponse
 
 config = ConfigurationProvider()
 
 app = Flask(__name__)
 app.secret_key = api_cfg('config').get('key')
 
-errors = {'NotFound': {'message': 'The requested URL was not found on the server.',
-                       'status': 404}}
 
-transport_api = Api(app, errors=errors, catch_all_404s=True)
+@app.errorhandler(404)
+def page_not_found(e):
+    errors = MessagesResponse(errors=['{} not found on the server'
+                                      .format(request.path)],
+                              code=404)
+    return errors()
+
+
+@app.errorhandler(IndexError)
+def no_results_found(e):
+    return MessagesResponse(warnings=['No results found.'],
+                            code=200)()
+
+@app.errorhandler(Exception)
+def internal_server_error(e):
+    logger.debug('Internal Server Error: {}'.format(e))
+    return SystemErrorResponse()
+
+transport_api = Api(app)
 
 # USER facing functionality
 
@@ -32,7 +50,12 @@ transport_api.add_resource(Index, '/')
 transport_api.add_resource(VersionInfo,
                            '/api',
                            '/api/',
-                           '/api/v<version>')
+                           '/api/v<version>',
+                           '/api/v<version>/')
+
+transport_api.add_resource(UserInfo,
+                           '/api/v<version>/user',
+                           '/api/v<version>/user/')
 
 transport_api.add_resource(AvailableProducts,
                            '/api/v<version>/available-products/<prod_id>',
@@ -49,9 +72,6 @@ transport_api.add_resource(ListOrders,
                            '/api/v<version>/list-orders',
                            '/api/v<version>/list-orders/',
                            '/api/v<version>/list-orders/<email>',
-                           '/api/v<version>/list-orders-ext',
-                           '/api/v<version>/list-orders-ext/',
-                           '/api/v<version>/list-orders-ext/<email>',
                            '/api/v<version>/list-orders-feed/<email>')
 
 transport_api.add_resource(Ordering,
@@ -60,13 +80,16 @@ transport_api.add_resource(Ordering,
                            '/api/v<version>/order/<ordernum>',
                            '/api/v<version>/order-status/<ordernum>')
 
-transport_api.add_resource(UserInfo,
-                           '/api/v<version>/user',
-                           '/api/v<version>/user/')
-
 transport_api.add_resource(ItemStatus,
+                           '/api/v<version>/item-status',
                            '/api/v<version>/item-status/<orderid>',
                            '/api/v<version>/item-status/<orderid>/<itemnum>')
+
+transport_api.add_resource(BacklogStats,
+                           '/api/v<version>/info/backlog')
+
+transport_api.add_resource(PublicSystemStatus,
+                           '/api/v<version>/info/status')
 
 transport_api.add_resource(Reports,
                            '/api/v<version>/reports/',

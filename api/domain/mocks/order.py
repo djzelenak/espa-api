@@ -31,14 +31,27 @@ class MockOrder(object):
     def __repr__(self):
         return "MockOrder:{0}".format(self.__dict__)
 
+    def as_dict(self):
+        return {
+                  "completion_date": '',
+                  "note": '',
+                  "order_date": '',
+                  "order_source": '',
+                  "order_type": '',
+                  "orderid": '',
+                  "priority": '',
+                  "product_options": '',
+                  "product_opts": '',
+                  "status": ''
+                }
+
     def generate_testing_order(self, user_id):
         user = User.find(user_id)
         # need to monkey with the email, otherwise we get collisions with each
         # test creating a new scratch order with the same user
         rand = str(random.randint(1, 99))
         user.email = rand + user.email
-        orderid = self.ordering_provider.place_order(self.base_order, user)
-        order = Order.find(orderid)
+        order = self.ordering_provider.place_order(self.base_order, user)
         return order.id
 
     def generate_ee_testing_order(self, user_id, partial=False):
@@ -105,3 +118,20 @@ class MockOrder(object):
         scene_names = scene_names[0:number]
         list_of_tuples = [(order.orderid, s) for s in scene_names]
         return list_of_tuples
+
+    @classmethod
+    def place_order(cls, order, user):
+        self = MockOrder()
+        # need to monkey with the email, otherwise we get collisions with each
+        # test creating a new scratch order with the same user
+        rand = str(random.randint(1, 99))
+        user.email = rand + user.email
+        order = self.ordering_provider.place_order(self.base_order, user)
+        return order
+
+    @classmethod
+    def cancel_order(cls, orderid, request_address):
+        order = Order.find(orderid)
+        order.status = 'cancelled'
+        order.save()
+        return order

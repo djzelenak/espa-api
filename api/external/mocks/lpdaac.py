@@ -10,3 +10,6 @@ def input_exists_true(input):
 
 def input_exists_false(input):
     return False
+
+def check_lpdaac_available():
+    return True
