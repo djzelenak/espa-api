@@ -357,12 +357,17 @@ class Ordering(Resource):
             return message()
         else:
             orderid, status = body.get('orderid'), body.get('status')
-        if False: #not user.is_staff():  # TODO: plan to be public facing
+        if not user.is_staff():  # TODO: plan to be public facing
             msg = ('Order cancellation is not available yet')
             message = MessagesResponse(errors=[msg], code=400)
             return message()
         orders = espa.fetch_order(orderid)
-        assert(orders[0].user_id == user.id)
+        if orders[0].user_id != user.id and not user.is_staff():
+            msg = ('User {} is not allowed to cancel order {}'
+                   .format(user.username, orderid))
+            logger.debug(msg + '\nOrigin: {}'.format(remote_addr))
+            message = MessagesResponse(errors=[msg], code=403)
+            return message()
         order = espa.cancel_order(orders[0].id, remote_addr)
         message = OrderResponse(**order.as_dict())
         message.limit = ('orderid', 'status')
