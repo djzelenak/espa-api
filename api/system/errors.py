@@ -270,9 +270,10 @@ class Errors(object):
 
     def lasrc_mystery_segfaults(self, error_message):
         ''' errors creating directories or transferring statistics '''
-        keys = ['Segmentation fault lasrc']
+        keys = ['Segmentation fault lasrc',
+                'Segmentation fault      lasrc']
         status = 'retry'
-        reason = 'illegal memory location'
+        reason = 'Unexpected internal memory error'
         extras = self.__add_retry('segfault_errors')
         return self.__find_error(error_message, keys, status, reason, extras)
 
