@@ -734,8 +734,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         :param order_id: order id used in the system
         """
         missing_scenes = []
+        scenes = Scene.where({'order_id': order_id,
+                              'ee_unit_id': tuple([s['unit_num'] for s in ee_scenes])})
         for s in ee_scenes:
-            scene = Scene.where({'order_id': order_id, 'ee_unit_id': s['unit_num']})
+            scene = [s for s in scenes if s.ee_unit_id == s['unit_num']]
 
             if scene:
                 scene = scene[0]
