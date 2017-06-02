@@ -147,8 +147,9 @@ class API(object):
             # capture the order
             response = self.ordering.place_order(order, user)
         except:
-            logger.debug("ERR version1 place_order arg: {0}\n"
-                         "exception {1}".format(order, traceback.format_exc()))
+            logger.debug("ERR version1 place_order arg: {2}: {0}\n"
+                         "exception {1}".format(order, traceback.format_exc(),
+                                                user.username))
             raise
 
         return response

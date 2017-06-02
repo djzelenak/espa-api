@@ -604,13 +604,13 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             # create the orderid based on the info from the eeorder
             order_id = Order.generate_ee_order_id(email_addr, eeorder)
 
-            order = Order.find(order_id)
+            order = Order.where({'ee_order_id': eeorder})
             scene_info = orders[eeorder, email_addr, contactid]
 
-            if order:
+            if len(order) >= 1:
                 # EE order already exists in the system
                 # update the associated scenes
-                self.update_ee_orders(scene_info, eeorder, order.id)
+                self.update_ee_orders(scene_info, eeorder, order[0].id)
                 #continue
 
             else:
@@ -751,7 +751,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     cache_key = 'lta.cannot.update'
                     lta_conn_failed_10mins = cache.get(cache_key)
                     if lta_conn_failed_10mins:
-                        logger.debug("Error updating lta for scene: {}\n{}".format(scene.id, e))
+                        logger.warn("Error updating lta for scene: {}\n{}".format(scene.id, e))
                     cache.set(cache_key, datetime.datetime.now())
                     scene.update('failed_lta_status_update', status)
             else:
@@ -1124,13 +1124,14 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         """
         scenes = Scene.where({'status': 'complete', 'download_size': 0})
         for scene in scenes:
-            try:
+            if os.path.exists(scene.product_distro_location):
                 scene.update('download_size', os.path.getsize(scene.product_distro_location))
-            except OSError, e:
+            else:
                 scene.status = 'error'
                 scene.note = 'product download not found'
                 scene.save()
-                logger.debug("scene download size re-calcing failed, msg: {}: {}".format(e.strerror, e.filename))
+                logger.debug("scene download size re-calcing failed, {}"
+                             .format(scene.product_distro_location))
 
         return True
 
