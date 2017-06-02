@@ -751,7 +751,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     cache_key = 'lta.cannot.update'
                     lta_conn_failed_10mins = cache.get(cache_key)
                     if lta_conn_failed_10mins:
-                        logger.debug("Error updating lta for scene: {}\n{}".format(scene.id, e))
+                        logger.warn("Error updating lta for scene: {}\n{}".format(scene.id, e))
                     cache.set(cache_key, datetime.datetime.now())
                     scene.update('failed_lta_status_update', status)
             else:
