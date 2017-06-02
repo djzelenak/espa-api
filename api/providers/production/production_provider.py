@@ -356,7 +356,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         logger.info("\n\n*** set_product_error: orderid {0}, "
                     "scene id {1} , scene name {2},\n"
-                    "error {4},\n"
+                    "error {4!r},\n"
                     "resolution {3}\n\n".format(order.orderid, product.id,
                                                 product.name, resolution, error))
 
