@@ -1190,7 +1190,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         end_capacity = onlinecache.capacity()
         logger.info('Ending cache capacity:{0}'.format(end_capacity))
 
-        orders = [{o.orderid: len(o.scenes({'status': 'complete'}))} for o in orders]
+        orders = [{o.orderid: len(o.scenes())} for o in orders]
         if send_email is True:
             logger.info('Sending purge report')
             emails.send_purge_report(start_capacity, end_capacity, orders)
