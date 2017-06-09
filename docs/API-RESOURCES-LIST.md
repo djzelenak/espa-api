@@ -279,7 +279,7 @@ curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/list-o
 
 Retrieves a submitted orders status
 ```bash
-curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/available-products/LE07_L1TP_027027_20160730_20160831_01_T1
+curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/order-status/production@usgs.gov-07282016-135122
 ```
 ```json
 // Response: 
