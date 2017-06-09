@@ -38,7 +38,7 @@ This allows `curl -n` to handle login, replacing `curl --user <erosusername>:<er
 
 </details>
 
-#### Orders and Scenes
+### Orders and Scenes
 
 HTTP Method	| URI	| Action
 ---|---|---

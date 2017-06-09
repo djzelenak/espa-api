@@ -10,6 +10,7 @@ USGS ESPA in the "Subject" section.
 * [Description of Products Available](docs/AVAILABLE-PRODUCTS.md)
 * [Abbreviations & Definitions](docs/TERMS.md)
 * [ESPA Customizations](docs/CUSTOMIZATION.md)
+* **[Available Resources List](docs/API-RESOURCES-LIST.md)**
 
 <details>
 <summary>Need a scene list?</summary>
