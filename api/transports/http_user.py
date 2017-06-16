@@ -414,11 +414,11 @@ class ItemStatus(Resource):
         return message()
 
     @staticmethod
-    def post(version):
+    def post(version, orderid=None, itemnum='ALL'):
         return BadMethodResponse()
 
     @staticmethod
-    def put(version):
+    def put(version, orderid=None, itemnum='ALL'):
         return BadMethodResponse()
 
 
