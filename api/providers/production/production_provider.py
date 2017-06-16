@@ -471,85 +471,88 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         with db_instance() as db:
             db.select(query)
 
+        # Columns: ['contactid', 'name', 'sensor_type', 'orderid',
+        #           'product_opts', 'priority', 'order_date', 'running']
         query_results = db.fetcharr
 
-        # Need the results reorganized by contact id so we can get dload urls from
-        # ee in bulk by id.
-        by_cid = {}
+        # Usage codes must be grouped by both ContactID and OrderID
+        names_by_cid = {}
+        usage_by_cid = {}
         for result in query_results:
-            cid = result['contactid']
-            # ['orderid', 'sensor_type', 'contactid', 'name', 'product_options']
-            by_cid.setdefault(cid, []).append(result)
+            cid, orderid = result['contactid'], result['orderid']
+            stype, sname = (result['sensor_type'],
+                            sensor.instance(result['name']).shortname)
+            usage = inventory.build_usage_str(result['product_opts'], sname)
+            usage_by_cid[(cid, orderid, stype)] = (usage, result)
+            names_by_cid.setdefault((cid, orderid, stype), []).append(result['name'])
 
         #this will be returned to the caller
         results = []
-        for cid in by_cid.keys():
-            cid_items = by_cid[cid]
-
-            landsat = [item['name'] for item in cid_items if item['sensor_type'] == 'landsat']
-            logger.warn('Retrieving {0} landsat download urls for cid:{1}'
-                         .format(len(landsat), cid))
+        for (cid, orderid, stype), name_list in names_by_cid.items():
+            logger.warn('Retrieving %s %s download urls for cid:%s orderid:%s',
+                        len(name_list), stype, cid, orderid)
+            (usage, item) = usage_by_cid[(cid, orderid, stype)]
 
             landsat_urls = dict()
-            if len(landsat) > 0:
+            if stype == 'landsat':
                 start = datetime.datetime.now()
                 auth_token = inventory.get_cached_session()
-                landsat_urls = inventory.get_cached_download_urls(auth_token, landsat)
+                entity_map = inventory.get_cached_convert(auth_token, cid, name_list)
+                landsat_urls = inventory.get_download_urls(auth_token, cid, name_list, usage)
+                landsat_urls = {i: landsat_urls.get(entity_map.get(i)) for i in name_list}
                 stop = datetime.datetime.now()
                 interval = stop - start
                 logger.warn('Retrieving download urls took {0} seconds'
                              .format(interval.seconds))
                 logger.warn('Retrieved {0} landsat urls for cid:{1}'.format(len(landsat_urls), cid))
 
-            modis = [item['name'] for item in cid_items if item['sensor_type'] == 'modis']
             modis_urls = dict()
-            if len(modis) > 0:
-                modis_urls = lpdaac.get_download_urls(modis)
+            if stype == 'modis':
+                modis_urls = lpdaac.get_download_urls(name_list)
+                logger.warn('Retrieved {0} modis urls for cid:{1}'.format(len(modis_urls), cid))
 
-            logger.warn('Retrieved {0} modis urls for cid:{1}'.format(len(modis_urls), cid))
-            for item in cid_items:
+            for scene_id in name_list:
                 dload_url = None
-                if item['sensor_type'] == 'landsat':
+                if stype == 'landsat':
 
-                    dload_url = landsat_urls.get(item['name'])
+                    dload_url = landsat_urls.get(scene_id)
                     if dload_url:
-                        logger.info('download_url was in landsat_urls for {0}'.format(item['name']))
+                        logger.debug('download_url was in landsat_urls for {0}'.format(scene_id))
                         if encode_urls:
                             dload_url = urllib.quote(dload_url, '')
 
-                elif item['sensor_type'] == 'modis':
-                    if 'download_url' in modis_urls[item['name']]:
-                        dload_url = modis_urls[item['name']]['download_url']
+                elif stype == 'modis':
+                    if 'download_url' in modis_urls[scene_id]:
+                        dload_url = modis_urls[scene_id]['download_url']
                         if encode_urls:
                             dload_url = urllib.quote(dload_url, '')
 
-                if item['name'] == 'plot':
+                if scene_id == 'plot':
                     options = {}
                 elif config.get('convertprodopts') == 'True':
                     options = OptionsConversion.convert(new=item['product_opts'],
                                                         scenes=[item['name']])
                 else:
                     # Need to strip out everything not directly related to the scene
-                    options = self.strip_unrelated(item['name'], item['product_opts'])
+                    options = self.strip_unrelated(scene_id, item['product_opts'])
 
                 result = {
-                    'orderid': item['orderid'],
-                    'product_type': item['sensor_type'],
-                    'scene': item['name'],
+                    'orderid': orderid,
+                    'product_type': stype,
+                    'scene': scene_id,
                     'priority': item['priority'],
                     'options': options
                 }
 
-                if item['sensor_type'] == 'plot':
+                if stype == 'plot':
                     # no dload url for plot items, just append it
                     results.append(result)
                 elif dload_url is not None:
                     result['download_url'] = dload_url
                     results.append(result)
                 else:
-                    logger.info('dload_url for {0} in order {0} '
-                                'was None, skipping...'
-                                .format(item['orderid'], item['name']))
+                    logger.error('dload_url for %s in order %s was None, '
+                                 'skipping...', scene_id, orderid)
         return results
 
     def load_ee_orders(self):
