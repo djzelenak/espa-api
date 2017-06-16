@@ -5,6 +5,7 @@ import json
 import urllib
 import traceback
 import datetime
+import socket
 
 import requests
 import memcache
@@ -37,8 +38,9 @@ class LTAService(object):
         self.agent_wurd = config.get('bulk.{0}.json.password'.format(mode))
         self.current_user = current_user  # CONTACT ID
         self.token = token
+        self.ipaddr = ipaddr or socket.gethostbyaddr(socket.gethostname())[2][0]
         if self.current_user and self.token:
-            self.set_user_context(self.current_user, ipaddress=ipaddr)
+            self.set_user_context(self.current_user, ipaddress=self.ipaddr)
 
         # FIXME: what is the correct download location? using zero-index a.t.m.
         self.ehost = config.url_for('external_cache')
