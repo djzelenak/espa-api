@@ -297,7 +297,7 @@ class Landsat(SensorProduct):
     default_rows = 11000
     default_cols = 11000
     input_filename_extension = '.tar.gz'
-    l1_provider = 'lta'
+    l1_provider = 'dmid'
 
     def __init__(self, product_id):
         product_id = product_id.strip()

@@ -34,14 +34,16 @@ class LTAError(Exception):
 # Find Documentation here:                                                     |
 #      https://earthexplorer.usgs.gov/inventory/documentation/json-api         |
 class LTAService(object):
-    def __init__(self, token=None):
+    def __init__(self, token=None, current_user=None, ipaddr=None):
         self.base_url = config.url_for('earthexplorer.json')
         mode = config.mode
         self.api_version = config.get('bulk.{0}.json.version'.format(mode))
         self.agent = config.get('bulk.{0}.json.username'.format(mode))
         self.agent_wurd = config.get('bulk.{0}.json.password'.format(mode))
-        self.current_user = None
+        self.current_user = current_user  # CONTACT ID
         self.token = token
+        if self.current_user and self.token:
+            self.set_user_context(self.current_user, ipaddress=ipaddr)
 
         # FIXME: what is the correct download location? using zero-index a.t.m.
         self.ehost = config.url_for('external_cache')
@@ -425,16 +427,16 @@ def logout(token):
     return LTAService(token).logout()
 
 
-def convert(token, product_ids):
-    return LTAService(token).id_lookup(product_ids)
+def convert(token, contactid, product_ids):
+    return LTAService(token, contactid).id_lookup(product_ids)
 
 
-def verify_scenes(token, product_ids):
-    return LTAService(token).verify_scenes(product_ids)
+def verify_scenes(token, contactid, product_ids):
+    return LTAService(token, contactid).verify_scenes(product_ids)
 
 
-def get_download_urls(token, product_ids):
-    return LTAService(token).get_download_urls(product_ids)
+def get_download_urls(token, contactid, product_ids):
+    return LTAService(token, contactid).get_download_urls(product_ids)
 
 
 def set_user_context(token, contactid, ipaddress=None):
@@ -453,5 +455,5 @@ def get_cached_convert(token, product_ids):
     return LTACachedService(token).cached_id_lookup(product_ids)
 
 
-def get_cached_verify_scenes(token, product_ids):
-    return LTACachedService(token).cached_verify_scenes(product_ids)
+def get_cached_verify_scenes(token, contactid, product_ids):
+    return LTACachedService(token, contactid).cached_verify_scenes(product_ids)
