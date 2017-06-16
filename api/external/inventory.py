@@ -293,7 +293,7 @@ class LTAService(object):
                                .format(sensor_name, product_ids))
             urls = {i['entityId']: i['url'].replace(self.ehost, self.ihost)
                     for i in results}
-            diff = set(id_list) - set(urls)
+            diff = set(ents) - set(urls)
             if diff:
                 raise LTAError('No download urls found for: {}'.format(diff))
             else:
