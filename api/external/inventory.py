@@ -259,7 +259,8 @@ class LTAService(object):
         data_use_str = '[espa]' + ','.join(list(set(params)))
         return data_use_str
 
-    def get_download_urls(self, product_ids, products='STANDARD', stage=True):
+    def get_download_urls(self, product_ids, products='STANDARD', stage=True,
+                          usage='[espa]:sr'):
         """
         Fetch the download location for supplied IDs, replacing the public host
             with an internal network host (to bypass public firewall routing)
@@ -270,6 +271,8 @@ class LTAService(object):
         :type products: str
         :param stage: If true, initiates a data stage command
         :type stage: bool
+        :param usage: Identify higher level products this data is used to create
+        :type usage: str
         :return: dict
         """
         dataset_groups = self.split_by_dataset(product_ids)
@@ -281,7 +284,8 @@ class LTAService(object):
             id_list = dataset_groups[sensor_name]
             ents = [entity_ids.get(i) for i in id_list]
             payload = dict(apiKey=self.token, datasetName=sensor_name,
-                           products=products, entityIds=ents, stage=stage)
+                           products=products, entityIds=ents, stage=stage,
+                           dataUse=usage)
             resp = self._post(endpoint, payload)
             results = resp.get('data')
             if not isinstance(results, list):
@@ -432,8 +436,8 @@ def verify_scenes(token, contactid, product_ids):
     return LTAService(token, contactid).verify_scenes(product_ids)
 
 
-def get_download_urls(token, contactid, product_ids):
-    return LTAService(token, contactid).get_download_urls(product_ids)
+def get_download_urls(token, contactid, product_ids, usage):
+    return LTAService(token, contactid).get_download_urls(product_ids, usage=usage)
 
 
 def set_user_context(token, contactid, ipaddress=None):
@@ -448,9 +452,13 @@ def get_cached_session():
     return LTACachedService().cached_login()
 
 
-def get_cached_convert(token, product_ids):
-    return LTACachedService(token).cached_id_lookup(product_ids)
+def get_cached_convert(token, contactid, product_ids):
+    return LTACachedService(token, contactid).cached_id_lookup(product_ids)
 
 
 def get_cached_verify_scenes(token, contactid, product_ids):
     return LTACachedService(token, contactid).cached_verify_scenes(product_ids)
+
+
+def build_usage_str(product_opts, sensor):
+    return LTAService.build_data_use_str(product_opts, sensor)
