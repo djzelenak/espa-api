@@ -46,7 +46,7 @@ class InventoryProviderV0(InventoryInterfaceV0):
     def check_dmid(prod_ls, contactid=None):
         # find all the submitted products that are nlaps and reject them
         not_avail = nlaps.products_are_nlaps(prod_ls)
-        if not not_avail:
+        if not_avail:
             raise InventoryException(not_avail)
         token = inventory.get_cached_session()
         return inventory.get_cached_verify_scenes(token, contactid, prod_ls)
