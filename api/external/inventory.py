@@ -281,7 +281,6 @@ class LTAService(object):
         for sensor_name in dataset_groups:
             id_list = dataset_groups[sensor_name]
             ents = [entity_ids.get(i) for i in id_list]
-            stage = False  # FIXME: REMOVE THIS <==========<==========<==========<==========
             payload = dict(apiKey=self.token, datasetName=sensor_name,
                            products=products, entityIds=ents, stage=stage)
             resp = self._post(endpoint, payload)
