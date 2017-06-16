@@ -408,7 +408,7 @@ class LTACachedService(LTAService):
         else:
             entities = self.id_lookup(id_list)
             self.set_lookup(entities)
-        results = {k: k in entities.keys() for k in id_list}
+        results = {k: entities.get(k) for k in id_list}
         return results
 
 
