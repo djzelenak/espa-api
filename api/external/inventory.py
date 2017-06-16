@@ -256,7 +256,7 @@ class LTAService(object):
         if reprojection:
             params.append(reproject_lut[reprojection.keys()[0]])
 
-        data_use_str = ','.join(list(set(params)))
+        data_use_str = '[espa]' + ','.join(list(set(params)))
         return data_use_str
 
     def get_download_urls(self, product_ids, products='STANDARD', stage=True):
