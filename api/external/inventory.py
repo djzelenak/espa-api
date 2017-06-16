@@ -96,12 +96,12 @@ class LTAService(object):
         url = self.base_url + endpoint
         if data:
             data = {'jsonRequest': json.dumps(data)}
-        logger.debug('{verb} {url}'.format(verb=verb.upper(), url=url))
+        logger.debug('[%s] %s', verb.upper(), url)
         if 'password' not in str(data):
             logger.debug('Payload: {}'.format(data))
         # Note: using `data=` (to force form-encoded params)
         response = getattr(requests, verb)(url, data=data)
-        logger.debug('RESPONSE:{}\n{}'.format(response, response.content))
+        logger.debug('[RESPONSE] %s\n%s', response, response.content)
         return self._parse(response)
 
     def _get(self, endpoint, data=None):
