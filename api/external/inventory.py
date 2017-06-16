@@ -18,15 +18,10 @@ from api.system.logger import ilogger as logger
 
 config = ConfigurationProvider()
 
-if config.mode in ('dev', 'tst'):
-    import logging
-    logging.basicConfig(level=logging.DEBUG)
-    logging.getLogger('requests.packages').setLevel(logging.DEBUG)
-
 
 class LTAError(Exception):
     def __init__(self, message):
-        logging.error('ERR {}'.format(message))
+        logger.error('ERR %s', message)
         super(LTAError, self).__init__(message)
 
 
