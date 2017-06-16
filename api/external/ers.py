@@ -2,6 +2,7 @@
 Purpose: ERS API client module
 Author: Clay Austin
 '''
+from api.system.logger import ilogger as logger
 
 import requests
 from api.providers.configuration.configuration_provider import ConfigurationProvider
@@ -27,11 +28,13 @@ class ERSApi(object):
         self._host = cfg.url_for('ersapi')
         self._secret = cfg.get("ers.%s.secret" % cfg.mode)
 
-    def _api_post(self, url, data):
+    def _api(self, verb, url, data=None, header=None):
         # certificate verification fails in dev/tst
         verify = True if cfg.mode == 'ops' else False
         try:
-            resp = requests.post(self._host + url, data=data, verify=verify)
+            logger.debug('[%s] %s', verb.upper(), self._host+url)
+            resp = getattr(requests, verb)(self._host + url, data=data,
+                                           headers=header, verify=verify)
             resp.raise_for_status()
         except Exception as e:
             raise ERSApiConnectionException(e)
@@ -41,19 +44,11 @@ class ERSApi(object):
             raise ERSApiErrorException(e)
         return data
 
+    def _api_post(self, url, data):
+        return self._api('post', url, data=data)
+
     def _api_get(self, url, header):
-        # certificate verification fails in dev/tst
-        verify = True if cfg.mode == 'ops' else False
-        try:
-            resp = requests.get(self._host+url, headers=header, verify=verify)
-            resp.raise_for_status()
-        except Exception as e:
-            raise ERSApiConnectionException(e)
-        try:
-            data = resp.json()
-        except Exception as e:
-            raise ERSApiErrorException(e)
-        return data
+        return self._api('get', url, header=header)
 
     def get_user_info(self, user, passw):
         """ Handles the authentication with ERS, and gets the users information
