@@ -113,7 +113,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 logger.debug('ERR file was not found: {}'
                              .format(completed_file_location))
             Scene.bulk_update([scene.id], Scene.cancel_opts())
-            return True  # TODO: proc False?
+            return False
 
         scene.status = 'complete'
         scene.processing_location = processing_loc
@@ -241,7 +241,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         scene = Scene.by_name_orderid(name, order.id)
         if order.status == 'cancelled':
             Scene.bulk_update([scene.id], Scene.cancel_opts())
-            return True  # TODO: proc False?
+            return False
         if processing_loc:
             scene.processing_location = processing_loc
         if status:

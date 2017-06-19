@@ -189,8 +189,7 @@ class OrderingProvider(ProviderInterfaceV0):
 
         logger.info('Received request to cancel {} from {}'
                     .format(orderid, request_ip_address))
-        # TODO: ADD "queued" to list, when proc can handle exception
-        killable_scene_states = ('submitted', 'oncache', 'onorder',
+        killable_scene_states = ('submitted', 'oncache', 'onorder', 'queued',
                                  'error', 'unavailable', 'complete')
         scenes = order.scenes(sql_dict={'status': killable_scene_states})
         if len(scenes) > 0:
