@@ -368,10 +368,6 @@ class Ordering(Resource):
             return message()
         else:
             orderid, status = body.get('orderid'), body.get('status')
-        if not user.is_staff():  # TODO: plan to be public facing
-            msg = ('Order cancellation is not available yet')
-            message = MessagesResponse(errors=[msg], code=400)
-            return message()
         orders = espa.fetch_order(orderid)
         if orders[0].user_id != user.id and not user.is_staff():
             msg = ('User {} is not allowed to cancel order {}'
