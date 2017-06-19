@@ -243,16 +243,17 @@ class ListOrders(Resource):
         filters = request.get_json(force=True, silent=True)
         search = dict(username=auth.username(), filters=filters)
         if email:  # Allow user collaboration
-            user = User.where({'email': email})
+            for usearch in ('email', 'username'):
+                user = User.where({usearch: email})
+                if len(user):
+                    break
             if not len(user):
-                user = User.where({'username': email})
-            if len(user) == 1:
-                search = dict(email=str(email), filters=filters)
-            else:
-                response = MessagesResponse(warnings=["User {} not found"
+                response = MessagesResponse(warnings=["Username/email {} not found"
                                                       .format(email)],
                                             code=200)
                 return response()
+            else:
+                search = {'filters': filters, usearch: email}
 
         response = OrdersResponse(espa.fetch_user_orders(**search))
         response.limit = ('orderid',)
