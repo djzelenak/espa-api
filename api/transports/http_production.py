@@ -83,7 +83,8 @@ class ProductionOperations(Resource):
             params = request.args.to_dict(flat=True)
             resp = espa.fetch_production_products(params)
         elif 'handle-orders' in request.url:
-            resp = espa.handle_orders()
+            params = request.get_json(force=True)
+            resp = espa.handle_orders(params)
 
         return prep_response(resp)
 
