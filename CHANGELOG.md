@@ -1,8 +1,8 @@
 ## Change Notes
 ###### June 2017 
-* **COMING SOON** Ability to cancel orders
+* Ability to cancel orders
 * Put all errors/warnings in "messages" JSON field
-* Remove CFMask product (replaced by pixel_qa **coming soon**)
+* Remove CFMask product (replaced by `pixel_qa`)
 * Bug fixes for API responses (HTTP Codes, Messages)
 * Add JSON filters to available-products, orders, and item-status
 * Remove `POST` http method from available-products 
