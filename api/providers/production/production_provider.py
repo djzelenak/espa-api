@@ -903,7 +903,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             #look to see if they are ee orders.  If true then update the
             #unit status
             invalid = [p for p in product_list if p.name in results['invalid']]
-            self.set_products_unavailable(invalid, 'Not found in landsat archive')
+            self.set_products_unavailable(invalid, 'No longer found in the archive, please search again')
 
         return True
 
