@@ -42,9 +42,9 @@ class LTAService(object):
         if self.current_user and self.token:
             self.set_user_context(self.current_user, ipaddress=self.ipaddr)
 
-        # FIXME: what is the correct download location? using zero-index a.t.m.
-        self.ehost = config.url_for('external_cache')
-        self.ihost = config.url_for('internal_cache').split(',')[0]
+        # FIXME: ONLY WORKS FOR LANDSAT (TODO: use modis.datapool from config)
+        self.ehost = config.url_for('json.landsat.datahost')
+        self.ihost = config.url_for('json.landsat.loadbalancer')
 
     @property
     def base_url(self):
