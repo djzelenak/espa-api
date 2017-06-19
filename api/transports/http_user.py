@@ -12,11 +12,12 @@ from api.util import lowercase_all
 from api.domain.user import User, UserException
 from api.external.ers import (
     ERSApiErrorException, ERSApiConnectionException, ERSApiAuthFailedException)
-from api import ValidationException, InventoryException
+from api import ValidationException, InventoryException, InventoryConnectionException
 from api.transports.http_json import (
     MessagesResponse, UserResponse, OrderResponse, OrdersResponse, ItemsResponse,
     BadRequestResponse, SystemErrorResponse, AccessDeniedResponse, AuthFailedResponse,
     BadMethodResponse)
+from api.util.dbconnect import DBConnectException
 
 from flask import jsonify
 from flask import make_response
@@ -94,7 +95,7 @@ def version_filter(func):
 
 @auth.error_handler
 def unauthorized():
-    reasons = ['unknown', 'auth', 'conn']
+    reasons = ['unknown', 'auth', 'conn', 'db']
     reason = flask.g.get('error_reason', '')
     if reason not in reasons or reason == 'unknown':
         if reason not in reasons:
@@ -102,6 +103,9 @@ def unauthorized():
         msg = SystemErrorResponse
     elif reason == 'auth':
         msg = AuthFailedResponse
+    elif reason == 'db':
+        msg = MessagesResponse(warnings=['Database connection failed'],
+                               code=503)
     elif reason == 'conn':
         msg = MessagesResponse(warnings=['ERS connection failed'],
                                code=503)
@@ -147,6 +151,10 @@ def verify_user(username, password):
     except ERSApiConnectionException as e:
         logger.info('ERS is down {}'.format(e))
         flask.g.error_reason = 'conn'
+        return False
+    except DBConnectException as e:
+        logger.debug('! Database reported a problem: {}'.format(e))
+        flask.g.error_reasons = 'db'
         return False
     except Exception:
         logger.info('Invalid login attempt, username: {}'.format(username))
@@ -330,6 +338,9 @@ class Ordering(Resource):
                                            code=400)
             except InventoryException as e:
                 message = MessagesResponse(errors=[e.response],
+                                           code=400)
+            except InventoryConnectionException as e:
+                message = MessagesResponse(warnings=['Could not connect to data source'],
                                            code=400)
             else:
                 message = OrderResponse(**order.as_dict())
