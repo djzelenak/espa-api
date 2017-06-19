@@ -172,11 +172,11 @@ class Index(Resource):
         return 'Welcome to the ESPA API, please direct requests to /api'
 
     @staticmethod
-    def post(version):
+    def post():
         return BadMethodResponse()
 
     @staticmethod
-    def put(version):
+    def put():
         return BadMethodResponse()
 
 
@@ -227,11 +227,11 @@ class AvailableProducts(Resource):
         return espa.available_products(prod_list, auth.username())
 
     @staticmethod
-    def post(version):
+    def post(version, prod_id=None):
         return BadMethodResponse()
 
     @staticmethod
-    def put(version):
+    def put(version, prod_id=None):
         return BadMethodResponse()
 
 
@@ -260,11 +260,11 @@ class ListOrders(Resource):
         return response()
 
     @staticmethod
-    def post(version):
+    def post(version, email=None):
         return BadMethodResponse()
 
     @staticmethod
-    def put(version):
+    def put(version, email=None):
         return BadMethodResponse()
 
 
@@ -323,7 +323,7 @@ class Ordering(Resource):
         return response()
 
     @staticmethod
-    def post(version):
+    def post(version, ordernum=None):
         user = flask.g.user
         message = None
         order = request.get_json(force=True, silent=True)
@@ -353,7 +353,7 @@ class Ordering(Resource):
             return message()
 
     @staticmethod
-    def put(version):
+    def put(version, ordernum=None):
         user = flask.g.user
         remote_addr = user_ip_address()
 
@@ -425,11 +425,11 @@ class ItemStatus(Resource):
         return message()
 
     @staticmethod
-    def post(version):
+    def post(version, orderid=None, itemnum=None):
         return BadMethodResponse()
 
     @staticmethod
-    def put(version):
+    def put(version, orderid=None, itemnum=None):
         return BadMethodResponse()
 
 
