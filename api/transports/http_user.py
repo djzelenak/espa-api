@@ -412,7 +412,7 @@ class ItemStatus(Resource):
     def get(version, orderid=None, itemnum='ALL'):
         user = flask.g.user
         filters = request.get_json(force=True, silent=True)
-        if not isinstance(filters, dict):
+        if filters and not isinstance(filters, dict):
             message = MessagesResponse(errors=['Invalid filters supplied'],
                                        code=400)
             return message()
