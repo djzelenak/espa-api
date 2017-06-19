@@ -125,12 +125,12 @@ class User(object):
                       "last_login, date_joined, contactid) values " \
                       "(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) " \
                       "on conflict (username) " \
-                      "do update set (email, contactid) = (%s, %s) " \
+                      "do update set (email, contactid, last_login) = (%s, %s, %s) " \
                       "where auth_user.username = %s" \
                       "returning id"
         arg_tup = (username, email, first_name, last_name,
                    'pass', 'f', 't', 'f', nownow, nownow, contactid,
-                   email, contactid, username)
+                   email, contactid, nownow, username)
 
         with db_instance() as db:
             try:
