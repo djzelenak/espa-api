@@ -238,6 +238,13 @@ class TestValidation(unittest.TestCase):
                 with self.assertRaisesRegexp(exc_type, err_message):
                     api.validation.validate(invalid_order, self.staffuser.username)
 
+    def test_validate_utm_zone(self):
+        invalid_order = copy.deepcopy(self.base_order)
+        invalid_order['projection'] = {'utm': {'zone': 50, 'zone_ns': 'north'}}
+        invalid_order['image_extents'] = {'east': 32.5, 'north': 114.9, 'south': 113.5, 'units': u'dd', 'west': 31.5}
+        with self.assertRaisesRegexp(ValidationException, 'are not near the requested UTM zone'):
+            api.validation.validate(invalid_order, self.staffuser.username)
+
 
 class TestInventory(unittest.TestCase):
     def setUp(self):
