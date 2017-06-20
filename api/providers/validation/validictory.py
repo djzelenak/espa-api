@@ -68,17 +68,6 @@ class OrderValidatorV0(validictory.SchemaValidator):
                                        self.data_source['image_extents']['units']))
                         self._errors.append(msg)
                         return
-            if 'utm' in self.data_source['projection']:
-                if 'image_extents' in self.data_source:
-                    cdict = dict(inzone=self.data_source['projection']['utm']['zone'],
-                                 east=self.data_source['image_extents']['east'],
-                                 west=self.data_source['image_extents']['west'],
-                                 zbuffer=3)
-                    if not self.is_utm_zone_nearby(**cdict):
-                        msg = ('image_extents ({east}E,{west}W) are not near the'
-                               ' requested UTM zone ({inzone})'
-                               .format(**cdict))
-                        self._errors.append(msg)
 
         if 'resize' in self.data_source:
             if not self.validate_type_object(self.data_source['resize']):
@@ -102,7 +91,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
             if set(self.data_source['image_extents'].keys()).symmetric_difference(
                     {'north', 'south', 'east', 'west', 'units'}):
                 return
-            if 'projection' not in self.data_source or not self.data_source['projection']:
+            if 'projection' not in self.data_source or not self.validate_type_object(self.data_source['projection']):
                 return
             if not self.validate_type_number(self.data_source['image_extents']['east']):
                 return
@@ -114,6 +103,17 @@ class OrderValidatorV0(validictory.SchemaValidator):
                 return
             if not self.validate_type_string(self.data_source['image_extents']['units']):
                 return
+            # Validate UTM zone matches image_extents
+            if self.validate_type_object(self.data_source['projection'].get('utm')):
+                cdict = dict(inzone=self.data_source['projection']['utm']['zone'],
+                             east=self.data_source['image_extents']['east'],
+                             west=self.data_source['image_extents']['west'],
+                             zbuffer=3)
+                if not self.is_utm_zone_nearby(**cdict):
+                    msg = ('image_extents ({east}E,{west}W) are not near the'
+                           ' requested UTM zone ({inzone})'
+                           .format(**cdict))
+                    self._errors.append(msg)
 
             calc_args['xmax'] = self.data_source['image_extents']['east']
             calc_args['ymax'] = self.data_source['image_extents']['north']
