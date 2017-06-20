@@ -4,6 +4,7 @@ import copy
 import yaml
 import re
 import os
+import math
 
 import validictory
 from validictory.validator import RequiredFieldValidationError, SchemaError, DependencyValidationError
@@ -67,6 +68,17 @@ class OrderValidatorV0(validictory.SchemaValidator):
                                        self.data_source['image_extents']['units']))
                         self._errors.append(msg)
                         return
+            if 'utm' in self.data_source['projection']:
+                if 'image_extents' in self.data_source:
+                    cdict = dict(inzone=self.data_source['projection']['utm']['zone'],
+                                 east=self.data_source['image_extents']['east'],
+                                 west=self.data_source['image_extents']['west'],
+                                 zbuffer=3)
+                    if not self.is_utm_zone_nearby(**cdict):
+                        msg = ('image_extents ({east}E,{west}W) are not near the'
+                               ' requested UTM zone ({inzone})'
+                               .format(**cdict))
+                        self._errors.append(msg)
 
         if 'resize' in self.data_source:
             if not self.validate_type_object(self.data_source['resize']):
@@ -144,6 +156,12 @@ class OrderValidatorV0(validictory.SchemaValidator):
             msg = ('{}:{} pixel count value falls below acceptable threshold'
                    ' of 1 pixel'.format(path, fieldname, cmin))
             self._errors.append(msg)
+
+    @staticmethod
+    def is_utm_zone_nearby(inzone, east, west, zbuffer=3):
+        def long2utm(dd_lon):
+            return (math.floor((dd_lon + 180) / 6.) % 60) + 1
+        return (long2utm(west) - zbuffer) <= inzone <= (long2utm(east) + zbuffer)
 
     @staticmethod
     def calc_extent(xmax, ymax, xmin, ymin, extent_units, resize_units, resize_pixel):
