@@ -197,6 +197,37 @@ class TestProductionAPI(unittest.TestCase):
 
         self.assertTrue('complete' == Scene.get('ordering_scene.status', scene.name, order.orderid))
 
+    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
+    @patch('os.path.getsize', lambda y: 999)
+    def test_update_product_details_mark_product_processing(self):
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        scene = order.scenes()[0]
+        res = production_provider.update_product('update_status',
+                                           name=scene.name,
+                                           orderid=order.orderid,
+                                           processing_loc='L8SRLEXAMPLE',
+                                           status='processing')
+        order = Order.find(order.id)
+        scene = order.scenes({'id': scene.id})[0]
+        self.assertEqual('processing', scene.status)
+
+    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
+    @patch('os.path.getsize', lambda y: 999)
+    def test_update_product_details_mark_cancelled_product_processing(self):
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        order.status = 'cancelled'
+        order.save()
+        scene = order.scenes()[0]
+        res = production_provider.update_product('update_status',
+                                           name=scene.name,
+                                           orderid=order.orderid,
+                                           processing_loc='L8SRLEXAMPLE',
+                                           status='processing')
+        self.assertFalse(res)
+
+        self.assertTrue('complete' == Scene.get('ordering_scene.status', scene.name, order.orderid)
     def test_production_set_product_error_unavailable_night(self):
         """
         Move a scene status from error to unavailable based on the solar zenith
