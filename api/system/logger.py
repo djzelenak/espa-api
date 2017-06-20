@@ -9,6 +9,13 @@ from api.providers.configuration.configuration_provider import ConfigurationProv
 
 config = ConfigurationProvider()
 
+if config.mode not in ('tst', 'dev'):
+    logging.getLogger("requests").setLevel(logging.WARNING)
+    logging.getLogger("passlib.registry").setLevel(logging.WARNING)
+else:
+    logging.getLogger('suds.client').setLevel(logging.DEBUG)
+    logging.getLogger("requests").setLevel(logging.DEBUG)
+
 LOG_FORMAT = ("%(asctime)s [%(levelname)s]: %(message)s in %(pathname)s:%(lineno)d")
 
 class DbgFilter(Filter):
