@@ -69,7 +69,8 @@ class TestProductionAPI(unittest.TestCase):
         plot_scene.sensor_type = 'plot'
         plot_scene.status = 'submitted'
         plot_scene.save()
-        response = production_provider.handle_submitted_plot_products()
+        scenes = Order.find(order_id).scenes({'name': 'plot', 'status': 'submitted'})
+        response = production_provider.handle_submitted_plot_products(scenes)
         pscene = order.scenes({'status': 'oncache', 'sensor_type': 'plot'})
         self.assertTrue(response is True)
         self.assertEqual(len(pscene), 1)
@@ -197,6 +198,37 @@ class TestProductionAPI(unittest.TestCase):
 
         self.assertTrue('complete' == Scene.get('ordering_scene.status', scene.name, order.orderid))
 
+    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
+    @patch('os.path.getsize', lambda y: 999)
+    def test_update_product_details_mark_product_processing(self):
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        scene = order.scenes()[0]
+        res = production_provider.update_product('update_status',
+                                           name=scene.name,
+                                           orderid=order.orderid,
+                                           processing_loc='L8SRLEXAMPLE',
+                                           status='processing')
+        order = Order.find(order.id)
+        scene = order.scenes({'id': scene.id})[0]
+        self.assertEqual('processing', scene.status)
+
+    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
+    @patch('os.path.getsize', lambda y: 999)
+    def test_update_product_details_mark_cancelled_product_processing(self):
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        order.status = 'cancelled'
+        order.save()
+        scene = order.scenes()[0]
+        res = production_provider.update_product('update_status',
+                                           name=scene.name,
+                                           orderid=order.orderid,
+                                           processing_loc='L8SRLEXAMPLE',
+                                           status='processing')
+        self.assertFalse(res)
+
+
     def test_production_set_product_error_unavailable_night(self):
         """
         Move a scene status from error to unavailable based on the solar zenith
@@ -238,14 +270,13 @@ class TestProductionAPI(unittest.TestCase):
            mock_production_provider.respond_true)
     @patch('api.providers.production.production_provider.ProductionProvider.load_ee_orders',
            mock_production_provider.respond_true)
-    @patch('api.providers.production.production_provider.ProductionProvider.handle_submitted_products',
-           mock_production_provider.respond_true)
     @patch('api.providers.production.production_provider.ProductionProvider.finalize_orders',
            mock_production_provider.respond_true)
     @patch('api.providers.production.production_provider.ProductionProvider.purge_orders',
            mock_production_provider.respond_true)
     def test_handle_orders_success(self):
-        self.assertTrue(api.handle_orders())
+        _ = self.mock_order.generate_testing_order(self.user_id)
+        self.assertTrue(api.handle_orders({'username': User.find(self.user_id)}))
 
     @patch('api.external.onlinecache.delete', mock_production_provider.respond_true)
     @patch('api.notification.emails.send_purge_report', mock_production_provider.respond_true)
@@ -264,7 +295,7 @@ class TestProductionAPI(unittest.TestCase):
     def test_production_send_initial_emails(self):
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
         order.update('status', 'ordered')
-        self.assertTrue(emails.Emails().send_all_initial())
+        self.assertTrue(emails.Emails().send_all_initial([order]))
 
     @patch('api.external.lta.get_order_status', lta.get_order_status)
     @patch('api.external.lta.update_order_status', lta.update_order_status)
@@ -281,14 +312,15 @@ class TestProductionAPI(unittest.TestCase):
             # outside of testing
             scene.update('name', scene_names[idx])
             scene.save()
-        self.assertTrue(production_provider.handle_onorder_landsat_products())
+        self.assertTrue(production_provider.handle_onorder_landsat_products(scenes))
 
     def test_production_handle_retry_products(self):
         prev = datetime.datetime.now() - datetime.timedelta(hours=1)
         order_id = self.mock_order.generate_testing_order(self.user_id)
         self.mock_order.update_scenes(order_id, 'status', ['retry'])
         self.mock_order.update_scenes(order_id, 'retry_after', [prev])
-        production_provider.handle_retry_products()
+        scenes = Order.find(order_id).scenes({'status': 'retry'})
+        production_provider.handle_retry_products(scenes)
         for s in Scene.where({'order_id': order_id}):
             self.assertTrue(s.status == 'submitted')
 
@@ -323,19 +355,11 @@ class TestProductionAPI(unittest.TestCase):
         for scene in order.scenes():
             scene.update('failed_lta_status_update', 'C')
 
-        production_provider.handle_failed_ee_updates()
+        scenes = Order.find(order.id).scenes({'failed_lta_status_update IS NOT': None})
+        production_provider.handle_failed_ee_updates(scenes)
 
         scenes = Scene.where({'failed_lta_status_update IS NOT': None})
         self.assertTrue(len(scenes) == 0)
-
-    @patch('api.providers.production.production_provider.ProductionProvider.handle_submitted_landsat_products',
-           mock_production_provider.respond_true)
-    @patch('api.providers.production.production_provider.ProductionProvider.handle_submitted_modis_products',
-           mock_production_provider.respond_true)
-    @patch('api.providers.production.production_provider.ProductionProvider.handle_submitted_plot_products',
-           mock_production_provider.respond_true)
-    def test_production_handle_submitted_products(self):
-        self.assertTrue(production_provider.handle_submitted_products())
 
     @patch('api.providers.production.production_provider.ProductionProvider.mark_nlaps_unavailable',
            mock_production_provider.respond_true)
@@ -345,7 +369,9 @@ class TestProductionAPI(unittest.TestCase):
            mock_production_provider.contact_ids_list)
     @patch('api.external.lta.check_lta_available', mock_production_provider.respond_true)
     def test_production_handle_submitted_landsat_products(self):
-        self.assertTrue(production_provider.handle_submitted_landsat_products())
+        orders = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        scenes = orders.scenes({'sensor_type': 'landsat'})
+        self.assertTrue(production_provider.handle_submitted_landsat_products(scenes))
 
     # !!! need to write test for nlaps.products_are_nlaps !!!
     @patch('api.external.nlaps.products_are_nlaps', nlaps.products_are_nlaps)
@@ -357,7 +383,8 @@ class TestProductionAPI(unittest.TestCase):
             scene.status = 'submitted'
             scene.sensor_type = 'landsat'
             scene.save()
-        self.assertTrue(production_provider.mark_nlaps_unavailable())
+        scenes = order.scenes()
+        self.assertTrue(production_provider.mark_nlaps_unavailable(scenes))
 
     @patch('api.external.lta.update_order_status', lta.update_order_status)
     def test_production_set_products_unavailable(self):
@@ -381,7 +408,8 @@ class TestProductionAPI(unittest.TestCase):
             scene.status = 'submitted'
             scene.sensor_type = 'landsat'
             scene.save()
-        response = production_provider.get_contactids_for_submitted_landsat_products()
+        scenes = Order.find(order.id).scenes({'sensor_type': 'landsat'})
+        response = production_provider.get_contactids_for_submitted_landsat_products(scenes)
         self.assertIsInstance(response, set)
         self.assertTrue(len(response) > 0)
 
@@ -395,7 +423,8 @@ class TestProductionAPI(unittest.TestCase):
             scene.sensor_type = 'modis'
             scene.save()
             sid = scene.id
-        self.assertTrue(production_provider.handle_submitted_modis_products())
+        scenes = order.scenes({'sensor_type': 'modis'})
+        self.assertTrue(production_provider.handle_submitted_modis_products(scenes))
         self.assertEquals(Scene.find(sid).status, "oncache")
 
     @patch('api.external.lpdaac.check_lpdaac_available', lpdaac.check_lpdaac_available)
@@ -408,7 +437,8 @@ class TestProductionAPI(unittest.TestCase):
             scene.sensor_type = 'modis'
             scene.save()
             sid = scene.id
-        self.assertTrue(production_provider.handle_submitted_modis_products())
+        scenes = order.scenes({'sensor_type': 'modis'})
+        self.assertTrue(production_provider.handle_submitted_modis_products(scenes))
         self.assertEquals(Scene.find(sid).status, "unavailable")
 
     def test_production_handle_submitted_plot_products(self):
@@ -432,15 +462,18 @@ class TestProductionAPI(unittest.TestCase):
                 else:
                     scene.update('status', 'unavailable')
 
-        self.assertTrue(production_provider.handle_submitted_plot_products())
+        scenes = order.scenes()
+        self.assertTrue(production_provider.handle_submitted_plot_products(scenes))
         self.assertEqual(Scene.find(plot_id).status, "oncache")
 
+    @patch('os.path.exists', lambda y: True)
     @patch('os.path.getsize', lambda y: 999)
     def test_production_calc_scene_download_sizes(self):
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
         scenes = order.scenes()
         Scene.bulk_update([s.id for s in scenes], {'status': 'complete', 'download_size': 0})
-        self.assertTrue(production_provider.calc_scene_download_sizes())
+        scenes = Order.find(order.id).scenes({'status': 'complete', 'download_size': 0})
+        self.assertTrue(production_provider.calc_scene_download_sizes(scenes))
         upscenes = Scene.where({'status': 'complete', 'download_size': 999})
         self.assertEqual(len(upscenes), len(scenes))
 
@@ -449,7 +482,7 @@ class TestProductionAPI(unittest.TestCase):
     def test_production_finalize_orders(self):
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
         order.update('status', 'ordered')
-        self.assertTrue(production_provider.finalize_orders())
+        self.assertTrue(production_provider.finalize_orders([order]))
 
     @patch('api.providers.production.production_provider.ProductionProvider.send_completion_email',
            mock_production_provider.respond_true)
