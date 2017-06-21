@@ -105,6 +105,8 @@ class OrderValidatorV0(validictory.SchemaValidator):
                 return
             # Validate UTM zone matches image_extents
             if self.validate_type_object(self.data_source['projection'].get('utm')):
+                if not self.validate_type_integer(self.data_source['projection']['utm'].get('zone')):
+                    return
                 cdict = dict(inzone=self.data_source['projection']['utm']['zone'],
                              east=self.data_source['image_extents']['east'],
                              west=self.data_source['image_extents']['west'],
