@@ -85,7 +85,7 @@ class API(object):
 
         return response
 
-    def fetch_user_orders(self, username='', email='', filters={}):
+    def fetch_user_orders(self, username='', email='', user_id='', filters={}):
         """ Return orders given a user id
 
         Args:
@@ -97,6 +97,7 @@ class API(object):
         try:
             response = self.ordering.fetch_user_orders(email=email,
                                                        username=username,
+                                                       user_id=user_id,
                                                        filters=filters)
         except:
             response = default_error_message
