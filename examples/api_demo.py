@@ -279,8 +279,6 @@ print(json.dumps(resp, indent=4))
 # 
 # ESPA processes your orders in the sequence in which they are recieved.  
 # You may want to remove blocking orders in your queue, to prioritize your latest orders
-# 
-# **COMING SOON**
 
 # In[27]:
 
