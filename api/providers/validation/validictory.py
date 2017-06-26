@@ -103,19 +103,6 @@ class OrderValidatorV0(validictory.SchemaValidator):
                 return
             if not self.validate_type_string(self.data_source['image_extents']['units']):
                 return
-            # Validate UTM zone matches image_extents
-            if self.validate_type_object(self.data_source['projection'].get('utm')):
-                if not self.validate_type_integer(self.data_source['projection']['utm'].get('zone')):
-                    return
-                cdict = dict(inzone=self.data_source['projection']['utm']['zone'],
-                             east=self.data_source['image_extents']['east'],
-                             west=self.data_source['image_extents']['west'],
-                             zbuffer=3)
-                if not self.is_utm_zone_nearby(**cdict):
-                    msg = ('image_extents ({east}E,{west}W) are not near the'
-                           ' requested UTM zone ({inzone})'
-                           .format(**cdict))
-                    self._errors.append(msg)
 
             calc_args['xmax'] = self.data_source['image_extents']['east']
             calc_args['ymax'] = self.data_source['image_extents']['north']
@@ -158,6 +145,21 @@ class OrderValidatorV0(validictory.SchemaValidator):
             msg = ('{}:{} pixel count value falls below acceptable threshold'
                    ' of 1 pixel'.format(path, fieldname, cmin))
             self._errors.append(msg)
+
+        if 'image_extents' in self.data_source:
+            # Validate UTM zone matches image_extents
+            if self.validate_type_object(self.data_source['projection'].get('utm')):
+                if not self.validate_type_integer(self.data_source['projection']['utm'].get('zone')):
+                    return
+                cdict = dict(inzone=self.data_source['projection']['utm']['zone'],
+                             east=self.data_source['image_extents']['east'],
+                             west=self.data_source['image_extents']['west'],
+                             zbuffer=3)
+                if not self.is_utm_zone_nearby(**cdict):
+                    msg = ('image_extents ({east}E,{west}W) are not near the'
+                           ' requested UTM zone ({inzone})'
+                           .format(**cdict))
+                    self._errors.append(msg)
 
     @staticmethod
     def is_utm_zone_nearby(inzone, east, west, zbuffer=3):
