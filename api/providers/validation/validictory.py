@@ -151,6 +151,8 @@ class OrderValidatorV0(validictory.SchemaValidator):
             if self.validate_type_object(self.data_source['projection'].get('utm')):
                 if not self.validate_type_integer(self.data_source['projection']['utm'].get('zone')):
                     return
+                if not self.data_source['image_extents']['units'] == 'dd':
+                    return
                 cdict = dict(inzone=self.data_source['projection']['utm']['zone'],
                              east=self.data_source['image_extents']['east'],
                              west=self.data_source['image_extents']['west'],
