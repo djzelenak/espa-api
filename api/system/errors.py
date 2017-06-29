@@ -45,6 +45,7 @@ class Errors(object):
         self.conditions.append(self.warp_errors)
         self.conditions.append(self.node_space_errors)
         self.conditions.append(self.lasrc_mystery_segfaults)
+        self.conditions.append(self.reproject_errors)
 
         #construct the named tuple for the return value of this module
         self.resolution = collections.namedtuple('ErrorResolution',
@@ -276,6 +277,12 @@ class Errors(object):
         reason = 'Unexpected internal memory error'
         extras = self.__add_retry('segfault_errors')
         return self.__find_error(error_message, keys, status, reason, extras)
+
+    def reproject_errors(self, error_message):
+        keys = ['WarpVerificationError: Failed to compute statistics, no valid pixels found in sampling']
+        status = 'unavailable'
+        reason = 'No valid pixels found for reprojection'
+        return self.__find_error(error_message, keys, status, reason)
 
 
 def resolve(error_message, name):
