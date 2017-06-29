@@ -122,15 +122,19 @@ class OrderingProvider(ProviderInterfaceV0):
 
         return pub_prods
 
-    def fetch_user_orders(self, username='', email='', filters=None):
+    def fetch_user_orders(self, username='', email='', user_id='', filters=None):
 
         if filters and not isinstance(filters, dict):
             raise OrderingProviderException('filters must be dict')
 
         if username:
-            user = User.where({'username': username})
+            usearch = {'username': username}
         elif email:
-            user = User.where({'email': email})
+            usearch = {'email': email}
+        elif user_id:
+            usearch = {'id': user_id}
+
+        user = User.where(usearch)
         if len(user) != 1:
             return list()
         else:
@@ -189,8 +193,7 @@ class OrderingProvider(ProviderInterfaceV0):
 
         logger.info('Received request to cancel {} from {}'
                     .format(orderid, request_ip_address))
-        # TODO: ADD "queued" to list, when proc can handle exception
-        killable_scene_states = ('submitted', 'oncache', 'onorder',
+        killable_scene_states = ('submitted', 'oncache', 'onorder', 'queued',
                                  'error', 'unavailable', 'complete')
         scenes = order.scenes(sql_dict={'status': killable_scene_states})
         if len(scenes) > 0:

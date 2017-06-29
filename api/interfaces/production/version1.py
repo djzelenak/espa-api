@@ -83,17 +83,17 @@ class API(object):
 
         return response
 
-    def handle_orders(self):
+    def handle_orders(self, params):
         """Handler for accepting orders and products into the processing system
 
         Args:
-            none
+            params (dict): args for the action. valid keys: username
 
         Returns:
             True if successful
         """
         try:
-            response = self.production.handle_orders()
+            response = self.production.handle_orders(**params)
         except:
             logger.debug("ERR version1 handle_orders. trace: {0}".format(traceback.format_exc()))
             response = default_error_message

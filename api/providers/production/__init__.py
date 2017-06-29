@@ -108,11 +108,6 @@ class ProductionProviderInterfaceV0(object):
         return
 
     @abc.abstractmethod
-    def handle_submitted_products(self):
-        ''' handles all submitted products in the system '''
-        return
-
-    @abc.abstractmethod
     def send_completion_email(order):
         ''' public interface to send the completion email '''
         return

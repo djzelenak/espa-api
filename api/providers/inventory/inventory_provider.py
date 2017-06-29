@@ -1,7 +1,7 @@
 from api.providers.inventory import InventoryInterfaceV0
 
 from api.external import lta, lpdaac
-from api import InventoryException
+from api import InventoryException, InventoryConnectionException
 from api.domain import sensor
 
 
@@ -30,8 +30,14 @@ class InventoryProviderV0(InventoryInterfaceV0):
                 lpdaac_ls.extend(order[key]['inputs'])
 
         if lta_ls:
+            if not lta.check_lta_available():
+                msg = 'Could not connect to LTA data source'
+                raise InventoryConnectionException(msg)
             results.update(self.check_LTA(lta_ls))
         if lpdaac_ls:
+            if not lpdaac.check_lpdaac_available():
+                msg = 'Could not connect to LPDAAC data source'
+                raise InventoryConnectionException(msg)
             results.update(self.check_LPDAAC(lpdaac_ls))
 
         not_avail = []
