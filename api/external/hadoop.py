@@ -10,7 +10,8 @@ config = ConfigurationProvider()
 class HadoopHandler(object):
 
     def list_jobs(self):
-        return self._remote_cmd('yarn application -appStates RUNNING -list')
+        status = self._remote_cmd('yarn application -appStates RUNNING -list')['stdout']
+        return dict(s.split()[0:2][::-1] for s in status[2:])
 
     def kill_job(self, jobid):
         return self._remote_cmd('hadoop job -kill {}'.format(jobid))
