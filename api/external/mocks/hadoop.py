@@ -8,7 +8,9 @@ def jobs_names_ids(self):
 
 
 def list_jobs(self, cmd):
-    return {'stdout': ['job_201607260910_1879', 'job_201607260910_1875']}
+    return {'stdout': ['Total number of applications (application-types: [] and states: [RUNNING]):1\n',
+                       '                Application-Id      Application-Name        Application-Type          User           Queue                   State      Final-State              Progress                        Tracking-URL\n',
+                       'application_1499729760759_0002  7_10_2017_17_11_2-all-espa_job             MAPREDUCE       SOMEUSER         default                 RUNNING              UNDEFINED                   5% http://HOSTNAME:00000\n']}
 
 
 def slave_ips(self, cmd):
