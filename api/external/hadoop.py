@@ -13,8 +13,8 @@ class HadoopHandler(object):
         status = self._remote_cmd('yarn application -appStates RUNNING -list')['stdout']
         return dict(s.split()[0:2][::-1] for s in status[2:])
 
-    def kill_job(self, jobid):
-        return self._remote_cmd('hadoop job -kill {}'.format(jobid))
+    def kill_job(self, appid):
+        return self._remote_cmd('yarn application -kill {}'.format(appid))
 
     def kill_user_jobs(self, username):
         _response = dict()
