@@ -10,7 +10,7 @@ config = ConfigurationProvider()
 class HadoopHandler(object):
 
     def list_jobs(self):
-        return self._remote_cmd('hadoop job -list')
+        return self._remote_cmd('yarn application -appStates RUNNING -list')
 
     def kill_job(self, jobid):
         return self._remote_cmd('hadoop job -kill {}'.format(jobid))
@@ -33,13 +33,7 @@ class HadoopHandler(object):
         resp = cache.get(cache_key)
 
         if not resp:
-            cmd = "hadoop job -list | egrep '^job' | awk '{print $1}' | " \
-                  "xargs -n 1 -I {} sh -c \"hadoop job -status {} | " \
-                  "egrep '^tracking' | awk '{print \$3}'\" | " \
-                  "xargs -n 1 -I{} sh -c \" echo -n {} | " \
-                  "sed 's/.*jobid=//'; echo -n ' ';curl -s -XGET {} | " \
-                  "grep 'Job Name' | sed 's/.* //' | sed 's/<br>//'\""
-            _stdout = self._remote_cmd(cmd)['stdout']
+            _stdout = self.list_jobs()['stdout']
             _id_name_list = [str(i).rstrip('\n') for i in _stdout]
             resp = {}
             for ids in _id_name_list:
