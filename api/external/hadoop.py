@@ -50,7 +50,7 @@ class HadoopHandler(object):
         return resp
 
     def slave_ips(self):
-        _stdout = self._remote_cmd("cat ~/bin/hadoop/conf/slaves")['stdout']
+        _stdout = self._remote_cmd("cat ~/bin/hadoop/etc/hadoop/slaves")['stdout']
         _host_list = [str(i).rstrip('\n') for i in _stdout]
         return [socket.gethostbyname(i) for i in _host_list]
 
