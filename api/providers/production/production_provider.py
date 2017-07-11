@@ -1358,3 +1358,18 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         logger.info('Re-submitted {} orphaned scenes'.format(len(scenes)))
 
         return True
+
+    @staticmethod
+    def reset_processing_status():
+        """
+        Kills all hadoop jobs (if found) and resets all scene states
+
+        :return: bool
+        """
+        running_jobs = hadoop_handler.list_jobs()
+        for appid in running_jobs.keys():  # Ignore job-name
+            hadoop_handler.kill_job(appid)
+
+        scenes = Scene.where({'status': ('queued', 'processing')})
+        Scene.bulk_update([s.id for s in scenes], {'status': 'submitted'})
+        return True
