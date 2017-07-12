@@ -1,4 +1,6 @@
 ## Change Notes
+###### July 2017
+* Add production-api reset queued/processing scene status
 ###### June 2017 
 * Ability to cancel orders
 * Put all errors/warnings in "messages" JSON field
