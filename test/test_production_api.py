@@ -647,5 +647,15 @@ class TestProductionAPI(unittest.TestCase):
         new_time = scene.status_modified
         self.assertGreater(new_time, old_time)
 
+    @patch('api.external.hadoop.HadoopHandler.list_jobs', hadoop.jobs_names_ids)
+    @patch('api.external.hadoop.HadoopHandler.kill_job', lambda x,y: True)
+    def test_hadoop_reset_status(self):
+        order_id = self.mock_order.generate_testing_order(self.user_id)
+        scenes = Scene.where({'order_id': order_id})
+        Scene.bulk_update([s.id for s in scenes], {'status': 'processing'})
+        self.assertTrue(production_provider.reset_processing_status())
+        scenes = Scene.where({'order_id': order_id})
+        self.assertEqual({'submitted'}, set([s.status for s in scenes]))
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)

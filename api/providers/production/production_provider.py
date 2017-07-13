@@ -1358,3 +1358,18 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         logger.info('Re-submitted {} orphaned scenes'.format(len(scenes)))
 
         return True
+
+    @staticmethod
+    def reset_processing_status():
+        """
+        Resets all "queued/processing" scene states
+
+        :return: bool
+        """
+        scenes = Scene.where({'status': ('queued', 'processing')})
+        if scenes:
+            Scene.bulk_update([s.id for s in scenes], {'status': 'submitted'})
+            return True
+        else:
+            return False
+

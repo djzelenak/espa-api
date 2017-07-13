@@ -123,7 +123,8 @@ transport_api.add_resource(ProductionStats,
                            '/production-api/v<version>/statistics/<name>')
 
 transport_api.add_resource(ProductionManagement,
-                           '/production-api/v<version>/handle-orphans')
+                           '/production-api/v<version>/handle-orphans',
+                           '/production-api/v<version>/reset-status')
 
 transport_api.add_resource(ProductionConfiguration,
                            '/production-api/v<version>/configuration/<key>')

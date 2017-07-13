@@ -162,3 +162,15 @@ class API(object):
             response = default_error_message
         return response
 
+    def reset_processing_status(self):
+        """
+        Handler for killing queued/processing scenes in hadoop
+        :return: true
+        """
+        try:
+            response = self.production.reset_processing_status()
+        except:
+            logger.debug("ERR handling queued/processing scenes\ntrace: {}".format(traceback.format_exc()))
+            response = default_error_message
+        return response
+

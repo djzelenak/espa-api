@@ -116,3 +116,6 @@ class ProductionManagement(Resource):
         if 'handle-orphans' in request.url:
             resp = espa.catch_orphaned_scenes()
             return prep_response(resp)
+        if 'reset-status' in request.url:
+            resp = espa.reset_processing_status()
+            return prep_response(resp)
