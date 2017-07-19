@@ -1,5 +1,6 @@
 ## Change Notes
 ###### July 2017
+* Upgrade remote calls for Hadoop2
 * Add production-api reset queued/processing scene status
 ###### June 2017 
 * Ability to cancel orders
