@@ -13,7 +13,8 @@ SET client_min_messages = warning;
 -- Name: espadev; Type: DATABASE; Schema: -; Owner: postgres
 --
 
-CREATE DATABASE espadev WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8';
+-- ##### Docker will create for us #####
+-- CREATE DATABASE espadev WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8';
 
 
 ALTER DATABASE espadev OWNER TO postgres;
