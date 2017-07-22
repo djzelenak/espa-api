@@ -12,4 +12,5 @@ RUN ln -s /usr/src/app/run/config.ini /home/espadev/.usgs/.cfgnfo
 COPY . /usr/src/app
 
 RUN mkdir -p /var/log/uwsgi/
+EXPOSE 4004
 ENTRYPOINT ["uwsgi", "run/api-dev-uwsgi.ini"]
