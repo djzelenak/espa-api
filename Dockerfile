@@ -10,4 +10,6 @@ RUN mkdir -p /home/espadev/.usgs/
 RUN ln -s /usr/src/app/run/config.ini /home/espadev/.usgs/.cfgnfo
 
 COPY . /usr/src/app
+
+RUN mkdir -p /var/log/uwsgi/
 ENTRYPOINT ["uwsgi", "run/api-dev-uwsgi.ini"]
