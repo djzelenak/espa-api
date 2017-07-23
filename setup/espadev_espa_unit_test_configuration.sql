@@ -17,6 +17,12 @@ INSERT INTO ordering_configuration (key, value) VALUES
 -- api.external.lpdaac
     ('url.dev.modis.datapool', 'hostname:port'),
 
+-- api.external.onlinecache
+    ('online_cache_orders_dir', '/path/2/output'),
+    ('landsatds.host', 'hostname'),
+    ('landsatds.username', 'username'),
+    ('landsatds.password', 'password'),
+
 -- api.notification.email
     ('url.dev.status_url', 'http://host.com')
 
