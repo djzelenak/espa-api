@@ -255,6 +255,7 @@ class TransportTestCase(unittest.TestCase):
         self.assertIn('errors', resp_json['messages'])
         self.assertIn('No input products supplied', resp_json['messages']['errors'][0])
 
+    @patch('api.external.ers._api_post', lambda x: dict())
     def test_messages_field_acc_denied(self):
         url = '/api/v1/available-products/'
         response = self.app.get(url, environ_base={'REMOTE_ADDR': '127.0.0.1'})
@@ -263,6 +264,7 @@ class TransportTestCase(unittest.TestCase):
         self.assertIn('messages', resp_json)
         self.assertIn('errors', resp_json['messages'])
 
+    @patch('api.domain.user.User.get', MockUser.get)
     def test_not_found(self):
         url = '/api/v1/not-valid'
         response = self.app.get(url, environ_base={'REMOTE_ADDR': '127.0.0.1'})
