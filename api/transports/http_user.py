@@ -18,6 +18,7 @@ from api.transports.http_json import (
     BadRequestResponse, SystemErrorResponse, AccessDeniedResponse, AuthFailedResponse,
     BadMethodResponse)
 from api.util.dbconnect import DBConnectException
+from api.providers.caching import CachingProvider
 
 from flask import jsonify
 from flask import make_response
@@ -31,7 +32,7 @@ from functools import wraps
 
 espa = APIv1()
 auth = HTTPBasicAuth()
-cache = memcache.Client(['127.0.0.1:11211'], debug=0)
+cache = CachingProvider()
 
 
 def user_ip_address():

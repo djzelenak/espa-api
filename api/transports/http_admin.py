@@ -10,6 +10,7 @@ from api.interfaces.admin.version1 import API as APIv1
 from api.system.logger import ilogger as logger
 from api.domain.user import User
 from api.transports.http_json import MessagesResponse
+from api.providers.caching import CachingProvider
 
 from flask import jsonify
 from flask import make_response
@@ -20,7 +21,7 @@ from flask.ext.restful import Resource
 
 espa = APIv1()
 auth = HTTPBasicAuth()
-cache = memcache.Client(['127.0.0.1:11211'], debug=0)
+cache = CachingProvider()
 
 
 def user_ip_address():
