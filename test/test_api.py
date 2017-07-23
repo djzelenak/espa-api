@@ -276,7 +276,7 @@ class TestInventory(unittest.TestCase):
             api.inventory.check(self.lta_order_bad)
 
     @patch('api.external.lpdaac.LPDAACService.input_exists', lambda x, y: True)
-    @patch('api.external.lpdaac.LPDAACService.check_lpdaac_available', lambda x, y: True)
+    @patch('api.external.lpdaac.LPDAACService.check_lpdaac_available', lambda y: True)
     def test_lpdaac_good(self):
         """
         Check LPDAAC support from the inventory provider
@@ -284,7 +284,7 @@ class TestInventory(unittest.TestCase):
         self.assertIsNone(api.inventory.check(self.lpdaac_order_good))
 
     @patch('api.external.lpdaac.LPDAACService.input_exists', lambda x, y: False)
-    @patch('api.external.lpdaac.LPDAACService.check_lpdaac_available', lambda x, y: True)
+    @patch('api.external.lpdaac.LPDAACService.check_lpdaac_available', lambda y: True)
     def test_lpdaac_bad(self):
         """
         Check LPDAAC support from the inventory provider
