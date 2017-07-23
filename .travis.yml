@@ -1,0 +1,17 @@
+language: python
+python:
+- '2.7'
+services: docker
+env:
+  global:
+  - COMMIT=${TRAVIS_COMMIT::8}
+  - ESPA_ENV=dev
+  - ESPA_MEMCACHE_HOST=memcached:11211
+before_install:
+- make docker-deps-up
+install: "pip install -r setup/requirements.txt"
+script: "run/runtests"
+after_success:
+#- "/bin/bash deploy"
+- make docker-deps-down
+
