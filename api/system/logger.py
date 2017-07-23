@@ -34,6 +34,6 @@ eh.setLevel(logging.CRITICAL)
 for handler in [ih, eh]:
     ilogger.addHandler(handler)
 
-    if isinstance(handler, logging.FileHandler):
+    if isinstance(handler, logging.StreamHandler):
         handler.setFormatter(Formatter(LOG_FORMAT))
 
