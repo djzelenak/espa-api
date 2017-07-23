@@ -13,3 +13,6 @@ fi
 #python -m unittest discover test
 nose2 --verbose --fail-fast --with-coverage
 
+# flake8 api
+# pylint api
+
