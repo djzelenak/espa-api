@@ -23,7 +23,7 @@ ilogger = logging.getLogger("api")
 ilogger.setLevel(logging.DEBUG)
 
 ih = StreamHandler(stream=sys.stdout)
-eh = SMTPHandler(mailhost='localhost', fromaddr=config.get('apiemailsender'), toaddrs=config.get('apiemailreceive').split(','), subject='ESPA API ERROR')
+eh = SMTPHandler(mailhost='localhost', fromaddr=config.get('apiemailsender'), toaddrs=config.get('ESPA_API_EMAIL_RECEIVE').split(','), subject='ESPA API ERROR')
 
 if config.mode not in ('tst', 'dev'):
     ih.setLevel(logging.INFO)
