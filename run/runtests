@@ -2,5 +2,14 @@
 
 source venv_api/bin/activate
 
-python -m unittest discover test
+export ESPA_ENV="dev"
+export ESPA_CONFIG_PATH="${HOME}"
+
+if [[ ! -e "$ESPA_CONFIG_PATH/.usgs/.cfgnfo" ]]; then
+	echo 'Could not find Database configuration'
+	exit 1
+fi
+
+#python -m unittest discover test
+nose2 --verbose --fail-fast --with-coverage
 
