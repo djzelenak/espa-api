@@ -13,7 +13,6 @@ ENV ESPA_API_EMAIL_RECEIVE="someone@somewhere.com"
 ENV ESPA_ENV="dev"
 
 COPY . /home/espadev/espa-api
-# RUN bash run/runtests # <-- .travis.yml
 
 EXPOSE 4004
 ENTRYPOINT ["uwsgi", "run/api-dev-uwsgi.ini"]
