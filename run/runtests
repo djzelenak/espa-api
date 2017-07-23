@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source venv_api/bin/activate
+#source venv_api/bin/activate
 
 export ESPA_ENV="dev"
 export ESPA_CONFIG_PATH="${HOME}"
