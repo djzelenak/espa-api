@@ -24,6 +24,11 @@ INSERT INTO ordering_configuration (key, value) VALUES
     ('landsatds.password', 'password'),
 
 -- api.notification.email
-    ('url.dev.status_url', 'http://host.com')
+    ('url.dev.status_url', 'http://host.com'),
+
+-- api.providers.administration.administration_provider.
+    ('system_message_title', 'text'),
+    ('system_message_body', 'text'),
+    ('display_system_message', 'False')
 
 ;
