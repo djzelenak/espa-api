@@ -86,9 +86,9 @@ INSERT INTO ordering_configuration (key, value) VALUES
     ('retry.sixs_errors.retries', '3'),
     ('retry.sixs_errors.timeout', '60'),
     ('retry.ssh_errors.retries', '3'),
-    ('retry.ssh_errors.timeout', '300')
+    ('retry.ssh_errors.timeout', '300'),
     ('retry.node_space_errors.retries', '3'),
-    ('retry.node_space_errors.timeout', '600')
+    ('retry.node_space_errors.timeout', '600'),
     ('retry.segfault_errors.retries', '5'),
     ('retry.segfault_errors.timeout', '3600')
 
