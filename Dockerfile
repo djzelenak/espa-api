@@ -10,8 +10,10 @@ RUN mkdir -p /home/espadev/.usgs/
 RUN ln -s /home/espadev/espa-api/run/config.ini /home/espadev/.usgs/.cfgnfo
 ENV ESPA_CONFIG_PATH=/home/espadev/
 ENV ESPA_API_EMAIL_RECEIVE="someone@somewhere.com"
+ENV ESPA_ENV="dev"
 
 COPY . /home/espadev/espa-api
+# RUN bash run/runtests # <-- .travis.yml
 
 EXPOSE 4004
 ENTRYPOINT ["uwsgi", "run/api-dev-uwsgi.ini"]

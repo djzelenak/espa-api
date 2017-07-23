@@ -1,12 +1,7 @@
 #!/bin/bash
 
-#source venv_api/bin/activate
-
-export ESPA_ENV="dev"
-export ESPA_CONFIG_PATH="${HOME}"
-
 if [[ ! -e "$ESPA_CONFIG_PATH/.usgs/.cfgnfo" ]]; then
-	echo 'Could not find Database configuration'
+	echo "Missing Database configuration $ESPA_CONFIG_PATH/.usgs/.cfgnfo"
 	exit 1
 fi
 
