@@ -49,12 +49,12 @@ INSERT INTO ordering_configuration (key, value) VALUES
 
     ('msg.system_message_body', ''),
     ('msg.system_message_title', ''),
-    ('msg.system_message_updated_by', ''), 
+    ('msg.system_message_updated_by', ''),
     ('msg.system_message_updated_date', ''),
 
     ('system.display_system_message', 'True'),
     ('system.load_ee_orders_enabled', 'True'),
-    ('system.run_order_purge_every', '86400')
+    ('system.run_order_purge_every', '86400'),
 
 -- api.providers.production
     ('policy.purge_orders_after', '10'),
@@ -86,6 +86,6 @@ INSERT INTO ordering_configuration (key, value) VALUES
     ('retry.sixs_errors.retries', '3'),
     ('retry.sixs_errors.timeout', '60'),
     ('retry.ssh_errors.retries', '3'),
-    ('retry.ssh_errors.timeout', '300'),
+    ('retry.ssh_errors.timeout', '300')
 
 ;
