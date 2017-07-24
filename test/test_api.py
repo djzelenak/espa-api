@@ -213,7 +213,6 @@ class TestValidation(unittest.TestCase):
             for order, test, exc in invalid_list:
                 # empty lists cause assertRaisesRegExp to fail
                 exc = str(exc).replace('[', '\[')
-                print('\n\n\n {} \n\n\n'.format(exc))
                 with self.assertRaisesRegexp(exc_type, exc):
                     api.validation(order, self.staffuser.username)
 
