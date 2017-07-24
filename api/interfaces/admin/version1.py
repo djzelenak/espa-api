@@ -48,8 +48,8 @@ class API(object):
             response = self.admin.access_configuration(key=key, value=value, delete=delete)
         except:
             logger.debug('ERR version1 configuration_management:'
-                         ' {}\ntrace: {}\n'.format(','.join([key, value, delete]),
-                                                   traceback.format_exc()))
+                         ' {},{},{}\ntrace: {}\n'.format(key, value, delete,
+                                                         traceback.format_exc()))
             response = default_error_message
 
         return response
