@@ -12,7 +12,6 @@ docker-shell:
 	docker run -it --entrypoint=/bin/bash usgseros/$(WORKERIMAGE)
 
 docker-deps-up:
-	docker ps -a
 	docker-compose -f setup/docker-compose.yml up -d
 
 docker-deps-up-nodaemon:
