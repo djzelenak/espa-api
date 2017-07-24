@@ -293,5 +293,3 @@ class TestInventory(unittest.TestCase):
         with self.assertRaises(InventoryException):
             api.inventory.check(self.lpdaac_order_bad)
 
-if __name__ == '__main__':
-    unittest.main(verbosity=2)

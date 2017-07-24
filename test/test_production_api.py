@@ -657,5 +657,3 @@ class TestProductionAPI(unittest.TestCase):
         scenes = Scene.where({'order_id': order_id})
         self.assertEqual({'submitted'}, set([s.status for s in scenes]))
 
-if __name__ == '__main__':
-    unittest.main(verbosity=2)
