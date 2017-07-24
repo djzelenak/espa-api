@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [[ ! -e "$ESPA_CONFIG_PATH/.usgs/.cfgnfo" ]]; then
-	echo "Missing Database configuration $ESPA_CONFIG_PATH/.usgs/.cfgnfo"
+if [[ ! -e "$ESPA_CONFIG_PATH" ]]; then
+	echo "Missing Database configuration $ESPA_CONFIG_PATH"
 	exit 1
 fi
 
