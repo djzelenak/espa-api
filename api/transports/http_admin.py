@@ -10,7 +10,7 @@ from api.interfaces.admin.version1 import API as APIv1
 from api.system.logger import ilogger as logger
 from api.domain.user import User
 from api.transports.http_json import MessagesResponse
-from api.providers.caching import CachingProvider
+from api.providers.caching.caching_provider import CachingProvider
 
 from flask import jsonify
 from flask import make_response

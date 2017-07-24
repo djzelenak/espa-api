@@ -18,7 +18,7 @@ from api.transports.http_json import (
     BadRequestResponse, SystemErrorResponse, AccessDeniedResponse, AuthFailedResponse,
     BadMethodResponse)
 from api.util.dbconnect import DBConnectException
-from api.providers.caching import CachingProvider
+from api.providers.caching.caching_provider import CachingProvider
 
 from flask import jsonify
 from flask import make_response
