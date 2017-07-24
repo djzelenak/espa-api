@@ -8,7 +8,7 @@ env:
   - COMMIT=${TRAVIS_COMMIT::8}
   - ESPA_ENV=dev
   - ESPA_MEMCACHE_HOST=memcached:30070
-  - ESPA_CONFIG_PATH=./run/config.ini
+  - ESPA_CONFIG_PATH=${TRAVIS_BUILD_DIR}/run/config.ini
 before_install:
 - make docker-deps-up
 install: "pip install -r setup/requirements.txt"
