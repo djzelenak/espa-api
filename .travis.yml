@@ -11,7 +11,9 @@ env:
   - ESPA_API_EMAIL_RECEIVE=someone@nowhere.com
 before_install:
 - make docker-deps-up
-install: "pip install -r setup/requirements.txt"
+install: 
+- pip install -r setup/requirements.txt
+- travis_wait 30 mvn install
 script: "run/runtests"
 after_success:
 #- "/bin/bash deploy"
