@@ -4,11 +4,11 @@ services:
     memcached:
       image: memcached:1.4.39
       ports:
-        - "127.0.0.1:11211:11211"
+        - "127.0.0.1:111211:111211"
     postgres:
       build: .
       ports:
-        - "127.0.0.1:5432:5432"
+        - "127.0.0.1:54321:54321"
       environment: 
         - PGDATA=/usr/local/pgsql/data
         - POSTGRES_PASSWORD=password1

@@ -7,7 +7,7 @@ env:
   global:
   - COMMIT=${TRAVIS_COMMIT::8}
   - ESPA_ENV=dev
-  - ESPA_MEMCACHE_HOST=memcached:11211
+  - ESPA_MEMCACHE_HOST=memcached:111211
 before_install:
 - make docker-deps-up
 install: "pip install -r setup/requirements.txt"
