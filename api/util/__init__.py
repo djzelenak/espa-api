@@ -8,15 +8,15 @@ import datetime
 import connections
 
 
-def get_cfg(cfgfile=".cfgnfo"):
+def get_cfg(cfgfile=None):
     """
     Retrieve the configuration information from the .cfgnfo file
     located in the current user's home directory
 
     :return: dict
     """
-    if cfgfile == ".cfgnfo":
-        cfg_path = os.path.join(os.environ['ESPA_CONFIG_PATH'], '.usgs', cfgfile)
+    if not cfgfile:
+        cfg_path = os.environ['ESPA_CONFIG_PATH']
     else:
         cfg_path = cfgfile
 
@@ -32,7 +32,7 @@ def get_cfg(cfgfile=".cfgnfo"):
     return cfg_info
 
 
-def api_cfg(section='config', cfgfile=".cfgnfo"):
+def api_cfg(section='config', cfgfile=None):
     config = get_cfg(cfgfile)[section]
     return config
 
