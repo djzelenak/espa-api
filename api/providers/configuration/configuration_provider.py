@@ -114,7 +114,7 @@ class ConfigurationProvider(ConfigurationProviderInterfaceV0):
         ts = datetime.datetime.now().strftime('config-%m%d%y-%H%M%S')
 
         if not path:
-            base = os.path.join(os.environ['ESPA_CONFIG_PATH'], '.usgs', '.config_backup')
+            base = os.path.join(os.path.dirname(os.environ['ESPA_CONFIG_PATH']), '.config_backup')
             if not os.path.exists(base):
                 os.makedirs(base)
 
