@@ -14,6 +14,7 @@ from api.notification import emails
 from api.providers.production.mocks.production_provider import MockProductionProvider
 from api.providers.production.production_provider import ProductionProvider
 from api.system.mocks import errors
+from api.system.logger import ilogger as logger
 from mock import patch
 
 api = API()
@@ -23,6 +24,7 @@ mock_production_provider = MockProductionProvider()
 
 class TestProductionAPI(unittest.TestCase):
     def setUp(self):
+        logger.warning('Testing Production-API started...')
         os.environ['espa_api_testing'] = 'True'
         # create a user
         self.mock_user = MockUser()
@@ -30,6 +32,7 @@ class TestProductionAPI(unittest.TestCase):
         self.user_id = self.mock_user.add_testing_user()
 
     def tearDown(self):
+        logger.warning('Testing Production-API done.')
         # clean up orders
         self.mock_order.tear_down_testing_orders()
         # clean up users

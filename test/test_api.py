@@ -18,6 +18,7 @@ from api.domain.user import User
 from api.providers.production.mocks.production_provider import MockProductionProvider
 from api.providers.production.production_provider import ProductionProvider
 from api.external.mocks import lta as mocklta
+from api.system.logger import ilogger as logger
 from mock import patch
 
 api = APIv1()
@@ -27,6 +28,7 @@ mock_production_provider = MockProductionProvider()
 
 class TestAPI(unittest.TestCase):
     def setUp(self):
+        logger.warning('Testing API started...')
         os.environ['espa_api_testing'] = 'True'
         # create a user
         self.mock_user = MockUser()
@@ -56,6 +58,7 @@ class TestAPI(unittest.TestCase):
             self.restricted['all']['role'].remove('restricted_prod')
 
     def tearDown(self):
+        logger.warning('Testing API done.')
         # clean up orders
         self.mock_order.tear_down_testing_orders()
         # clean up users
@@ -119,6 +122,7 @@ class TestAPI(unittest.TestCase):
 
 class TestValidation(unittest.TestCase):
     def setUp(self):
+        logger.warning('Testing Validation started...')
         os.environ['espa_api_testing'] = 'True'
 
         self.mock_user = MockUser()
@@ -247,6 +251,7 @@ class TestValidation(unittest.TestCase):
 
 class TestInventory(unittest.TestCase):
     def setUp(self):
+        logger.warning('Testing Inventory started...')
         os.environ['espa_api_testing'] = 'True'
         self.lta_prod_good = u'LT50300372011275PAC01'
         self.lta_prod_bad = u'LE70290302001200EDC01'
