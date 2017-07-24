@@ -1,6 +1,7 @@
-# espa-api
 
 [![Build Status](https://travis-ci.org/USGS-EROS/espa-api.svg?branch=master)](https://travis-ci.org/USGS-EROS/espa-api)
+
+# espa-api
 
 This is an API for interacting with the ESPA ordering system. 
 
