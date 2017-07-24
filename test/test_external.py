@@ -162,7 +162,10 @@ class TestHadoopHandler(unittest.TestCase):
     @patch('api.external.hadoop.HadoopHandler._remote_cmd', mockhadoop.list_jobs)
     def test_list_jobs(self):
         resp = self.hadoop.list_jobs()
-        self.assertEqual({'7_10_2017_17_11_2-all-espa_job'}, set(resp))
+        self.assertIsInstance(resp, dict)
+        for key, value in resp.items()
+            self.assertIsInstance(key, str)
+            self.assertIsInstance(value, str)
 
     @patch('api.external.hadoop.HadoopHandler.job_names_ids', mockhadoop.jobs_names_ids)
     def test_job_names_ids(self):
