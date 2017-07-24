@@ -163,7 +163,7 @@ class TestHadoopHandler(unittest.TestCase):
     def test_list_jobs(self):
         resp = self.hadoop.list_jobs()
         self.assertIsInstance(resp, dict)
-        for key, value in resp.items()
+        for key, value in resp.items():
             self.assertIsInstance(key, str)
             self.assertIsInstance(value, str)
 
