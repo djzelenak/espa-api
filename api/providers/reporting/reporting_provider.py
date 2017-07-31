@@ -96,7 +96,7 @@ class ReportingProvider(ReportingProviderInterfaceV0):
                     return None
                 stat = {groupby: dict()}
                 for row in result:
-                    stat[groupby][row[groupby]] = [row['statistic']]
+                    stat[groupby][row[groupby]] = row['statistic']
             return stat
         else:
             logger.debug("Query was empty for {0}: {1}".format(name, query))
