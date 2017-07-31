@@ -1233,10 +1233,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                               'completion_email_sent IS': None, 'id': pending_orders})
         self.handle_cancelled_orders(orders)
 
-        scenes = Scene.where({'status': 'submitted', 'sensor_type': 'landsat', 'order_id': pending_orders})
+        scenes = Scene.where({'status': 'submitted', 'sensor_type': 'landsat', 'order_id': pending_orders})[:500]
         self.mark_nlaps_unavailable(scenes)
 
-        scenes = Scene.where({'status': 'submitted', 'sensor_type': 'landsat', 'order_id': pending_orders})
+        scenes = Scene.where({'status': 'submitted', 'sensor_type': 'landsat', 'order_id': pending_orders})[:500]
         self.handle_submitted_landsat_products(scenes)
 
         scenes = Scene.where({'status': 'submitted', 'sensor_type': 'modis', 'order_id': pending_orders})
