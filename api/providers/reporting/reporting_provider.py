@@ -85,6 +85,7 @@ class ReportingProvider(ReportingProviderInterfaceV0):
             raise NotImplementedError("value: {0}".format(name))
 
         query = STATS[name]['query']
+        groupby = STATS[name]['groupby']
 
         if query is not None and len(query) > 0:
             with db_instance() as db:
@@ -93,10 +94,12 @@ class ReportingProvider(ReportingProviderInterfaceV0):
                 if len(result) < 1:
                     logger.debug('Query was empty for {0}: {1}'.format(name, query))
                     return None
-                stat = {k: [] for k in result[0].keys()}
+                stat = {groupby: dict()}
                 for row in result:
-                    for k in row.keys():
-                        stat[k].append(row[k])
+                    if row[groupby] in stat[groupby]:
+                        stat[groupby][row[groupby]].append(row['statistic'])
+                    else:
+                        stat[groupby][row[groupby]] = [row['statistic']]
             return stat
         else:
             logger.debug("Query was empty for {0}: {1}".format(name, query))

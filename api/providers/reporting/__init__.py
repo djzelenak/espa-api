@@ -299,6 +299,7 @@ STATS = {
     'stat_products_complete_1_hrs_sensor': {
         'display_name': 'Products Complete 1hrs - Sensor',
         'description': 'Number of products completed last 1 hrs, sorted by Sensor',
+        'groupby': 'sensor',
         'query': r'''SELECT COALESCE(COUNT(*), 0) "statistic",
                             CASE WHEN split_part(s.name, '_', 2) = '' THEN
                                 CASE WHEN s.sensor_type = 'landsat' THEN left(s.name, 3) ELSE left(s.name, 7) END
@@ -311,6 +312,7 @@ STATS = {
     'stat_products_complete_1_hrs_machine': {
         'display_name': 'Products Complete 1hrs - Machine',
         'description': 'Number of products completed last 1 hrs, sorted by Machine',
+        'groupby': 'machine',
         'query': r'''SELECT COALESCE(COUNT(*), 0) "statistic",
                             s.processing_location "machine"
                      FROM ordering_scene s
