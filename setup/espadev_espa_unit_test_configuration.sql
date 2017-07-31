@@ -16,6 +16,8 @@ INSERT INTO ordering_configuration (key, value) VALUES
     ('url.dev.earthexplorer', 'https://somehost'),
     ('url.dev.internal_cache', 'localhost,localhost'),
     ('url.dev.external_cache', 'localhost'),
+    ('url.dev.landsat.external', 'localhost,localhost'),
+    ('url.dev.landsat.datapool', 'localhost'),
 
     ('soap.cache_location', '/tmp/suds'),
     ('soap.client_timeout', '1800'),
