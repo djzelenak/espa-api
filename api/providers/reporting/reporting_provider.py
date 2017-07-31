@@ -90,7 +90,10 @@ class ReportingProvider(ReportingProviderInterfaceV0):
             with db_instance() as db:
                 db.select(query)
                 result = db.dictfetchall
-                stat = {k: [] for k in result.keys()}
+                if len(result) < 1:
+                    logger.debug('Query was empty for {0}: {1}', name, query)
+                    return None
+                stat = {k: [] for k in result[0].keys()}
                 for row in result:
                     for k in row.keys():
                         stat[k].append(row[k])
