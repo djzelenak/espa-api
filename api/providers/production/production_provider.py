@@ -1300,7 +1300,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 prodlist.append(hadoop_handler.master_ip())
                 prodlist.extend(hadoop_handler.slave_ips())
             except BaseException, e:
-                logger.error('Could not access hadoop!')
+                logger.exception('Could not access hadoop!')
             cache.set(cache_key, prodlist, timeout)
 
         return prodlist
