@@ -79,6 +79,27 @@ class ReportingProvider(ReportingProviderInterfaceV0):
 
         return stat
 
+    def get_multistat(self, name):
+        """ Returns SQL columns/rows as JSON keys/arrays """
+        if name not in STATS:
+            raise NotImplementedError("value: {0}".format(name))
+
+        query = STATS[name]['query']
+
+        if query is not None and len(query) > 0:
+            with db_instance() as db:
+                db.select(query)
+                result = db.dictfetchall
+                stat = {k: [] for k in result.keys()}
+                for row in result:
+                    for k in row.keys():
+                        stat[k].append(row[k])
+            return stat
+        else:
+            logger.debug("Query was empty for {0}: {1}".format(name, query))
+            return None
+
+
     def missing_auxiliary_data(self, sensor_group, year=None):
         _sensor_groups = {'L17': {1978: ['ncep', 'toms']},
                           'L8': {2013: ['lads']}}
