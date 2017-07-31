@@ -164,6 +164,18 @@ class API(object):
             response = default_error_message
         return response
 
+    def get_multistat(self, name):
+        """
+        retrieve requested statistic value
+        :return: long
+        """
+        try:
+            response = self.reporting.get_multistat(name)
+        except:
+            logger.debug("ERR version1 get_stat name: {0}, traceback: {1}".format(name, traceback.format_exc()))
+            response = default_error_message
+        return response
+
     def get_admin_whitelist(self):
         """
         Returns list of ip addresses for whitelist hosts accessing stats
