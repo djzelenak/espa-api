@@ -495,8 +495,8 @@ class OrderWrapperServiceClient(LTAService):
 
             retval = {}
 
-            ehost = config.url_for('external_cache')
-            ihosts = config.url_for('internal_cache').split(',')
+            external_hosts = config.url_for('landsat.external').split(',')
+            load_balancer = config.url_for('landsat.datapool')
 
             for index, scene in enumerate(list(scene_elements)):
                 name = self.get_xml_item(scene, schema, 'sceneId').text
@@ -516,9 +516,10 @@ class OrderWrapperServiceClient(LTAService):
                 if __dload_url is not None:
                     dload_url = __dload_url.text
 
-                    if dload_url.find(ehost) != -1:
-                        dload_url = dload_url.replace(ehost,
-                                                      ihosts[index % 2].strip())
+                    for external_host in external_hosts:
+                        if dload_url.find(external_host) != -1:
+                            dload_url = dload_url.replace(external_host,
+                                                          load_balancer.strip())
                     retval[name]['download_url'] = dload_url
 
             return retval
