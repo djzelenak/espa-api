@@ -14,7 +14,6 @@ from api.notification import emails
 from api.providers.production.mocks.production_provider import MockProductionProvider
 from api.providers.production.production_provider import ProductionProvider
 from api.system.mocks import errors
-from api.system.logger import ilogger as logger
 from mock import patch
 
 api = API()
@@ -24,7 +23,6 @@ mock_production_provider = MockProductionProvider()
 
 class TestProductionAPI(unittest.TestCase):
     def setUp(self):
-        logger.warning('Testing Production-API started...')
         os.environ['espa_api_testing'] = 'True'
         # create a user
         self.mock_user = MockUser()
@@ -32,7 +30,6 @@ class TestProductionAPI(unittest.TestCase):
         self.user_id = self.mock_user.add_testing_user()
 
     def tearDown(self):
-        logger.warning('Testing Production-API done.')
         # clean up orders
         self.mock_order.tear_down_testing_orders()
         # clean up users
@@ -245,10 +242,9 @@ class TestProductionAPI(unittest.TestCase):
                                            status='processing')
         self.assertFalse(res)
 
-
     def test_production_set_product_error_unavailable_night(self):
         """
-        Move a scene status from error to unavailable based on the solar zenith
+        Move a scene status from error to unavailable based on the solar zenith (TOA)
         error message
         """
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
@@ -259,7 +255,22 @@ class TestProductionAPI(unittest.TestCase):
                                               error='solar zenith angle out of range')
         scene = Scene.by_name_orderid(name=scene.name, order_id=order.id)
         self.assertTrue('unavailable' == scene.status)
-        self.assertTrue('cannot be processed due to the high solar zenith angle' in scene.note)
+        self.assertTrue('Solar zenith angle out of range, cannot process night scene' in scene.note)
+
+    def test_production_set_product_error_unavailable_almost_night(self):
+        """
+        Move a scene status from error to unavailable based on the solar zenith (SR)
+        error message
+        """
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        scene = order.scenes({'name !=': 'plot'})[0]
+        production_provider.set_product_error(name=scene.name,
+                                              orderid=order.orderid,
+                                              processing_loc='L8SRLEXAMPLE',
+                                              error='solar zenith angle is too large')
+        scene = Scene.by_name_orderid(name=scene.name, order_id=order.id)
+        self.assertTrue('unavailable' == scene.status)
+        self.assertTrue('Solar zenith angle is too large, cannot process scene to SR' in scene.note)
 
     @patch('api.external.lta.update_order_status', lta.update_order_status_fail)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
@@ -659,4 +670,7 @@ class TestProductionAPI(unittest.TestCase):
         self.assertTrue(production_provider.reset_processing_status())
         scenes = Scene.where({'order_id': order_id})
         self.assertEqual({'submitted'}, set([s.status for s in scenes]))
+
+if __name__ == '__main__':
+    unittest.main(verbosity=2)
 
