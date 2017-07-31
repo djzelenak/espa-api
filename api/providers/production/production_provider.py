@@ -1296,8 +1296,11 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             # timeout in 6 hours
             timeout = 60 * 60 * 6
             prodlist = list(['127.0.0.1', socket.gethostbyname(socket.gethostname())])
-            prodlist.append(hadoop_handler.master_ip())
-            prodlist.extend(hadoop_handler.slave_ips())
+            try:
+                prodlist.append(hadoop_handler.master_ip())
+                prodlist.extend(hadoop_handler.slave_ips())
+            except BaseException, e:
+                logger.error('Could not access hadoop!')
             cache.set(cache_key, prodlist, timeout)
 
         return prodlist
