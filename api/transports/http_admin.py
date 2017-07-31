@@ -160,7 +160,10 @@ class ProductionStats(Resource):
 
     @staticmethod
     def get(version, name):
-        return espa.get_stat(name)
+        if 'statistics' in request.url:
+            return espa.get_stat(name)
+        if 'multistat' in request.url:
+            return espa.get_multistat(name)
 
 
 class SystemStatus(Resource):
