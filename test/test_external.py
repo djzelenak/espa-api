@@ -162,21 +162,24 @@ class TestHadoopHandler(unittest.TestCase):
     @patch('api.external.hadoop.HadoopHandler._remote_cmd', mockhadoop.list_jobs)
     def test_list_jobs(self):
         resp = self.hadoop.list_jobs()
-        self.assertTrue('stdout' in resp.keys())
+        self.assertIsInstance(resp, dict)
+        for key, value in resp.items():
+            self.assertIsInstance(key, str)
+            self.assertIsInstance(value, str)
 
     @patch('api.external.hadoop.HadoopHandler.job_names_ids', mockhadoop.jobs_names_ids)
     def test_job_names_ids(self):
         resp = self.hadoop.job_names_ids()
-        self.assertTrue(isinstance(resp, dict))
+        self.assertIsInstance(resp, dict)
 
     @patch('api.external.hadoop.HadoopHandler._remote_cmd', mockhadoop.slave_ips)
     def test_slave_ips(self):
         resp = self.hadoop.slave_ips()
-        self.assertTrue(isinstance(resp, list))
+        self.assertIsInstance(resp, list)
         self.assertTrue(len(resp) > 0)
 
     @patch('api.external.hadoop.HadoopHandler.master_ip', mockhadoop.master_ip)
     def test_master_ip(self):
         resp = self.hadoop.master_ip()
-        self.assertTrue(isinstance(resp, str))
+        self.assertIsInstance(resp, str)
         self.assertTrue(len(resp.split('.')) == 4)

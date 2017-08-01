@@ -194,7 +194,7 @@ class OrderingProvider(ProviderInterfaceV0):
         logger.info('Received request to cancel {} from {}'
                     .format(orderid, request_ip_address))
         killable_scene_states = ('submitted', 'oncache', 'onorder', 'queued',
-                                 'error', 'unavailable', 'complete')
+                                 'retry', 'error', 'unavailable', 'complete')
         scenes = order.scenes(sql_dict={'status': killable_scene_states})
         if len(scenes) > 0:
             Scene.bulk_update([s.id for s in scenes], Scene.cancel_opts())
