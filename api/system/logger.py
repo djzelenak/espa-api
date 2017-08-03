@@ -2,7 +2,7 @@ import os
 import sys
 import logging
 
-from logging import StreamHandler
+from logging import StreamHandler, FileHandler
 from logging import Formatter
 from logging import Filter
 from logging.handlers import SMTPHandler
@@ -22,7 +22,11 @@ LOG_FORMAT = ("%(asctime)s [%(levelname)s]: %(message)s in %(pathname)s:%(lineno
 ilogger = logging.getLogger("api")
 ilogger.setLevel(logging.DEBUG)
 
-ih = StreamHandler(stream=sys.stdout)
+espa_log_dir = os.getenv('ESPA_LOG_DIR')
+if espa_log_dir:
+    ih = FileHandler(os.path.join(espa_log_dir, 'espa-api-flask.log'))
+else:
+    ih = StreamHandler(stream=sys.stdout)
 eh = SMTPHandler(mailhost='localhost', fromaddr=config.get('apiemailsender'), toaddrs=config.get('ESPA_API_EMAIL_RECEIVE').split(','), subject='ESPA API ERROR')
 
 if config.mode not in ('tst', 'dev'):
