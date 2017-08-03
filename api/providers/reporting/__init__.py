@@ -295,7 +295,10 @@ STATS = {
         'query': r'''SELECT COUNT(id) "statistic"
                      FROM ordering_scene s
                      WHERE s.status = 'onorder' '''
-    },
+    }
+}
+
+MULTISTATS = {
     'stat_products_complete_1_hrs_sensor': {
         'display_name': 'Products Complete 1hrs - Sensor',
         'description': 'Number of products completed last 1 hrs, sorted by Sensor',

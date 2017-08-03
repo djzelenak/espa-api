@@ -2,7 +2,7 @@ from api.util.dbconnect import DBConnectException, db_instance
 from api.providers.reporting import ReportingProviderInterfaceV0
 from api.system.logger import ilogger as logger
 from api.providers.reporting import REPORTS
-from api.providers.reporting import STATS
+from api.providers.reporting import STATS, MULTISTATS
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 
 import copy
@@ -84,8 +84,8 @@ class ReportingProvider(ReportingProviderInterfaceV0):
         if name not in STATS:
             raise NotImplementedError("value: {0}".format(name))
 
-        query = STATS[name]['query']
-        groupby = STATS[name]['groupby']
+        query = MULTISTATS[name]['query']
+        groupby = MULTISTATS[name]['groupby']
 
         if query is not None and len(query) > 0:
             with db_instance() as db:
