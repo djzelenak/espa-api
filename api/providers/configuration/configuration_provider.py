@@ -54,6 +54,8 @@ class ConfigurationProvider(ConfigurationProviderInterfaceV0):
                 ret[idx] = os.environ['ESPA_API_EMAIL_RECEIVE']
             else:
                 ret = os.environ['ESPA_API_EMAIL_RECEIVE']
+        else:
+            ret = current.get('apiemailreceive')
 
         if isinstance(ret, list):
             return tuple(ret)
