@@ -92,7 +92,7 @@ class ReportingProvider(ReportingProviderInterfaceV0):
                 db.select(query)
                 result = db.dictfetchall
                 if len(result) < 1:
-                    logger.critical('Query was empty for {0}: {1}'.format(name, query))
+                    logger.debug('Query was empty for {0}: {1}'.format(name, query))
                     return None
                 stat = {groupby: dict()}
                 for row in result:
