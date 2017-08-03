@@ -100,7 +100,7 @@ def unauthorized():
     reason = flask.g.get('error_reason', '')
     if reason not in reasons or reason == 'unknown':
         if reason not in reasons:
-            logger.debug('ERR uncaught exception in user authentication')
+            logger.critical('ERR uncaught exception in user authentication')
         msg = SystemErrorResponse
     elif reason == 'auth':
         msg = AuthFailedResponse
@@ -154,7 +154,7 @@ def verify_user(username, password):
         flask.g.error_reason = 'conn'
         return False
     except DBConnectException as e:
-        logger.debug('! Database reported a problem: {}'.format(e))
+        logger.critical('! Database reported a problem: {}'.format(e))
         flask.g.error_reasons = 'db'
         return False
     except Exception:
@@ -374,7 +374,7 @@ class Ordering(Resource):
         if orders[0].user_id != user.id and not user.is_staff():
             msg = ('User {} is not allowed to cancel order {}'
                    .format(user.username, orderid))
-            logger.debug(msg + '\nOrigin: {}'.format(remote_addr))
+            logger.critical(msg + '\nOrigin: {}'.format(remote_addr))
             message = MessagesResponse(errors=[msg], code=403)
             return message()
         if orders[0].status != 'ordered':

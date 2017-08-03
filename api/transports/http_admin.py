@@ -190,7 +190,7 @@ class SystemStatus(Resource):
             else:
                 return 'success'
         except Exception as e:
-            logger.debug("ERROR updating system status: {0}".format(traceback.format_exc()))
+            logger.critical("ERROR updating system status: {0}".format(traceback.format_exc()))
             resp = MessagesResponse(errors=['internal server error'],
                                     code=500)
         return resp()

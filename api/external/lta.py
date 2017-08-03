@@ -286,9 +286,9 @@ class OrderWrapperServiceClient(LTAService):
         if __response.ok:
             response = __response.content
         else:
-            logger.debug('Non 200 response from lta.order_scenes')
-            logger.debug('Response:{0}'.format(__response.content))
-            logger.debug('Request:{0}'.format(payload))
+            logger.critical('Non 200 response from lta.order_scenes, '
+                            'Response:{0}, '
+                            'Request:{1}'.format(__response.content, payload))
             msg = StringIO()
             msg.write('Error in lta.OrderWrapperServiceClient.order_scenes\n')
             msg.write('Non 200 response code from service\n')
@@ -408,7 +408,7 @@ class OrderWrapperServiceClient(LTAService):
 
         if not utils.connections.is_reachable(url, timeout=3):
             msg = 'ERR Link received from LTA is invalid: {}'.format(url)
-            logger.debug(msg)
+            logger.critical(msg)
             return False
         else:
             return True

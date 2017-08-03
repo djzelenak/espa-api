@@ -65,7 +65,7 @@ class ReportingProvider(ReportingProviderInterfaceV0):
                 stat = result[0]['statistic']
             return stat
         else:
-            logger.debug("Query was empty for {0}: {1}".format(name, query))
+            logger.critical("Query was empty for {0}: {1}".format(name, query))
             return None
 
     def get_stat(self, name):
@@ -92,14 +92,14 @@ class ReportingProvider(ReportingProviderInterfaceV0):
                 db.select(query)
                 result = db.dictfetchall
                 if len(result) < 1:
-                    logger.debug('Query was empty for {0}: {1}'.format(name, query))
+                    logger.critical('Query was empty for {0}: {1}'.format(name, query))
                     return None
                 stat = {groupby: dict()}
                 for row in result:
                     stat[groupby][row[groupby]] = row['statistic']
             return stat
         else:
-            logger.debug("Query was empty for {0}: {1}".format(name, query))
+            logger.critical("Query was empty for {0}: {1}".format(name, query))
             return None
 
 

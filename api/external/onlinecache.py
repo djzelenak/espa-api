@@ -29,7 +29,7 @@ class OnlineCache(object):
 
         if not self.orderpath:
             msg = '{} not defined in configurations'.format(self.__order_path_key)
-            logger.debug(msg)
+            logger.critical(msg)
             raise OnlineCacheException(msg)
 
         host, user, pw = self.config.get([self.__host_key,
@@ -41,7 +41,7 @@ class OnlineCache(object):
         try:
             self.client.execute('ls')
         except Exception as e:
-            logger.debug('No connection to OnlineCache host: {}'.format(e))
+            logger.critical('No connection to OnlineCache host: {}'.format(e))
             raise OnlineCacheException(e)
 
     def exists(self, orderid, filename=None):
@@ -72,7 +72,7 @@ class OnlineCache(object):
         """
         if not self.exists(orderid, filename):
             msg = 'Invalid orderid {} or filename {}'.format(orderid, filename)
-            logger.debug(msg)
+            logger.critical(msg)
             return False
 
         if filename:
@@ -144,14 +144,14 @@ class OnlineCache(object):
             result = self.client.execute(cmd)
         except Exception, exception:
             if not silent:
-                logger.debug('Error executing command: {} '
-                             'Raised exception: {}'.format(cmd, exception))
+                logger.critical('Error executing command: {} '
+                                'Raised exception: {}'.format(cmd, exception))
             raise OnlineCacheException(exception)
 
         if 'stderr' in result and result['stderr']:
             if not silent:
-                logger.debug('Error executing command: {} '
-                             'stderror returned: {}'.format(cmd, result['stderr']))
+                logger.critical('Error executing command: {} '
+                                'stderror returned: {}'.format(cmd, result['stderr']))
 
             raise OnlineCacheException(result['stderr'])
 

@@ -105,7 +105,7 @@ class User(object):
                 return username, cp.get('apiemailreceive'), 'espa', 'admin', ''
             else:
                 msg = "ERR validating espa_admin, invalid password "
-                logger.debug(msg)
+                logger.critical(msg)
                 raise UserException(msg)
         else:
             eu = ers.get_user_info(username, password)
@@ -139,9 +139,9 @@ class User(object):
                 user_id = db.fetcharr[0]['id']
             except:
                 exc_type, exc_val, exc_trace = sys.exc_info()
-                logger.debug("ERR user find_or_create args {0} {1} " \
-                             "{2} {3}\n trace: {4}".format(username, email, first_name,
-                                                           last_name, traceback.format_exc()))
+                logger.critical("ERR user find_or_create args {0} {1} " \
+                                "{2} {3}\n trace: {4}".format(username, email, first_name,
+                                                              last_name, traceback.format_exc()))
                 raise exc_type, exc_val, exc_trace
 
         return user_id
@@ -171,8 +171,8 @@ class User(object):
                                i["last_name"], i["contactid"])
                     ret.append(obj)
         except DBConnectException as e:
-                logger.debug('Error querying for users: {}\n'
-                             'sql: {}'.format(e.message, log_sql))
+                logger.critical('Error querying for users: {}\n'
+                                'sql: {}'.format(e.message, log_sql))
                 raise UserException(e)
         return ret
 
@@ -240,7 +240,7 @@ class User(object):
             result = db[0]
         except:
             exc_type, exc_val, exc_trace = sys.exc_info()
-            logger.debug("ERR retrieving roles for user. msg{0} trace{1}".format(exc_val, traceback.format_exc()))
+            logger.critical("ERR retrieving roles for user. msg{0} trace{1}".format(exc_val, traceback.format_exc()))
             raise exc_type, exc_val, exc_trace
 
         return result

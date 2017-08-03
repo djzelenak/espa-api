@@ -142,8 +142,8 @@ class Order(object):
                 db.execute(sql, params)
                 db.commit()
         except DBConnectException as e:
-            logger.debug('Error creating new order: {}\n'
-                         'sql: {}'.format(e.message, log_sql))
+            logger.critical('Error creating new order: {}\n'
+                            'sql: {}'.format(e.message, log_sql))
             raise OrderException(e)
 
         order = Order.find(params['orderid'])
@@ -187,9 +187,9 @@ class Order(object):
         try:
             Scene.create(bulk_ls)
         except SceneException as e:
-            logger.debug('Order creation failed on scene injection, '
-                         'order: {}\nexception: {}'
-                         .format(order.orderid, e.message))
+            logger.critical('Order creation failed on scene injection, '
+                            'order: {}\nexception: {}'
+                            .format(order.orderid, e.message))
 
             with db_instance() as db:
                 db.execute('delete ordering_order where id = %s',
@@ -228,8 +228,8 @@ class Order(object):
                     obj = Order(**od)
                     ret.append(obj)
         except DBConnectException as e:
-            logger.debug('Error order where: {}\n'
-                         'sql: {}'.format(e.message, log_sql))
+            logger.critical('Error order where: {}\n'
+                            'sql: {}'.format(e.message, log_sql))
             raise OrderException(e)
 
         return ret
@@ -437,7 +437,7 @@ class Order(object):
             except sensor.ProductNotImplemented:
                 log_msg = ('Received unsupported product via EE: {}'
                            .format(item['sceneid']))
-                logger.debug(log_msg)
+                logger.critical(log_msg)
                 continue
 
             short = scene_info.shortname
@@ -473,8 +473,8 @@ class Order(object):
 
                 ret = db[0]['email']
         except DBConnectException as e:
-            logger.debug('Error retrieving user_email: {}'
-                         .format(log_sql))
+            logger.critical('Error retrieving user_email: {}'
+                            .format(log_sql))
             raise OrderException(e)
 
         return ret
@@ -517,8 +517,8 @@ class Order(object):
                             .format(self.orderid, self.id, log_sql,
                                     zip(attr_tup, vals)))
         except DBConnectException as e:
-            logger.debug('Error saving order: {}\nsql: {}'
-                         .format(e.message, log_sql))
+            logger.critical('Error saving order: {}\nsql: {}'
+                            .format(e.message, log_sql))
 
             raise OrderException(e)
 
@@ -546,8 +546,8 @@ class Order(object):
                 db.execute(sql, (db_extns.AsIs(att), val, self.id))
                 db.commit()
         except DBConnectException as e:
-            logger.debug('Error updating order: {}\nSQL: {}'
-                         .format(e.message, log_sql))
+            logger.critical('Error updating order: {}\nSQL: {}'
+                            .format(e.message, log_sql))
 
         self.__setattr__(att, val)
 

@@ -38,7 +38,7 @@ def no_results_found(e):
 
 @app.errorhandler(Exception)
 def internal_server_error(e):
-    logger.debug('Internal Server Error: {}'.format(e))
+    logger.critical('Internal Server Error: {}'.format(e))
     return SystemErrorResponse()
 
 transport_api = Api(app)

@@ -110,8 +110,8 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 onlinecache.delete(orderid, filename=product_file)
                 onlinecache.delete(orderid, filename=cksum_file)
             else:
-                logger.debug('ERR file was not found: {}'
-                             .format(completed_file_location))
+                logger.critical('ERR file was not found: {}'
+                                .format(completed_file_location))
             Scene.bulk_update([scene.id], Scene.cancel_opts())
             return False
 
@@ -709,13 +709,13 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 # we failed to load scenes missed on initial EE order import
                 # we do not want to delete the order, as we would on initial
                 # creation
-                logger.debug('EE Scene creation failed on scene injection, '
-                             'for missing EE scenes on existing order '
-                             'order: {}\nexception: {}'.format(order_id, e.message))
+                logger.critical('EE Scene creation failed on scene injection, '
+                                'for missing EE scenes on existing order '
+                                'order: {}\nexception: {}'.format(order_id, e.message))
             else:
-                logger.debug('EE Order creation failed on scene injection, '
-                             'order: {}\nexception: {}'
-                             .format(order_id, e.message))
+                logger.critical('EE Order creation failed on scene injection, '
+                                'order: {}\nexception: {}'
+                                .format(order_id, e.message))
 
                 with db_instance() as db:
                     db.execute('delete ordering_order where id = %s',
@@ -962,7 +962,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         :return: True
         """
         if not lta.check_lta_available():
-            logger.debug('LTA down. Skip handle_submitted_landsat_products...')
+            logger.critical('LTA down. Skip handle_submitted_landsat_products...')
             return False
         logger.info('Handling submitted landsat products...')
         # Here's the real logic for this handling submitted landsat products
@@ -979,7 +979,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 except Exception, e:
                     msg = ('Could not update_landsat_product_status for {0}\n'
                            'Exception:{1}'.format(contact_id, e))
-                    logger.debug(msg)
+                    logger.critical(msg)
 
         return True
 
@@ -989,7 +989,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         :return: True
         """
         if not lpdaac.check_lpdaac_available():
-            logger.debug('DAAC down. Skip handle_submitted_modis_products...')
+            logger.critical('DAAC down. Skip handle_submitted_modis_products...')
             return False
         logger.info("Handling submitted modis products...")
 
@@ -1051,7 +1051,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                             logger.info("{0} plot is on cache".format(order.orderid))
                         p.save()
                 else:
-                    logger.debug('{}'.format(plots_in_order))
+                    logger.critical('{}'.format(plots_in_order))
                     raise ValueError('Too many ({n}) plots in order {oid}'.format(n=len(plots_in_order), oid=order.id))
         return True
 
@@ -1090,14 +1090,14 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     sent = None
                     sent = self.send_completion_email(order)
                     if sent is None:
-                        logger.debug('Completion email not sent for {0}'.format(order.orderid))
+                        logger.critical('Completion email not sent for {0}'.format(order.orderid))
                         raise ProductionProviderException("Completion email not sent from "
                                                           "update_order_if_complete\nfor order {}".format(order.orderid))
                     else:
                         order.completion_email_sent = datetime.datetime.now()
                         order.save()
                 except Exception, e:
-                    logger.debug('Error calling send_completion_email\nexception: {}'.format(e))
+                    logger.critical('Error calling send_completion_email\nexception: {}'.format(e))
                     raise e
         return True
 
@@ -1114,8 +1114,8 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 scene.status = 'error'
                 scene.note = 'product download not found'
                 scene.save()
-                logger.debug("scene download size re-calcing failed, {}"
-                             .format(scene.product_distro_location))
+                logger.critical("scene download size re-calcing failed, {}"
+                                .format(scene.product_distro_location))
 
         return True
 
@@ -1163,9 +1163,9 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     logger.info('Deleting {0} from online cache disk'.format(order.orderid))
                     onlinecache.delete(order.orderid)
             except onlinecache.OnlineCacheException:
-                logger.debug('Could not delete {0} from the online cache'.format(order.orderid))
+                logger.critical('Could not delete {0} from the online cache'.format(order.orderid))
             except Exception as e:
-                logger.debug('Exception purging {0}\nexception: {1}'.format(order.orderid, e))
+                logger.critical('Exception purging {0}\nexception: {1}'.format(order.orderid, e))
 
         end_capacity = onlinecache.capacity()
         logger.info('Ending cache capacity:{0}'.format(end_capacity))
@@ -1181,7 +1181,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
     def handle_failed_ee_updates(scenes):
         n_failed = len(scenes)
         if n_failed:
-            logger.debug('Failed LTA status count: {} scenes'.format(n_failed))
+            logger.critical('Failed LTA status count: {} scenes'.format(n_failed))
         for s in scenes:
             try:
                 lta.update_order_status(s.order_attr('ee_order_id'), s.ee_unit_id,

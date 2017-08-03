@@ -46,9 +46,9 @@ class API(object):
         try:
             response = self.admin.access_configuration(key=key, value=value, delete=delete)
         except:
-            logger.debug('ERR version0 configuration_management:'
-                         ' {}\ntrace: {}\n'.format(','.join([key, value, delete]),
-                                                   traceback.format_exc()))
+            logger.critical('ERR version0 configuration_management:'
+                            ' {}\ntrace: {}\n'.format(','.join([key, value, delete]),
+                                                      traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -57,8 +57,8 @@ class API(object):
         try:
             response = self.admin.restore_configuration(filepath)
         except:
-            logger.debug('ERR version0 load_configuration: '
-                         '{}\ntrace: {}\n'.format(filepath, traceback.format_exc()))
+            logger.critical('ERR version0 load_configuration: '
+                            '{}\ntrace: {}\n'.format(filepath, traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -67,8 +67,8 @@ class API(object):
         try:
             response = self.admin.backup_configuration(filepath)
         except:
-            logger.debug('ERR version0 backup_configuration: '
-                         '{}\ntrace: {}\n'.format(filepath, traceback.format_exc()))
+            logger.critical('ERR version0 backup_configuration: '
+                            '{}\ntrace: {}\n'.format(filepath, traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -82,7 +82,7 @@ class API(object):
         try:
             response = str(self.reporting.run(name))
         except:
-            logger.debug("ERR version0 get_report name {0}\ntraceback {1}".format(name, traceback.format_exc()))
+            logger.critical("ERR version0 get_report name {0}\ntraceback {1}".format(name, traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -95,7 +95,7 @@ class API(object):
         try:
             response = self.reporting.listing()
         except:
-            logger.debug("ERR version0 available_reports traceback {0}".format(traceback.format_exc()))
+            logger.critical("ERR version0 available_reports traceback {0}".format(traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -108,7 +108,7 @@ class API(object):
         try:
             response = self.admin.get_system_status()
         except:
-            logger.debug("ERR version0 get_system_status. traceback {0}".format(traceback.format_exc()))
+            logger.critical("ERR version0 get_system_status. traceback {0}".format(traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -121,7 +121,7 @@ class API(object):
             response = self.admin.update_system_status(params)
         except:
             exc_type, exc_val, exc_trace = sys.exc_info()
-            logger.debug("ERR updating system status params: {0}\n exception {1}".format(params, traceback.format_exc()))
+            logger.critical("ERR updating system status params: {0}\n exception {1}".format(params, traceback.format_exc()))
             raise exc_type, exc_val, exc_trace
 
         return response
@@ -134,7 +134,7 @@ class API(object):
             return self.admin.get_system_config()
         except:
             exc_type, exc_val, exc_trace = sys.exc_info()
-            logger.debug(
+            logger.critical(
                 "ERR retrieving system config: exception {0}".format(traceback.format_exc()))
             raise exc_type, exc_val, exc_trace
 
@@ -146,7 +146,7 @@ class API(object):
         try:
             response = self.reporting.stat_list()
         except:
-            logger.debug("ERR version0 available_stats traceback {0}".format(traceback.format_exc()))
+            logger.critical("ERR version0 available_stats traceback {0}".format(traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -159,6 +159,6 @@ class API(object):
         try:
             response = self.reporting.get_stat(name)
         except:
-            logger.debug("ERR version0 get_stat name: {0}, traceback: {1}".format(name, traceback.format_exc()))
+            logger.critical("ERR version0 get_stat name: {0}, traceback: {1}".format(name, traceback.format_exc()))
             response = default_error_message
         return response
