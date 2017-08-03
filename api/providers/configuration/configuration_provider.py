@@ -48,14 +48,13 @@ class ConfigurationProvider(ConfigurationProviderInterfaceV0):
         else:
             ret = current.get(key)
 
-        if 'ESPA_API_EMAIL_RECEIVE' in key and os.environ.get('ESPA_API_EMAIL_RECEIVE'):
+        if 'ESPA_API_EMAIL_RECEIVE' in key:
+            val = os.getenv('ESPA_API_EMAIL_RECEIVE', current.get('apiemailreceive'))
             if isinstance(ret, list):
                 idx = key.index('ESPA_API_EMAIL_RECEIVE')
-                ret[idx] = os.environ['ESPA_API_EMAIL_RECEIVE']
+                ret[idx] = val
             else:
-                ret = os.environ['ESPA_API_EMAIL_RECEIVE']
-        else:
-            ret = current.get('apiemailreceive')
+                ret = val
 
         if isinstance(ret, list):
             return tuple(ret)
