@@ -81,7 +81,7 @@ class ReportingProvider(ReportingProviderInterfaceV0):
 
     def get_multistat(self, name):
         """ Returns SQL columns/rows as JSON keys/arrays """
-        if name not in STATS:
+        if name not in MULTISTATS:
             raise NotImplementedError("value: {0}".format(name))
 
         query = MULTISTATS[name]['query']
@@ -101,7 +101,6 @@ class ReportingProvider(ReportingProviderInterfaceV0):
         else:
             logger.critical("Query was empty for {0}: {1}".format(name, query))
             return None
-
 
     def missing_auxiliary_data(self, sensor_group, year=None):
         _sensor_groups = {'L17': {1978: ['ncep', 'toms']},
