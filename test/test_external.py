@@ -130,8 +130,12 @@ class TestOnlineCache(unittest.TestCase):
     @patch('api.external.onlinecache.OnlineCache.execute_command', mockonlinecache.list)
     @patch('api.external.onlinecache.sshcmd')
     def setUp(self, MockSSHCmd):
+        os.environ['espa_api_testing'] = 'True'
         MockSSHCmd.return_value = MagicMock()
         self.cache = onlinecache.OnlineCache()
+
+    def tearDown(self):
+        os.environ['espa_api_testing'] = ''
 
     @patch('api.external.onlinecache.OnlineCache.execute_command', mockonlinecache.list)
     def test_cache_listorders(self):
@@ -157,7 +161,11 @@ class TestHadoopHandler(unittest.TestCase):
     Tests for the hadoop interaction class
     """
     def setUp(self):
+        os.environ['espa_api_testing'] = 'True'
         self.hadoop = HadoopHandler()
+
+    def tearDown(self):
+        os.environ['espa_api_testing'] = ''
 
     @patch('api.external.hadoop.HadoopHandler._remote_cmd', mockhadoop.list_jobs)
     def test_list_jobs(self):
