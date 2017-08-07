@@ -10,6 +10,7 @@ SET check_function_bodies = false;
 SET client_min_messages = warning;
 
 
+CREATE SCHEMA espa_unit_test;
 SET search_path = espa_unit_test;
 
 --

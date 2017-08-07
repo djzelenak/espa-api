@@ -86,11 +86,9 @@ class Emails(object):
                            subject=subject,
                            body=email_msg)
 
-    def send_all_initial(self):
+    def send_all_initial(self, orders):
         '''Finds all the orders that have not had their initial emails sent and
         sends them'''
-
-        orders = Order.where({'status': 'ordered', 'initial_email_sent IS': None})
         for o in orders:
             if not o.initial_email_sent:
                 self.send_initial(o.orderid)

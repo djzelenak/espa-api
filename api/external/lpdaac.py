@@ -40,7 +40,7 @@ class LPDAACService(object):
         :return: bool
         """
         url = 'http://{}'.format(self.datapool)
-        return utils.connections.is_reachable(url)
+        return utils.connections.is_reachable(url, timeout=1)
 
     def input_exists(self, product):
         '''Determines if a LPDAAC product is available for download

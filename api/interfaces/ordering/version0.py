@@ -76,9 +76,9 @@ class API(object):
         try:
             response = self.ordering.available_products(product_id, username)
         except:
-            logger.debug("ERR version0 available_prods_get product_id: {0} "
-                         "username: {1}\nexception {2}".format(product_id, username,
-                                                               traceback.format_exc()))
+            logger.critical("ERR version0 available_prods_get product_id: {0} "
+                            "username: {1}\nexception {2}".format(product_id, username,
+                                                                  traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -95,7 +95,7 @@ class API(object):
         try:
             response = self.ordering.fetch_user_orders(user_id, filters=filters)
         except:
-            logger.debug("ERR version0 fetch_user_orders arg: {0}\nexception {1}".format(user_id, traceback.format_exc()))
+            logger.critical("ERR version0 fetch_user_orders arg: {0}\nexception {1}".format(user_id, traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -112,7 +112,7 @@ class API(object):
         try:
             response = self.ordering.fetch_user_orders_ext(user_id, filters=filters)
         except:
-            logger.debug("ERR version0 fetch_user_orders arg: {0}\nexception {1}".format(user_id, traceback.format_exc()))
+            logger.critical("ERR version0 fetch_user_orders arg: {0}\nexception {1}".format(user_id, traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -127,7 +127,7 @@ class API(object):
         try:
             response = self.ordering.fetch_user_orders_feed(email)
         except:
-            logger.debug("ERR version0 fetch_user_orders_feed email: {0}\nexception: {1}".format(email, traceback.format_exc()))
+            logger.critical("ERR version0 fetch_user_orders_feed email: {0}\nexception: {1}".format(email, traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -144,7 +144,7 @@ class API(object):
         try:
             response = self.ordering.fetch_order(ordernum)
         except:
-            logger.debug("ERR version0 fetch_order arg: {0}\nexception {1}".format(ordernum, traceback.format_exc()))
+            logger.critical("ERR version0 fetch_order arg: {0}\nexception {1}".format(ordernum, traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -179,7 +179,7 @@ class API(object):
             logger.info('Requested inputs not available: {0}\nresponse {1}'.format(order, e.response))
             response = e.response
         except:
-            logger.debug("ERR version0 place_order arg: {0}\nexception {1}".format(order, traceback.format_exc()))
+            logger.critical("ERR version0 place_order arg: {0}\nexception {1}".format(order, traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -201,7 +201,7 @@ class API(object):
         try:
             response = self.ordering.item_status(orderid, itemid)
         except:
-            logger.debug("ERR version0 item_status itemid {0}  orderid: {1}\nexception {2}".format(itemid, orderid, traceback.format_exc()))
+            logger.critical("ERR version0 item_status itemid {0}  orderid: {1}\nexception {2}".format(itemid, orderid, traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -214,7 +214,7 @@ class API(object):
         try:
             response = self.ordering.get_system_status()
         except:
-            logger.debug("ERR version0 get_system_status. traceback {0}".format(traceback.format_exc()))
+            logger.critical("ERR version0 get_system_status. traceback {0}".format(traceback.format_exc()))
             response = default_error_message
 
         return response

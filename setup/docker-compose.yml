@@ -1,0 +1,23 @@
+version: "2"
+
+services:
+    memcached:
+      image: memcached:1.4.39
+      ports:
+        - "127.0.0.1:30070:11211"
+    postgres:
+      build: .
+      ports:
+        - "127.0.0.1:30080:5432"
+      environment: 
+        - PGDATA=/usr/local/pgsql/data
+        - POSTGRES_PASSWORD=password1
+        - POSTGRES_USER=espadev
+        - POSTGRES_DB=espadev
+        - POSTGRES_INITDB_ARGS=-D $$PGDATA --locale en_US.UTF-8 -E UTF8 --auth-local=trust --auth-host=password
+      volumes: 
+         - postgres-volume:/usr/local/pgsql/data
+
+volumes:
+  postgres-volume:
+

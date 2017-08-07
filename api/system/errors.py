@@ -37,6 +37,7 @@ class Errors(object):
         self.conditions.append(self.missing_aux_data)
         self.conditions.append(self.network_errors)
         self.conditions.append(self.night_scene)
+        self.conditions.append(self.almost_night_scene)
         self.conditions.append(self.no_such_file_or_directory)
         self.conditions.append(self.oli_no_sr)
         self.conditions.append(self.oli_only_no_thermal)
@@ -45,6 +46,7 @@ class Errors(object):
         self.conditions.append(self.warp_errors)
         self.conditions.append(self.node_space_errors)
         self.conditions.append(self.lasrc_mystery_segfaults)
+        self.conditions.append(self.reproject_errors)
 
         #construct the named tuple for the return value of this module
         self.resolution = collections.namedtuple('ErrorResolution',
@@ -157,8 +159,8 @@ class Errors(object):
                                      sensor.Landsat)
 
         if resolution is not None and is_landsat:
-            logger.debug("err api/errors.py gzip_errors_online_cache\n"\
-                        "product_name: {0}\nerror_message: {1}".format(self.product_name, error_message))
+            logger.critical("err api/errors.py gzip_errors_online_cache\n"\
+                            "product_name: {0}\nerror_message: {1}".format(self.product_name, error_message))
             emails.Emails().send_gzip_error_email(self.product_name)
 
         return resolution
@@ -173,14 +175,21 @@ class Errors(object):
         return self.__find_error(error_message, keys, status, reason)
 
     def night_scene(self, error_message):
-        '''Indicates that LEDAPS/l8sr could not process a scene because the
+        '''Indicates that LEDAPS/l8sr TOA could not process a scene because the
         sun was beneath the horizon'''
 
-        keys = ['solar zenith angle out of range',
-                'Solar zenith angle is out of range',
-                'Solar zenith angle is too large']
+        keys = ['solar zenith angle out of range']
         status = 'unavailable'
-        reason = 'This scene cannot be processed due to the high solar zenith angle'
+        reason = 'Solar zenith angle out of range, cannot process night scene'
+        return self.__find_error(error_message, keys, status, reason)
+
+    def almost_night_scene(self, error_message):
+        '''Indicates that LEDAPS/l8sr SR could not process a scene because the
+        sun elevation was below 14 degrees'''
+
+        keys = ['solar zenith angle is too large']
+        status = 'unavailable'
+        reason = 'Solar zenith angle is too large, cannot process scene to SR'
         return self.__find_error(error_message, keys, status, reason)
 
     def missing_aux_data(self, error_message):
@@ -276,6 +285,12 @@ class Errors(object):
         reason = 'Unexpected internal memory error'
         extras = self.__add_retry('segfault_errors')
         return self.__find_error(error_message, keys, status, reason, extras)
+
+    def reproject_errors(self, error_message):
+        keys = ['WarpVerificationError: Failed to compute statistics, no valid pixels found in sampling']
+        status = 'unavailable'
+        reason = 'No valid pixels found for reprojection'
+        return self.__find_error(error_message, keys, status, reason)
 
 
 def resolve(error_message, name):

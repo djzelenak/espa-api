@@ -22,9 +22,8 @@ class RemoteHost(object):
         """ """
         try:
             if self.debug is True:
-                logger.debug("Attempting to run [%s] on %s as %s" % (command,
-                                                                     self.host,
-                                                                     self.user))
+                logger.critical("Attempting to run [%s] on %s as %s" %
+                                (command,  self.host, self.user))
 
             self.client = paramiko.SSHClient()
             self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -45,11 +44,9 @@ class RemoteHost(object):
             return {'stdout': stdout.readlines(), 'stderr': stderr.readlines()}
 
         except paramiko.SSHException as e:
-            logger.debug('Failed running [{}]'
-                         ' on {} as {} exception: {}'.format(command,
-                                                             self.host,
-                                                             self.user,
-                                                             e))
+            logger.critical('Failed running [{}]'
+                            ' on {} as {} exception: {}'
+                            .format(command, self.host, self.user, e))
 
             return e
 

@@ -81,3 +81,7 @@ class InventoryException(Exception):
         self.response = {'Inputs Not Available': msg}
 
 
+class InventoryConnectionException(Exception):
+    """Exception handling if input data pool is down"""
+    def __init__(self, msg):
+        super(InventoryConnectionException, self).__init__(msg)

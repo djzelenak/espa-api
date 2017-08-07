@@ -1,7 +1,8 @@
 import os
+import sys
 import logging
 
-from logging import FileHandler
+from logging import StreamHandler, FileHandler
 from logging import Formatter
 from logging import Filter
 from logging.handlers import SMTPHandler
@@ -18,27 +19,25 @@ else:
 
 LOG_FORMAT = ("%(asctime)s [%(levelname)s]: %(message)s in %(pathname)s:%(lineno)d")
 
-class DbgFilter(Filter):
-    def filter(self, rec):
-        return rec.levelno == logging.DEBUG
-
 ilogger = logging.getLogger("api")
 ilogger.setLevel(logging.DEBUG)
 
-ih = FileHandler("/var/log/uwsgi/espa-api-info.log")
-dh = FileHandler("/var/log/uwsgi/espa-api-debug.log")
-eh = SMTPHandler(mailhost='localhost', fromaddr=config.get('apiemailsender'), toaddrs=config.get('apiemailreceive').split(','), subject='ESPA API ERROR')
+espa_log_dir = os.getenv('ESPA_LOG_DIR')
+if espa_log_dir:
+    ih = FileHandler(os.path.join(espa_log_dir, 'espa-api-flask.log'))
+else:
+    ih = StreamHandler(stream=sys.stdout)
+eh = SMTPHandler(mailhost='localhost', fromaddr=config.get('apiemailsender'), toaddrs=config.get('ESPA_API_EMAIL_RECEIVE').split(','), subject='ESPA API ERROR')
 
-ih.setLevel(logging.INFO)
-dh.setLevel(logging.DEBUG)
-eh.setLevel(logging.DEBUG)
+if config.mode not in ('tst', 'dev'):
+    ih.setLevel(logging.INFO)
+else:
+    ih.setLevel(logging.DEBUG)
+eh.setLevel(logging.CRITICAL)
 
-for handler in [ih, dh, eh]:
+for handler in [ih, eh]:
     ilogger.addHandler(handler)
 
-    if isinstance(handler, logging.FileHandler):
+    if isinstance(handler, logging.StreamHandler):
         handler.setFormatter(Formatter(LOG_FORMAT))
-
-    if handler.level == logging.DEBUG:
-        handler.addFilter(DbgFilter())
 

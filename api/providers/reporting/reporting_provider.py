@@ -2,7 +2,7 @@ from api.util.dbconnect import DBConnectException, db_instance
 from api.providers.reporting import ReportingProviderInterfaceV0
 from api.system.logger import ilogger as logger
 from api.providers.reporting import REPORTS
-from api.providers.reporting import STATS
+from api.providers.reporting import STATS, MULTISTATS
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 
 import copy
@@ -65,7 +65,7 @@ class ReportingProvider(ReportingProviderInterfaceV0):
                 stat = result[0]['statistic']
             return stat
         else:
-            logger.debug("Query was empty for {0}: {1}".format(name, query))
+            logger.critical("Query was empty for {0}: {1}".format(name, query))
             return None
 
     def get_stat(self, name):
@@ -78,6 +78,29 @@ class ReportingProvider(ReportingProviderInterfaceV0):
             stat = self.stat_query(name)
 
         return stat
+
+    def get_multistat(self, name):
+        """ Returns SQL columns/rows as JSON keys/arrays """
+        if name not in MULTISTATS:
+            raise NotImplementedError("value: {0}".format(name))
+
+        query = MULTISTATS[name]['query']
+        groupby = MULTISTATS[name]['groupby']
+
+        if query is not None and len(query) > 0:
+            with db_instance() as db:
+                db.select(query)
+                result = db.dictfetchall
+                if len(result) < 1:
+                    logger.debug('Query was empty for {0}: {1}'.format(name, query))
+                    return None
+                stat = {groupby: dict()}
+                for row in result:
+                    stat[groupby][row[groupby]] = row['statistic']
+            return stat
+        else:
+            logger.critical("Query was empty for {0}: {1}".format(name, query))
+            return None
 
     def missing_auxiliary_data(self, sensor_group, year=None):
         _sensor_groups = {'L17': {1978: ['ncep', 'toms']},

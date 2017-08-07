@@ -10,6 +10,7 @@ from api.interfaces.admin.version1 import API as APIv1
 from api.system.logger import ilogger as logger
 from api.domain.user import User
 from api.transports.http_json import MessagesResponse
+from api.providers.caching.caching_provider import CachingProvider
 
 from flask import jsonify
 from flask import make_response
@@ -20,7 +21,7 @@ from flask.ext.restful import Resource
 
 espa = APIv1()
 auth = HTTPBasicAuth()
-cache = memcache.Client(['127.0.0.1:11211'], debug=0)
+cache = CachingProvider()
 
 
 def user_ip_address():
@@ -159,7 +160,10 @@ class ProductionStats(Resource):
 
     @staticmethod
     def get(version, name):
-        return espa.get_stat(name)
+        if 'statistics' in request.url:
+            return espa.get_stat(name)
+        if 'multistat' in request.url:
+            return espa.get_multistat(name)
 
 
 class SystemStatus(Resource):
@@ -186,7 +190,7 @@ class SystemStatus(Resource):
             else:
                 return 'success'
         except Exception as e:
-            logger.debug("ERROR updating system status: {0}".format(traceback.format_exc()))
+            logger.critical("ERROR updating system status: {0}".format(traceback.format_exc()))
             resp = MessagesResponse(errors=['internal server error'],
                                     code=500)
         return resp()

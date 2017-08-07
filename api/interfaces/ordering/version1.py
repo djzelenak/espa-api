@@ -8,6 +8,7 @@
 import traceback
 from api.system.logger import ilogger as logger
 from api.domain import default_error_message, user_api_operations
+from api import ValidationException, InventoryException, InventoryConnectionException
 
 
 class API(object):
@@ -78,14 +79,14 @@ class API(object):
         try:
             response = self.ordering.available_products(product_id, username)
         except:
-            logger.debug("ERR version1 available_prods_get product_id: {0} "
-                         "username: {1}\nexception {2}".format(product_id, username,
-                                                               traceback.format_exc()))
+            logger.critical("ERR version1 available_prods_get product_id: {0} "
+                            "username: {1}\nexception {2}".format(product_id, username,
+                                                                  traceback.format_exc()))
             response = default_error_message
 
         return response
 
-    def fetch_user_orders(self, username='', email='', filters={}):
+    def fetch_user_orders(self, username='', email='', user_id='', filters={}):
         """ Return orders given a user id
 
         Args:
@@ -97,12 +98,13 @@ class API(object):
         try:
             response = self.ordering.fetch_user_orders(email=email,
                                                        username=username,
+                                                       user_id=user_id,
                                                        filters=filters)
         except:
             response = default_error_message
-            logger.debug("ERR version1 fetch_user_orders arg: {0}\n"
-                         "exception {1}".format(username or email,
-                                                traceback.format_exc()))
+            logger.critical("ERR version1 fetch_user_orders arg: {0}\n"
+                            "exception {1}".format(username or email,
+                                                   traceback.format_exc()))
 
         return response
 
@@ -118,8 +120,8 @@ class API(object):
         try:
             response = self.ordering.fetch_order(ordernum)
         except:
-            logger.debug("ERR version1 fetch_order arg: {0}\n"
-                         "exception {1}".format(ordernum, traceback.format_exc()))
+            logger.critical("ERR version1 fetch_order arg: {0}\n"
+                            "exception {1}".format(ordernum, traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -146,11 +148,15 @@ class API(object):
             self.metrics.collect(order)
             # capture the order
             response = self.ordering.place_order(order, user)
-        except:
-            logger.debug("ERR version1 place_order arg: {2}: {0}\n"
-                         "exception {1}".format(order, traceback.format_exc(),
-                                                user.username))
+        except (InventoryException, ValidationException, InventoryConnectionException) as e:
+            logger.info('Bad order submission: User %s Order %s\nexception %s',
+                        user.username, order, traceback.format_exc())
             raise
+        except:
+            logger.critical("ERR version1 place_order arg: %s: %s\n"
+                            "exception %s", user.username, order,
+                            traceback.format_exc())
+            response = default_error_message
 
         return response
 
@@ -171,7 +177,7 @@ class API(object):
         try:
             response = self.ordering.item_status(orderid, itemid, username, filters)
         except:
-            logger.debug("ERR version1 item_status itemid {0}  orderid: {1}\nexception {2}".format(itemid, orderid, traceback.format_exc()))
+            logger.critical("ERR version1 item_status itemid {0}  orderid: {1}\nexception {2}".format(itemid, orderid, traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -184,7 +190,7 @@ class API(object):
         try:
             response = self.ordering.get_system_status()
         except:
-            logger.debug("ERR version1 get_system_status. traceback {0}".format(traceback.format_exc()))
+            logger.critical("ERR version1 get_system_status. traceback {0}".format(traceback.format_exc()))
             response = default_error_message
         return response
 
@@ -197,8 +203,8 @@ class API(object):
             # TODO: Allow getting user-specific backlog?
             response = self.reporting.get_stat('stat_backlog_depth')
         except:
-            logger.debug("ERR version1 get_backlog, traceback: {0}"
-                         .format(traceback.format_exc()))
+            logger.critical("ERR version1 get_backlog, traceback: {0}"
+                            .format(traceback.format_exc()))
             raise
         return response
 
@@ -212,7 +218,7 @@ class API(object):
         try:
             response = self.ordering.cancel_order(orderid, request_address)
         except:
-            logger.debug("ERR version1 cancel_order, traceback: {0}"
-                         .format(traceback.format_exc()))
+            logger.critical("ERR version1 cancel_order, traceback: {0}"
+                            .format(traceback.format_exc()))
             raise
         return response

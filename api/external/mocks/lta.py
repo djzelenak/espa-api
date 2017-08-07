@@ -42,11 +42,11 @@ def get_available_orders():
         ]
     """
     ret = {}
-    ret[(123, 'klsmith@usgs.gov', 418781)] = [{'sceneid': 'LE70900652008327EDC00',
+    ret[('123', 'klsmith@usgs.gov', 418781)] = [{'sceneid': 'LE70900652008327EDC00',
                                                'unit_num': 789},
                                               {'sceneid': 'LE70900652008327EDC00',
                                                'unit_num': 780}]
-    ret[(124, 'klsmith@usgs.gov', 418781)] = [{'sceneid': 'LE70900652008327EDC00',
+    ret[('124', 'klsmith@usgs.gov', 418781)] = [{'sceneid': 'LE70900652008327EDC00',
                                                'unit_num': 780},
                                               {'sceneid': 'LE70900652008327EDC00',
                                                'unit_num': 799}]
@@ -56,10 +56,10 @@ def get_available_orders():
 def get_available_orders_partial(partial=False):
     ret = {}
     if partial:
-        ret[(125, 'klsmith@usgs.gov', 418781)] = [{'sceneid': 'LE70900652008327EDC00',
+        ret[('125', 'klsmith@usgs.gov', 418781)] = [{'sceneid': 'LE70900652008327EDC00',
                                                    'unit_num': 789}]
     else:
-        ret[(125, 'klsmith@usgs.gov', 418781)] = [{'sceneid': 'LE70900652008327EDC00',
+        ret[('125', 'klsmith@usgs.gov', 418781)] = [{'sceneid': 'LE70900652008327EDC00',
                                                    'unit_num': 789},
                                                   {'sceneid': 'LT50900652008327EDC00',
                                                    'unit_num': 780}]

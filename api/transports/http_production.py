@@ -83,7 +83,8 @@ class ProductionOperations(Resource):
             params = request.args.to_dict(flat=True)
             resp = espa.fetch_production_products(params)
         elif 'handle-orders' in request.url:
-            resp = espa.handle_orders()
+            params = request.get_json(force=True, silent=True) or {}
+            resp = espa.handle_orders(params)
 
         return prep_response(resp)
 
@@ -114,4 +115,7 @@ class ProductionManagement(Resource):
     def get(version):
         if 'handle-orphans' in request.url:
             resp = espa.catch_orphaned_scenes()
+            return prep_response(resp)
+        if 'reset-status' in request.url:
+            resp = espa.reset_processing_status()
             return prep_response(resp)

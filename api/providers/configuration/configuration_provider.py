@@ -48,12 +48,13 @@ class ConfigurationProvider(ConfigurationProviderInterfaceV0):
         else:
             ret = current.get(key)
 
-        if 'apiemailreceive' in key and os.environ.get('apiemailreceive'):
+        if 'ESPA_API_EMAIL_RECEIVE' in key:
+            val = os.getenv('ESPA_API_EMAIL_RECEIVE', current.get('apiemailreceive'))
             if isinstance(ret, list):
-                idx = key.index('apiemailreceive')
-                ret[idx] = os.environ['apiemailreceive']
+                idx = key.index('ESPA_API_EMAIL_RECEIVE')
+                ret[idx] = val
             else:
-                ret = os.environ['apiemailreceive']
+                ret = val
 
         if isinstance(ret, list):
             return tuple(ret)
@@ -114,7 +115,7 @@ class ConfigurationProvider(ConfigurationProviderInterfaceV0):
         ts = datetime.datetime.now().strftime('config-%m%d%y-%H%M%S')
 
         if not path:
-            base = os.path.join(os.environ['ESPA_CONFIG_PATH'], '.usgs', '.config_backup')
+            base = os.path.join(os.path.dirname(os.environ['ESPA_CONFIG_PATH']), '.config_backup')
             if not os.path.exists(base):
                 os.makedirs(base)
 

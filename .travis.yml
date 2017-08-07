@@ -1,0 +1,22 @@
+language: python
+python:
+- '2.7'
+services: docker
+env:
+  global:
+  - COMMIT=${TRAVIS_COMMIT::8}
+  - ESPA_ENV=dev
+  - ESPA_MEMCACHE_HOST=localhost:30070
+  - ESPA_CONFIG_PATH=${TRAVIS_BUILD_DIR}/run/config.ini
+  - ESPA_API_EMAIL_RECEIVE=someone@nowhere.com
+before_install:
+- make docker-deps-up
+install: 
+- pip install -r setup/requirements.txt
+script:
+- "travis_wait 30 sleep 1800 &"
+- "run/runtests"
+after_success:
+#- "/bin/bash deploy"
+- make docker-deps-down
+

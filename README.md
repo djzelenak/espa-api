@@ -1,3 +1,6 @@
+
+[![Build Status](https://travis-ci.org/USGS-EROS/espa-api.svg?branch=master)](https://travis-ci.org/USGS-EROS/espa-api)
+
 # espa-api
 
 This is an API for interacting with the ESPA ordering system. 
@@ -10,6 +13,7 @@ USGS ESPA in the "Subject" section.
 * [Description of Products Available](docs/AVAILABLE-PRODUCTS.md)
 * [Abbreviations & Definitions](docs/TERMS.md)
 * [ESPA Customizations](docs/CUSTOMIZATION.md)
+* **[Available Resources List](docs/API-RESOURCES-LIST.md)**
 
 <details>
 <summary>Need a scene list?</summary>

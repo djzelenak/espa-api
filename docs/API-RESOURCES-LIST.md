@@ -38,7 +38,7 @@ This allows `curl -n` to handle login, replacing `curl --user <erosusername>:<er
 
 </details>
 
-#### Orders and Scenes
+### Orders and Scenes
 
 HTTP Method	| URI	| Action
 ---|---|---
@@ -51,7 +51,7 @@ HTTP Method	| URI	| Action
 
 ---
 
-**GET /api**<a id="api"></a>
+<a id="api"></a>**GET /api**
 
 Lists all available versions of the api.
 ```bash
@@ -64,7 +64,7 @@ curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api
 }
 ```
 
-**GET /api/v0**<a id="apiOps"></a>
+<a id="apiOps"></a>**GET /api/v0**
 
 Lists all available api operations.
 ```bash
@@ -93,7 +93,7 @@ curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0
 }
 ```
 
-**GET /api/v0/user**<a id="apiUser"></a>
+<a id="apiUser"></a>**GET /api/v0/user**
 
 Returns user information for the authenticated user.
 
@@ -113,7 +113,7 @@ curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/user
 }
 ```
    
-**GET /api/v0/available-products/\<product_id\>**<a id="apiProdsGet"></a>
+<a id="apiProdsGet"></a>**GET /api/v0/available-products/\<product_id\>**
 
 Lists the available output products for the supplied input.
 
@@ -135,7 +135,7 @@ curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/availa
 }
 ```
 
-**GET /api/v0/available-products**<a id="apiProdsPost"></a>
+<a id="apiProdsPost"></a>**GET /api/v0/available-products**
 
 Lists available products for the supplied inputs.  Also classifies the inputs by sensor or lists as 'not implemented' if the values cannot be ordered or determined.
 
@@ -173,7 +173,7 @@ curl  --user <erosusername>:<erospassword> \
 }
 ```
 
-**GET /api/v0/projections**<a id="apiProj"></a>
+<a id="apiProj"></a>**GET /api/v0/projections**
 
 Lists and describes available projections.  This is a dump of the schema defined that constrains projection info.
 
@@ -209,7 +209,7 @@ curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/projec
 }        
 ```
 
-**GET /api/v0/formats**<a id="apiFormats"></a>
+<a id="apiFormats"></a>**GET /api/v0/formats**
 
 Lists all available output formats
 ```bash
@@ -225,7 +225,7 @@ curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/format
 }
 ```
 
-**GET /api/v0/resampling-methods**<a id="apiResamp"></a>
+<a id="apiResamp"></a>**GET /api/v0/resampling-methods**
 
 Lists all available resampling methods
 ```bash
@@ -242,7 +242,7 @@ curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/resamp
 }
 ```
 
-**GET /api/v0/list-orders**<a id="apiOrders"></a>
+<a id="apiOrders"></a>**GET /api/v0/list-orders**
 
 List orders for the authenticated user.
 ```bash
@@ -261,7 +261,7 @@ Also accepts JSON filters:
 curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/list-orders -X GET -d '{"status": "complete"}'
 ```
 
-**GET /api/v0/list-orders/\<email\>**<a id="apiOrdersEmail"></a>
+<a id="apiOrdersEmail"></a>**GET /api/v0/list-orders/\<email\>**
 
 Lists orders for the supplied email.  Necessary to support user collaboration.
 ```bash
@@ -275,11 +275,11 @@ curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/list-o
 ]
 ```
 
-**GET /api/v0/order-status/\<ordernum\>**<a id="apiStatus"></a>
+<a id="apiStatus"></a>**GET /api/v0/order-status/\<ordernum\>**
 
 Retrieves a submitted orders status
 ```bash
-curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/available-products/LE07_L1TP_027027_20160730_20160831_01_T1
+curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/order-status/production@usgs.gov-07282016-135122
 ```
 ```json
 // Response: 
@@ -289,7 +289,7 @@ curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/availa
 }
 ```
 
-**GET /api/v0/order/\<ordernum\>**<a id="apiOrderDetails"></a>
+<a id="apiOrderDetails"></a>**GET /api/v0/order/\<ordernum\>**
 
 Retrieves details for a submitted order. Some information may be omitted from this response depending on access privileges.
 ```bash
@@ -320,7 +320,7 @@ curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/order/
 }
 ```
 
-**GET /api/v0/item-status/\<ordernum\>**<a id="apiItemStats"></a>
+<a id="apiItemStats"></a>**GET /api/v0/item-status/\<ordernum\>**
 
 Retrieve the status and details for all products in an order.
 ```bash
@@ -358,7 +358,7 @@ curl --user <erosusername>:<erospassword> \
     https://espa.cr.usgs.gov/api/v0/item-status/production@usgs.gov-03072016-081013
 ```
 
-**GET /api/v0/item-status/\<ordernum\>/\<itemnum\>**<a id="apiProdStats"></a>
+<a id="apiProdStats"></a>**GET /api/v0/item-status/\<ordernum\>/\<itemnum\>**
 
 Retrieve status and details for a particular product in an order
 ```bash
@@ -380,7 +380,7 @@ curl --user <erosusername>:<erospassword> \
  }
 ```
 
-**POST /api/v0/order**<a id="apiSubmitOrder"></a>
+<a id="apiSubmitOrder"></a>**POST /api/v0/order**
 
 Accepts requests for process from an HTTP POST with a JSON body. The body is validated against the schema definitions.
 Errors are returned to user, successful validation returns an orderid
@@ -425,9 +425,7 @@ curl --user <erosusername>:<erospassword> -d '{"olitirs8_collection": {
     "status": "ordered"
 }
 ```
-**PUT /api/v0/order**<a id="apiUpdateOrder"></a>
-
-**COMING SOON**
+<a id="apiUpdateOrder"></a>**PUT /api/v0/order**
 
 Update an order with a JSON body. 
 
@@ -445,7 +443,7 @@ curl --user <erosusername>:<erospassword> \
 }
 ```
 
-**GET /api/v0/order-schema**<a id="apiOrderSchema"></a>
+<a id="apiOrderSchema"></a>**GET /api/v0/order-schema**
  
 Retrieves order schema definition
 ```bash

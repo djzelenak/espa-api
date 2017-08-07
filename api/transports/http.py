@@ -38,7 +38,7 @@ def no_results_found(e):
 
 @app.errorhandler(Exception)
 def internal_server_error(e):
-    logger.debug('Internal Server Error: {}'.format(e))
+    logger.critical('Internal Server Error: {}'.format(e))
     return SystemErrorResponse()
 
 transport_api = Api(app)
@@ -120,10 +120,12 @@ transport_api.add_resource(ProductionOperations,
                            '/production-api/v<version>/queue-products')
 
 transport_api.add_resource(ProductionStats,
-                           '/production-api/v<version>/statistics/<name>')
+                           '/production-api/v<version>/statistics/<name>',
+                           '/production-api/v<version>/multistat/<name>')
 
 transport_api.add_resource(ProductionManagement,
-                           '/production-api/v<version>/handle-orphans')
+                           '/production-api/v<version>/handle-orphans',
+                           '/production-api/v<version>/reset-status')
 
 transport_api.add_resource(ProductionConfiguration,
                            '/production-api/v<version>/configuration/<key>')

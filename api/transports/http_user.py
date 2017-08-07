@@ -12,11 +12,13 @@ from api.util import lowercase_all
 from api.domain.user import User, UserException
 from api.external.ers import (
     ERSApiErrorException, ERSApiConnectionException, ERSApiAuthFailedException)
-from api import ValidationException, InventoryException
+from api import ValidationException, InventoryException, InventoryConnectionException
 from api.transports.http_json import (
     MessagesResponse, UserResponse, OrderResponse, OrdersResponse, ItemsResponse,
     BadRequestResponse, SystemErrorResponse, AccessDeniedResponse, AuthFailedResponse,
     BadMethodResponse)
+from api.util.dbconnect import DBConnectException
+from api.providers.caching.caching_provider import CachingProvider
 
 from flask import jsonify
 from flask import make_response
@@ -30,7 +32,7 @@ from functools import wraps
 
 espa = APIv1()
 auth = HTTPBasicAuth()
-cache = memcache.Client(['127.0.0.1:11211'], debug=0)
+cache = CachingProvider()
 
 
 def user_ip_address():
@@ -94,14 +96,17 @@ def version_filter(func):
 
 @auth.error_handler
 def unauthorized():
-    reasons = ['unknown', 'auth', 'conn']
+    reasons = ['unknown', 'auth', 'conn', 'db']
     reason = flask.g.get('error_reason', '')
     if reason not in reasons or reason == 'unknown':
         if reason not in reasons:
-            logger.debug('ERR uncaught exception in user authentication')
+            logger.critical('ERR uncaught exception in user authentication')
         msg = SystemErrorResponse
     elif reason == 'auth':
         msg = AuthFailedResponse
+    elif reason == 'db':
+        msg = MessagesResponse(warnings=['Database connection failed'],
+                               code=503)
     elif reason == 'conn':
         msg = MessagesResponse(warnings=['ERS connection failed'],
                                code=503)
@@ -148,6 +153,10 @@ def verify_user(username, password):
         logger.info('ERS is down {}'.format(e))
         flask.g.error_reason = 'conn'
         return False
+    except DBConnectException as e:
+        logger.critical('! Database reported a problem: {}'.format(e))
+        flask.g.error_reasons = 'db'
+        return False
     except Exception:
         logger.info('Invalid login attempt, username: {}'.format(username))
         flask.g.error_reason = 'unknown'
@@ -164,11 +173,11 @@ class Index(Resource):
         return 'Welcome to the ESPA API, please direct requests to /api'
 
     @staticmethod
-    def post(version):
+    def post():
         return BadMethodResponse()
 
     @staticmethod
-    def put(version):
+    def put():
         return BadMethodResponse()
 
 
@@ -219,11 +228,11 @@ class AvailableProducts(Resource):
         return espa.available_products(prod_list, auth.username())
 
     @staticmethod
-    def post(version):
+    def post(version, prod_id=None):
         return BadMethodResponse()
 
     @staticmethod
-    def put(version):
+    def put(version, prod_id=None):
         return BadMethodResponse()
 
 
@@ -235,16 +244,17 @@ class ListOrders(Resource):
         filters = request.get_json(force=True, silent=True)
         search = dict(username=auth.username(), filters=filters)
         if email:  # Allow user collaboration
-            user = User.where({'email': email})
+            for usearch in ('email', 'username'):
+                user = User.where({usearch: email})
+                if len(user):
+                    break
             if not len(user):
-                user = User.where({'username': email})
-            if len(user) == 1:
-                search = dict(email=str(email), filters=filters)
-            else:
-                response = MessagesResponse(warnings=["User {} not found"
+                response = MessagesResponse(warnings=["Username/email {} not found"
                                                       .format(email)],
                                             code=200)
                 return response()
+            else:
+                search = {'filters': filters, usearch: email}
 
         response = OrdersResponse(espa.fetch_user_orders(**search))
         response.limit = ('orderid',)
@@ -252,11 +262,11 @@ class ListOrders(Resource):
         return response()
 
     @staticmethod
-    def post(version):
+    def post(version, email=None):
         return BadMethodResponse()
 
     @staticmethod
-    def put(version):
+    def put(version, email=None):
         return BadMethodResponse()
 
 
@@ -315,7 +325,7 @@ class Ordering(Resource):
         return response()
 
     @staticmethod
-    def post(version):
+    def post(version, ordernum=None):
         user = flask.g.user
         message = None
         order = request.get_json(force=True, silent=True)
@@ -331,6 +341,9 @@ class Ordering(Resource):
             except InventoryException as e:
                 message = MessagesResponse(errors=[e.response],
                                            code=400)
+            except InventoryConnectionException as e:
+                message = MessagesResponse(warnings=['Could not connect to data source'],
+                                           code=400)
             else:
                 message = OrderResponse(**order.as_dict())
                 message.limit = ('orderid', 'status')
@@ -342,7 +355,7 @@ class Ordering(Resource):
             return message()
 
     @staticmethod
-    def put(version):
+    def put(version, ordernum=None):
         user = flask.g.user
         remote_addr = user_ip_address()
 
@@ -357,15 +370,11 @@ class Ordering(Resource):
             return message()
         else:
             orderid, status = body.get('orderid'), body.get('status')
-        if not user.is_staff():  # TODO: plan to be public facing
-            msg = ('Order cancellation is not available yet')
-            message = MessagesResponse(errors=[msg], code=400)
-            return message()
         orders = espa.fetch_order(orderid)
         if orders[0].user_id != user.id and not user.is_staff():
             msg = ('User {} is not allowed to cancel order {}'
                    .format(user.username, orderid))
-            logger.debug(msg + '\nOrigin: {}'.format(remote_addr))
+            logger.critical(msg + '\nOrigin: {}'.format(remote_addr))
             message = MessagesResponse(errors=[msg], code=403)
             return message()
         if orders[0].status != 'ordered':
@@ -405,6 +414,10 @@ class ItemStatus(Resource):
     def get(version, orderid=None, itemnum='ALL'):
         user = flask.g.user
         filters = request.get_json(force=True, silent=True)
+        if filters and not isinstance(filters, dict):
+            message = MessagesResponse(errors=['Invalid filters supplied'],
+                                       code=400)
+            return message()
         item_status = espa.item_status(orderid, itemnum, user.username,
                                 filters=filters)
         message = ItemsResponse(item_status, code=200)
@@ -414,11 +427,11 @@ class ItemStatus(Resource):
         return message()
 
     @staticmethod
-    def post(version, orderid=None, itemnum='ALL'):
+    def post(version, orderid=None, itemnum=None):
         return BadMethodResponse()
 
     @staticmethod
-    def put(version, orderid=None, itemnum='ALL'):
+    def put(version, orderid=None, itemnum=None):
         return BadMethodResponse()
 
 

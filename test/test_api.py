@@ -18,6 +18,7 @@ from api.domain.user import User
 from api.providers.production.mocks.production_provider import MockProductionProvider
 from api.providers.production.production_provider import ProductionProvider
 from api.external.mocks import lta as mocklta
+from api.system.logger import ilogger as logger
 from mock import patch
 
 api = APIv1()
@@ -27,6 +28,7 @@ mock_production_provider = MockProductionProvider()
 
 class TestAPI(unittest.TestCase):
     def setUp(self):
+        logger.warning('Testing API started...')
         os.environ['espa_api_testing'] = 'True'
         # create a user
         self.mock_user = MockUser()
@@ -56,6 +58,7 @@ class TestAPI(unittest.TestCase):
             self.restricted['all']['role'].remove('restricted_prod')
 
     def tearDown(self):
+        logger.warning('Testing API done.')
         # clean up orders
         self.mock_order.tear_down_testing_orders()
         # clean up users
@@ -119,6 +122,7 @@ class TestAPI(unittest.TestCase):
 
 class TestValidation(unittest.TestCase):
     def setUp(self):
+        logger.warning('Testing Validation started...')
         os.environ['espa_api_testing'] = 'True'
 
         self.mock_user = MockUser()
@@ -213,7 +217,6 @@ class TestValidation(unittest.TestCase):
             for order, test, exc in invalid_list:
                 # empty lists cause assertRaisesRegExp to fail
                 exc = str(exc).replace('[', '\[')
-                print('\n\n\n {} \n\n\n'.format(exc))
                 with self.assertRaisesRegexp(exc_type, exc):
                     api.validation(order, self.staffuser.username)
 
@@ -238,9 +241,17 @@ class TestValidation(unittest.TestCase):
                 with self.assertRaisesRegexp(exc_type, err_message):
                     api.validation.validate(invalid_order, self.staffuser.username)
 
+    # def test_validate_utm_zone(self):
+    #     invalid_order = copy.deepcopy(self.base_order)
+    #     invalid_order['projection'] = {'utm': {'zone': 50, 'zone_ns': 'north'}}
+    #     invalid_order['image_extents'] = {'east': 32.5, 'north': 114.9, 'south': 113.5, 'units': u'dd', 'west': 31.5}
+    #     with self.assertRaisesRegexp(ValidationException, 'are not near the requested UTM zone'):
+    #         api.validation.validate(invalid_order, self.staffuser.username)
+
 
 class TestInventory(unittest.TestCase):
     def setUp(self):
+        logger.warning('Testing Inventory started...')
         os.environ['espa_api_testing'] = 'True'
         self.lta_prod_good = u'LT50300372011275PAC01'
         self.lta_prod_bad = u'LE70290302001200EDC01'
@@ -254,6 +265,7 @@ class TestInventory(unittest.TestCase):
         self.lpdaac_order_bad = {'mod09a1': {'inputs': [self.lpdaac_prod_bad]}}
 
     @patch('api.external.lta.requests.post', mocklta.get_verify_scenes_response)
+    @patch('api.external.lta.check_lta_available', lambda: True)
     def test_lta_good(self):
         """
         Check LTA support from the inventory provider
@@ -261,6 +273,7 @@ class TestInventory(unittest.TestCase):
         self.assertIsNone(api.inventory.check(self.lta_order_good))
 
     @patch('api.external.lta.requests.post', mocklta.get_verify_scenes_response_invalid)
+    @patch('api.external.lta.check_lta_available', lambda: True)
     def test_lta_bad(self):
         """
         Check LTA support from the inventory provider
@@ -269,6 +282,7 @@ class TestInventory(unittest.TestCase):
             api.inventory.check(self.lta_order_bad)
 
     @patch('api.external.lpdaac.LPDAACService.input_exists', lambda x, y: True)
+    @patch('api.external.lpdaac.LPDAACService.check_lpdaac_available', lambda y: True)
     def test_lpdaac_good(self):
         """
         Check LPDAAC support from the inventory provider
@@ -276,6 +290,7 @@ class TestInventory(unittest.TestCase):
         self.assertIsNone(api.inventory.check(self.lpdaac_order_good))
 
     @patch('api.external.lpdaac.LPDAACService.input_exists', lambda x, y: False)
+    @patch('api.external.lpdaac.LPDAACService.check_lpdaac_available', lambda y: True)
     def test_lpdaac_bad(self):
         """
         Check LPDAAC support from the inventory provider
@@ -283,5 +298,3 @@ class TestInventory(unittest.TestCase):
         with self.assertRaises(InventoryException):
             api.inventory.check(self.lpdaac_order_bad)
 
-if __name__ == '__main__':
-    unittest.main(verbosity=2)

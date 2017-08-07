@@ -54,7 +54,7 @@ class API(object):
         try:
             response = self.production.get_products_to_process(**params)
         except:
-            logger.debug("ERR version1 fetch_production_products, params: {0}\ntrace: {1}\n".format(params, traceback.format_exc()))
+            logger.critical("ERR version1 fetch_production_products, params: {0}\ntrace: {1}\n".format(params, traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -78,24 +78,24 @@ class API(object):
         try:
             response = self.production.update_product(action, **params)
         except:
-            logger.debug("ERR version1 update_product_details, params: {0}\ntrace: {1}\n".format(params, traceback.format_exc()))
+            logger.critical("ERR version1 update_product_details, params: {0}\ntrace: {1}\n".format(params, traceback.format_exc()))
             response = default_error_message
 
         return response
 
-    def handle_orders(self):
+    def handle_orders(self, params):
         """Handler for accepting orders and products into the processing system
 
         Args:
-            none
+            params (dict): args for the action. valid keys: username
 
         Returns:
             True if successful
         """
         try:
-            response = self.production.handle_orders()
+            response = self.production.handle_orders(**params)
         except:
-            logger.debug("ERR version1 handle_orders. trace: {0}".format(traceback.format_exc()))
+            logger.critical("ERR version1 handle_orders. trace: {0}".format(traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -112,9 +112,9 @@ class API(object):
         try:
             response = self.production.queue_products(order_name_tuple_list, processing_location, job_name)
         except:
-            logger.debug("ERR version1 queue_products"
-                         " params: {0}\ntrace: {1}".format((order_name_tuple_list, processing_location, job_name),
-                                                           traceback.format_exc()))
+            logger.critical("ERR version1 queue_products"
+                            " params: {0}\ntrace: {1}".format((order_name_tuple_list, processing_location, job_name),
+                                                              traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -133,7 +133,7 @@ class API(object):
             if key in self.configuration.configuration_keys:
                 response = {key: self.configuration.get(key)}
         except:
-            logger.debug("ERR version1 get_production_key, arg: {0}\ntrace: {1}\n".format(key, traceback.format_exc()))
+            logger.critical("ERR version1 get_production_key, arg: {0}\ntrace: {1}\n".format(key, traceback.format_exc()))
             response = default_error_message
 
         return response
@@ -146,7 +146,7 @@ class API(object):
         try:
             response = self.production.production_whitelist()
         except:
-            logger.debug("ERR failure to generate production whitelist\ntrace: {}".format(traceback.format_exc()))
+            logger.critical("ERR failure to generate production whitelist\ntrace: {}".format(traceback.format_exc()))
             response = default_error_message
         return response
 
@@ -158,7 +158,19 @@ class API(object):
         try:
             response = self.production.catch_orphaned_scenes()
         except:
-            logger.debug("ERR handling orphaned scenes\ntrace: {}".format(traceback.format_exc()))
+            logger.critical("ERR handling orphaned scenes\ntrace: {}".format(traceback.format_exc()))
+            response = default_error_message
+        return response
+
+    def reset_processing_status(self):
+        """
+        Handler for killing queued/processing scenes in hadoop
+        :return: true
+        """
+        try:
+            response = self.production.reset_processing_status()
+        except:
+            logger.critical("ERR handling queued/processing scenes\ntrace: {}".format(traceback.format_exc()))
             response = default_error_message
         return response
 

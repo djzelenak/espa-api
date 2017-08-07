@@ -1,6 +1,13 @@
 #!/bin/bash
 
-source venv_api/bin/activate
+if [[ ! -e "$ESPA_CONFIG_PATH" ]]; then
+	echo "Missing Database configuration $ESPA_CONFIG_PATH"
+	exit 1
+fi
 
-python -m unittest discover test
+#python -m unittest discover test
+nose2 --log-level ERROR --fail-fast --with-coverage
+
+# flake8 api
+# pylint api
 
