@@ -5,13 +5,13 @@ RESOURCE_DEF = {
         "errorCode": None,
         "error": "",
         "data": "2fd976601eef1ebd632b545a8fef11a3",
-        "api_version": "1.4.0"
+        "api_version": "1.4.1"
     },
     'logout': {
         "errorCode": None,
         "error": "",
         "data": True,
-        "api_version": "1.4.0"
+        "api_version": "1.4.1"
     },
     'idLookup': {
         "errorCode": None,
@@ -27,11 +27,17 @@ RESOURCE_DEF = {
         "errorCode": None,
         "error": "",
         "data": [
-            "http://invalid.com/path/to/downloads/l1/2014/013/029/LC81560632017038LGN00.tar.gz?iid=LC81560632017038LGN00&amp;did=63173803&amp;ver="
-            "http://invalid.com/path/to/downloads/l1/2014/013/029/LE70280282013130EDC00.tar.gz?iid=LE70280282013130EDC00&amp;did=63173803&amp;ver="
-            "http://invalid.com/path/to/downloads/l1/2014/013/029/LT50320282012116EDC00.tar.gz?iid=LT50320282012116EDC00&amp;did=63173803&amp;ver="
+            {"entityId": "LC81560632017038LGN00",
+             "product": "STANDARD",
+             "url": "http://invalid.com/path/to/downloads/l1/2014/013/029/LC81560632017038LGN00.tar.gz?iid=LC81560632017038LGN00&amp;did=63173803&amp;ver="},
+            {"entityId": "LE70280282013130EDC00",
+             "product": "STANDARD",
+             "url": "http://invalid.com/path/to/downloads/l1/2014/013/029/LE70280282013130EDC00.tar.gz?iid=LE70280282013130EDC00&amp;did=63173803&amp;ver="},
+            {"entityId": "LT50320282012116EDC00",
+             "product": "STANDARD",
+             "url": "http://invalid.com/path/to/downloads/l1/2014/013/029/LT50320282012116EDC00.tar.gz?iid=LT50320282012116EDC00&amp;did=63173803&amp;ver="}
         ],
-        "api_version": "1.4.0"
+        "api_version": "1.4.1"
     },
     'userContext': {
         "errorCode": None,
