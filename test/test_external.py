@@ -66,6 +66,7 @@ class TestInventory(unittest.TestCase):
     Provide testing for the EarthExplorer JSON API (Machine-2-Machine)
     """
     def setUp(self):
+        os.environ['espa_api_testing'] = 'True'
         self.token = '2fd976601eef1ebd632b545a8fef11a3'
         self.collection_ids = ['LC08_L1TP_156063_20170207_20170216_01_T1',
                                'LE07_L1TP_028028_20130510_20160908_01_T1',
@@ -73,7 +74,7 @@ class TestInventory(unittest.TestCase):
         self.contact_id = 0
 
     def tearDown(self):
-        pass
+        os.environ['espa_api_testing'] = ''
 
     @patch('api.external.inventory.requests.get', mockinventory.RequestsSpoof)
     @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
@@ -155,6 +156,7 @@ class TestCachedInventory(unittest.TestCase):
     @patch('api.external.inventory.requests.get', mockinventory.RequestsSpoof)
     @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
     def setUp(self):
+        os.environ['espa_api_testing'] = 'True'
         self.token = inventory.get_cached_session()  # Initial "real" request
         self.collection_ids = ['LC08_L1TP_156063_20170207_20170216_01_T1',
                                'LE07_L1TP_028028_20130510_20160908_01_T1',
@@ -163,7 +165,7 @@ class TestCachedInventory(unittest.TestCase):
         _ = inventory.get_cached_verify_scenes(self.token, self.collection_ids)
 
     def tearDown(self):
-        pass
+        os.environ['espa_api_testing'] = ''
 
     @patch('api.external.inventory.requests.post', mockinventory.CachedRequestPreventionSpoof)
     def test_cached_login(self):
