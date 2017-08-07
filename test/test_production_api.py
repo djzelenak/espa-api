@@ -60,6 +60,18 @@ class TestProductionAPI(unittest.TestCase):
         response = api.fetch_production_products(params)
         self.assertTrue('bilbo' in response[0]['orderid'])
 
+    @patch('api.external.lta.get_download_urls', lta.get_download_urls)
+    @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry',
+           mock_production_provider.set_product_retry)
+    def test_fetch_production_products_landsat_LEGACY(self):
+        order_id = self.mock_order.generate_testing_order(self.user_id)
+        # need scenes with statuses of 'processing' and 'ordered'
+        self.mock_order.update_scenes(order_id, 'landsat', 'status', ['processing', 'oncache'])
+        user = User.find(self.user_id)
+        params = {'for_user': user.username, 'product_types': ['landsat']}
+        response = api.fetch_production_products(params)
+        self.assertTrue('bilbo' in response[0]['orderid'])
+
     def test_fetch_production_products_plot(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
         self.mock_order.update_scenes(order_id, ('landsat', 'modis'), 'status', ['complete'])
@@ -292,9 +304,13 @@ class TestProductionAPI(unittest.TestCase):
 
     @patch('api.providers.production.production_provider.ProductionProvider.send_initial_emails',
            mock_production_provider.respond_true)
+    @patch('api.providers.production.production_provider.ProductionProvider.handle_onorder_landsat_products',
+           mock_production_provider.respond_true)
     @patch('api.providers.production.production_provider.ProductionProvider.handle_retry_products',
            mock_production_provider.respond_true)
     @patch('api.providers.production.production_provider.ProductionProvider.load_ee_orders',
+           mock_production_provider.respond_true)
+    @patch('api.providers.production.production_provider.ProductionProvider.handle_submitted_products',
            mock_production_provider.respond_true)
     @patch('api.providers.production.production_provider.ProductionProvider.finalize_orders',
            mock_production_provider.respond_true)
@@ -386,6 +402,15 @@ class TestProductionAPI(unittest.TestCase):
 
         scenes = Scene.where({'failed_lta_status_update IS NOT': None})
         self.assertTrue(len(scenes) == 0)
+
+    @patch('api.providers.production.production_provider.ProductionProvider.handle_submitted_landsat_products',
+           mock_production_provider.respond_true)
+    @patch('api.providers.production.production_provider.ProductionProvider.handle_submitted_modis_products',
+           mock_production_provider.respond_true)
+    @patch('api.providers.production.production_provider.ProductionProvider.handle_submitted_plot_products',
+           mock_production_provider.respond_true)
+    def test_production_handle_submitted_products(self):
+        self.assertTrue(production_provider.handle_submitted_products())
 
     @patch('api.providers.production.production_provider.ProductionProvider.mark_nlaps_unavailable',
            mock_production_provider.respond_true)
