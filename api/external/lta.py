@@ -746,6 +746,25 @@ def get_user_name(contactid):
     return RegistrationServiceClient().get_username(contactid)
 
 
+def verify_scenes(product_list):
+    return OrderWrapperServiceClient().verify_scenes(product_list)
+
+
+def input_exists(product, contact_id):
+    return OrderWrapperServiceClient().input_exists(product, contact_id)
+
+
+def order_scenes(product_list, contact_id, priority=5):
+    return OrderWrapperServiceClient().order_scenes(product_list,
+                                                    contact_id,
+                                                    priority)
+
+
+def get_download_urls(product_list, contact_id):
+    return OrderWrapperServiceClient().get_download_urls(product_list,
+                                                         contact_id)
+
+
 def get_available_orders():
     return OrderDeliveryServiceClient().get_available_orders()
 
