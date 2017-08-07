@@ -98,7 +98,7 @@ class CachedRequestPreventionSpoof(object):
 
 # ----------------------------------------+
 # Production API testing                  |
-def get_cached_download_urls(token, contactid, product_list, usage):
+def get_download_urls(token, contactid, product_list, usage):
     response = {i: 'http://one_time_use.tar.gz' for i in product_list}
     return response
 
