@@ -12,7 +12,7 @@ class InventoryProviderV0(InventoryInterfaceV0):
     Raises InventoryException if a requested L1 product is
     unavailable for processing
     """
-    def check(self, order, contactid):
+    def check(self, order, contactid=None):
         ids = sensor.SensorCONST.instances.keys()
 
         lta_ls = []
