@@ -396,7 +396,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         return True
 
-    def parse_urls_owrapper(self, query_results):
+    def parse_urls_owrapper(self, query_results, encode_urls=False):
         # TODO: fall back to this (while it exists)
         # Need the results reorganized by contact id so we can get dload urls from
         # ee in bulk by id.
@@ -505,7 +505,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                                 .format(item['orderid'], item['name']))
         return results
 
-    def parse_urls_m2m(self, query_results):
+    def parse_urls_m2m(self, query_results, encode_urls=False):
         # TODO: clean up this mess
         # Usage codes must be grouped by both ContactID and OrderID
         names_by_cid = {}
