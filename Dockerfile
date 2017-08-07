@@ -9,6 +9,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 ENV ESPA_CONFIG_PATH=/home/espadev/espa-api/run/config.ini
 ENV ESPA_API_EMAIL_RECEIVE="someone@somewhere.com"
 ENV ESPA_ENV="dev"
+ENV ESPA_MEMCACHE_HOST="localhost:30070"
 
 COPY . /home/espadev/espa-api
 
