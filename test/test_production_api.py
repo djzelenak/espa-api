@@ -49,7 +49,6 @@ class TestProductionAPI(unittest.TestCase):
         self.assertTrue('bilbo' in response[0]['orderid'])
 
     @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
-    @patch('api.external.inventory.get_cached_download_urls', inventory.get_cached_download_urls)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry',
            mock_production_provider.set_product_retry)
     def test_fetch_production_products_landsat(self):
