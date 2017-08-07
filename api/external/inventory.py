@@ -31,11 +31,13 @@ class LTAError(Exception):
 #      https://earthexplorer.usgs.gov/inventory/documentation/json-api         |
 class LTAService(object):
     def __init__(self, token=None, current_user=None, ipaddr=None):
-        self.base_url = config.url_for('earthexplorer.json')
         mode = config.mode
         self.api_version = config.get('bulk.{0}.json.version'.format(mode))
         self.agent = config.get('bulk.{0}.json.username'.format(mode))
         self.agent_wurd = config.get('bulk.{0}.json.password'.format(mode))
+        self.base_url = ('{}/inventory/json/v/{}/'
+                         .format(config.url_for('earthexplorer.json'),
+                                 self.api_version))
         self.current_user = current_user  # CONTACT ID
         self.token = token
         self.ipaddr = ipaddr or socket.gethostbyaddr(socket.gethostname())[2][0]
