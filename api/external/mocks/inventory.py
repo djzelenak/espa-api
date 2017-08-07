@@ -103,7 +103,7 @@ def get_download_urls(token, contactid, product_list, usage):
     return response
 
 def get_cached_convert(token, contactid, product_list):
-    response = {i: 'LC81230382015314LGN00'}
+    response = {i: 'LC81230382015314LGN00' for i in product_list}
     return response
 
 def get_cached_session():
