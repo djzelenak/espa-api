@@ -669,11 +669,11 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         if os.getenv('ESPA_M2M_MODE') == 'True':
             logger.info('@@ URLS: FETCH via MACHINE-TO-MACHINE')
-            results = parse_urls_m2m(query_results)
+            results = self.parse_urls_m2m(query_results)
             logger.info('@@ URLS: COMPLETE via MACHINE-TO-MACHINE')
         else:
             logger.info('@@ URLS: FETCH via OrderWrapperService')
-            results = parse_urls_owrapper(query_results)
+            results = self.parse_urls_owrapper(query_results)
             logger.info('@@ URLS: COMPLETE via OrderWrapperService')
         return results
 
