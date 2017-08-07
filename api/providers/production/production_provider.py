@@ -514,7 +514,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             cid, orderid = result['contactid'], result['orderid']
             stype, sname = (result['sensor_type'],
                             sensor.instance(result['name']).shortname)
-            usage = inventory.build_usage_str(result['product_opts'], sname)
+            usage = orderid
             usage_by_cid[(cid, orderid, stype)] = (usage, result)
             names_by_cid.setdefault((cid, orderid, stype), []).append(result['name'])
 

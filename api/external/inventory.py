@@ -211,54 +211,6 @@ class LTAService(object):
         results = {k: k in entity_ids.keys() for k in product_ids}
         return results
 
-    @staticmethod
-    def build_data_use_str(product_opts, sensor_name):
-        """
-        Used to identify higher level products that this data is used to create,
-            this creates a comma-delimited list for DMID to determine their
-            desired demographics insights on data download volume
-
-        :param product_opts: Processing opts for ESPA processing (all sensors)
-        :type product_opts: dict
-        :param sensor_name: Specific sensor to pull from `product_opts`
-        :type sensor_name: str
-        :return: str
-        """
-        # TODO: Use the new named tuple from sensor.py
-        products_lut = {'l1': 'l1', 'source_metadata': 'l1m',
-                        'pixel_qa': 'l2qa', 'toa': 'toa', 'bt': 'bt',
-                        'sr': 'sr', 'lst': 'st', 'swe': 'swe',
-                        'sr_ndvi': 'sr:idx', 'sr_evi': 'sr:idx',
-                        'sr_savi': 'sr:idx', 'sr_msavi': 'sr:idx',
-                        'sr_ndmi': 'sr:idx', 'sr_nbr': 'sr:idx',
-                        'sr_nbr2': 'sr:idx',
-                        'stats': 'stats'}
-        customize_lut = {'image_extents': 'ext', 'resize': 'px_rs'}
-        format_lut = {'gtiff': 'f:gt', 'hdf-eos2': 'f:he', 'envi': 'f:ev',
-                      'netcdf': 'f:nc'}
-        resample_lut = {'nn': 's:nn', 'cc': 's:cc', 'bil': 's:bil'}
-        reproject_lut = {'aea': 'r:aea', 'utm': 'r:utm', 'sinu': 'r:sinu',
-                         'ps': 'r:ps', 'lonlat': 'r:lonlat'}
-
-        params = list()
-        products = product_opts[sensor_name]['products']
-        params += [products_lut[p] for p in products]
-        for ckey in ['image_extents', 'resize']:
-            if product_opts.get(ckey):
-                params.append(customize_lut[ckey])
-        oformat = product_opts.get('format', None)
-        if oformat:
-            params.append(format_lut[oformat])
-        resampling = product_opts.get('resampling_method', None)
-        if resampling:
-            params.append(resample_lut[resampling])
-        reprojection = product_opts.get('projection', None)
-        if reprojection:
-            params.append(reproject_lut[reprojection.keys()[0]])
-
-        data_use_str = '[espa]' + ','.join(list(set(params)))
-        return data_use_str
-
     def get_download_urls(self, product_ids, products='STANDARD', stage=True,
                           usage='[espa]:sr'):
         """
@@ -459,6 +411,3 @@ def get_cached_convert(token, contactid, product_ids):
 def get_cached_verify_scenes(token, contactid, product_ids):
     return LTACachedService(token, contactid).cached_verify_scenes(product_ids)
 
-
-def build_usage_str(product_opts, sensor):
-    return LTAService.build_data_use_str(product_opts, sensor)
