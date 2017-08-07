@@ -42,10 +42,8 @@ class LTAService(object):
         if self.current_user and self.token:
             self.set_user_context(self.current_user, ipaddress=self.ipaddr)
 
-        # FIXME: ONLY WORKS FOR LANDSAT (TODO: use modis.datapool from config)
-        self.ehost = config.url_for('json.landsat.datahost')
-        self.ihost = config.url_for('json.landsat.loadbalancer')
-
+        self.external_hosts = config.url_for('landsat.external').split(',')
+        self.load_balancer = config.url_for('landsat.datapool')
     @property
     def base_url(self):
         return self._base_url
@@ -243,8 +241,11 @@ class LTAService(object):
             if not isinstance(results, list):
                 raise LTAError('{} failed fetch download urls: {}'
                                .format(sensor_name, product_ids))
-            urls = {i['entityId']: i['url'].replace(self.ehost, self.ihost)
-                    for i in results}
+            urls = {i['entityId']: i['url'] for i in results}
+            for host in self.external_hosts:
+                urls = {k:v.replace(host, self.load_balancer)
+                        for k,v in urls.items()}
+
             diff = set(ents) - set(urls)
             if diff:
                 raise LTAError('No download urls found for: {}'.format(diff))
