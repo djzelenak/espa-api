@@ -5,6 +5,7 @@ from api.providers.inventory import InventoryInterfaceV0
 from api.external import lta, inventory, lpdaac, nlaps
 from api import InventoryException, InventoryConnectionException
 from api.domain import sensor
+from api.system.logger import ilogger as logger
 
 
 class InventoryProviderV0(InventoryInterfaceV0):
