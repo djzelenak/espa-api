@@ -59,12 +59,21 @@ class InventoryProviderV0(InventoryInterfaceV0):
         not_avail = nlaps.products_are_nlaps(prod_ls)
         if not_avail:
             raise InventoryException(not_avail)
+        logger.info('@@ VERIFY: FETCH via MACHINE-TO-MACHINE')
         token = inventory.get_cached_session()
-        return inventory.get_cached_verify_scenes(token, contactid, prod_ls)
+        results = inventory.get_cached_verify_scenes(token, contactid, prod_ls)
+        logger.info('@@ VERIFY: COMPLETE via MACHINE-TO-MACHINE')
+        return results
 
     @staticmethod
     def check_LTA(prod_ls):
-        return lta.verify_scenes(prod_ls)
+        not_avail = nlaps.products_are_nlaps(prod_ls)
+        if not_avail:
+            raise InventoryException(not_avail)
+        logger.info('@@ VERIFY: FETCH via OrderWrapperService')
+        results = lta.verify_scenes(prod_ls)
+        logger.info('@@ VERIFY: COMPLETE via OrderWrapperService')
+        return results
 
     @staticmethod
     def check_LPDAAC(prod_ls):
