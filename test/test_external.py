@@ -157,12 +157,13 @@ class TestCachedInventory(unittest.TestCase):
     @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
     def setUp(self):
         os.environ['espa_api_testing'] = 'True'
+        self.contact_id = 0
         self.token = inventory.get_cached_session()  # Initial "real" request
         self.collection_ids = ['LC08_L1TP_156063_20170207_20170216_01_T1',
                                'LE07_L1TP_028028_20130510_20160908_01_T1',
                                'LT05_L1TP_032028_20120425_20160830_01_T1']
-        _ = inventory.get_cached_convert(self.token, self.collection_ids)
-        _ = inventory.get_cached_verify_scenes(self.token, self.collection_ids)
+        _ = inventory.get_cached_convert(self.token, self.contact_id, self.collection_ids)
+        _ = inventory.get_cached_verify_scenes(self.token, self.contact_id, self.collection_ids)
 
     def tearDown(self):
         os.environ['espa_api_testing'] = ''
@@ -175,14 +176,14 @@ class TestCachedInventory(unittest.TestCase):
     @patch('api.external.inventory.requests.get', mockinventory.CachedRequestPreventionSpoof)
     @patch('api.external.inventory.requests.post', mockinventory.CachedRequestPreventionSpoof)
     def test_cached_lookup(self):
-        entity_ids = inventory.get_cached_convert(self.token, self.collection_ids)
+        entity_ids = inventory.get_cached_convert(self.token, self.contact_id, self.collection_ids)
         self.assertEqual(set(self.collection_ids), set(entity_ids))
 
     @patch('api.external.inventory.requests.get', mockinventory.CachedRequestPreventionSpoof)
     @patch('api.external.inventory.requests.post', mockinventory.CachedRequestPreventionSpoof)
     def test_cached_verify_scenes(self):
         expected = {k: True for k in self.collection_ids}
-        results = inventory.get_cached_verify_scenes(self.token, self.collection_ids)
+        results = inventory.get_cached_verify_scenes(self.token, self.contact_id, self.collection_ids)
         self.assertItemsEqual(expected, results)
 
 
