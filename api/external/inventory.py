@@ -125,7 +125,7 @@ class LTAService(object):
 
     def available(self):
         """
-        Checks the LTA API status endpoint and compares an expected API version
+        Checks the LTA API status endpoint
 
         :return: bool
         """
@@ -133,7 +133,7 @@ class LTAService(object):
         payload = dict(username=self.agent, password=self.agent_wurd,
                        authType='EROS')
         resp = self._post(endpoint, payload)
-        return self.api_version == resp.get('api_version')
+        return resp.get('data') is not None
 
     def logout(self):
         """
@@ -407,10 +407,10 @@ def get_cached_session():
     return LTACachedService().cached_login()
 
 
-def get_cached_convert(token, contactid, product_ids):
-    return LTACachedService(token, contactid).cached_id_lookup(product_ids)
+def get_cached_convert(token, product_ids):
+    return LTACachedService(token).cached_id_lookup(product_ids)
 
 
-def get_cached_verify_scenes(token, contactid, product_ids):
-    return LTACachedService(token, contactid).cached_verify_scenes(product_ids)
+def get_cached_verify_scenes(token, product_ids):
+    return LTACachedService(token).cached_verify_scenes(product_ids)
 
