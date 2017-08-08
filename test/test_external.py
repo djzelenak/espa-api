@@ -68,6 +68,7 @@ class TestInventory(unittest.TestCase):
     def setUp(self):
         os.environ['espa_api_testing'] = 'True'
         self.token = '2fd976601eef1ebd632b545a8fef11a3'
+        self.usage = 'espa-production@email.com-20170801-01-01'
         self.collection_ids = ['LC08_L1TP_156063_20170207_20170216_01_T1',
                                'LE07_L1TP_028028_20130510_20160908_01_T1',
                                'LT05_L1TP_032028_20120425_20160830_01_T1']
@@ -103,7 +104,7 @@ class TestInventory(unittest.TestCase):
     @patch('api.external.inventory.requests.get', mockinventory.RequestsSpoof)
     @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
     def test_api_get_download_urls(self):
-        results = inventory.get_download_urls(self.token, self.collection_ids)
+        results = inventory.get_download_urls(self.token, self.contact_id, self.collection_ids, self.usage)
         self.assertIsInstance(results, dict)
         ehost, ihost = 'invalid.com', '127.0.0.1'
         results = {k:v.replace(ehost, ihost) for k,v in results.items()}
