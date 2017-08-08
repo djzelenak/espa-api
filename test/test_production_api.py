@@ -314,8 +314,6 @@ class TestProductionAPI(unittest.TestCase):
            mock_production_provider.respond_true)
     @patch('api.providers.production.production_provider.ProductionProvider.load_ee_orders',
            mock_production_provider.respond_true)
-    @patch('api.providers.production.production_provider.ProductionProvider.handle_submitted_products',
-           mock_production_provider.respond_true)
     @patch('api.providers.production.production_provider.ProductionProvider.finalize_orders',
            mock_production_provider.respond_true)
     @patch('api.providers.production.production_provider.ProductionProvider.purge_orders',
@@ -406,15 +404,6 @@ class TestProductionAPI(unittest.TestCase):
 
         scenes = Scene.where({'failed_lta_status_update IS NOT': None})
         self.assertTrue(len(scenes) == 0)
-
-    @patch('api.providers.production.production_provider.ProductionProvider.handle_submitted_landsat_products',
-           mock_production_provider.respond_true)
-    @patch('api.providers.production.production_provider.ProductionProvider.handle_submitted_modis_products',
-           mock_production_provider.respond_true)
-    @patch('api.providers.production.production_provider.ProductionProvider.handle_submitted_plot_products',
-           mock_production_provider.respond_true)
-    def test_production_handle_submitted_products(self):
-        self.assertTrue(production_provider.handle_submitted_products())
 
     @patch('api.providers.production.production_provider.ProductionProvider.mark_nlaps_unavailable',
            mock_production_provider.respond_true)
