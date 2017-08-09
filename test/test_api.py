@@ -18,6 +18,7 @@ from api.domain.user import User
 from api.providers.production.mocks.production_provider import MockProductionProvider
 from api.providers.production.production_provider import ProductionProvider
 from api.external.mocks import lta as mocklta
+from api.external.mocks import inventory as mockinventory
 from api.system.logger import ilogger as logger
 from mock import patch
 
@@ -271,6 +272,17 @@ class TestInventory(unittest.TestCase):
         Check LTA support from the inventory provider
         """
         self.assertIsNone(api.inventory.check(self.lta_order_good))
+
+    @patch('api.external.inventory.requests.post', mockinventory.CachedRequestPreventionSpoof)
+    @patch('api.external.inventory.get_cached_session', mockinventory.get_cached_session)
+    @patch('api.external.inventory.LTACachedService.get_lookup', mockinventory.get_cache_values)
+    def test_lta_good(self):
+        """
+        Check LTA support from the inventory provider
+        """
+        os.environ['ESPA_M2M_MODE'] = 'True'
+        self.assertIsNone(api.inventory.check(self.lta_order_good))
+        os.environ['ESPA_M2M_MODE'] = ''
 
     @patch('api.external.lta.requests.post', mocklta.get_verify_scenes_response_invalid)
     @patch('api.external.lta.check_lta_available', lambda: True)
