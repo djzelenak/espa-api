@@ -62,7 +62,7 @@ class InventoryProviderV0(InventoryInterfaceV0):
             raise InventoryException(not_avail)
         logger.info('@@ VERIFY: FETCH via MACHINE-TO-MACHINE')
         token = inventory.get_cached_session()
-        results = inventory.get_cached_verify_scenes(token, contactid, prod_ls)
+        results = inventory.get_cached_verify_scenes(token, prod_ls)
         logger.info('@@ VERIFY: COMPLETE via MACHINE-TO-MACHINE')
         return results
 
