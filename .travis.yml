@@ -13,6 +13,7 @@ before_install:
 - make docker-deps-up
 install: 
 - pip install -r setup/requirements.txt
+cache: pip
 script:
 - "travis_wait 30 sleep 1800 &"
 - "run/runtests"
