@@ -11,6 +11,7 @@ env:
   - ESPA_API_EMAIL_RECEIVE=someone@nowhere.com
 before_install:
 - make docker-deps-up
+cache: pip
 install: 
 - pip install -r setup/requirements.txt
 script:
