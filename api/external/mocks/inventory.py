@@ -115,7 +115,7 @@ def get_download_urls(token, contactid, product_list, usage):
     response = {'LC81230382015314LGN00': 'http://one_time_use.tar.gz' for i in product_list}
     return response
 
-def get_cached_convert(token, contactid, product_list):
+def get_cached_convert(token, product_list):
     response = {i: 'LC81230382015314LGN00' for i in product_list}
     return response
 
