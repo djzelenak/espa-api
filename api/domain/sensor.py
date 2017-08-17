@@ -109,6 +109,14 @@ class Modis(SensorProduct):
         self.vertical = __hv[4:6]
         self.version = parts[3]
         self.date_produced = parts[4]
+        self.lta_json_name = self.lta_json_name.format(collection=int(self.version))
+        if int(self.version) == 5:
+            # MODIS Version 5 dataset does not have a version...
+            self.lta_json_name = self.lta_json_name.replace('_V5', '')
+
+    def __repr__(self):
+        return 'MODIS: {}'.format(self.__dict__)
+
 
 
 class Terra(Modis):
@@ -198,92 +206,92 @@ class Modis11A1(Modis):
 
 class ModisTerra09A1(Terra, Modis09A1):
     """models modis 09A1 from Terra"""
-    lta_json_name = 'MODIS_MOD09A1'
+    lta_json_name = 'MODIS_MOD09A1_V{collection}'
 
 
 class ModisTerra09GA(Terra, Modis09GA):
     """models modis 09GA from Terra"""
-    lta_json_name = 'MODIS_MOD09GA'
+    lta_json_name = 'MODIS_MOD09GA_V{collection}'
 
 
 class ModisTerra09GQ(Terra, Modis09GQ):
     """models modis 09GQ from Terra"""
-    lta_json_name = 'MODIS_MOD09GQ'
+    lta_json_name = 'MODIS_MOD09GQ_V{collection}'
 
 
 class ModisTerra09Q1(Terra, Modis09Q1):
     """models modis 09Q1 from Terra"""
-    lta_json_name = 'MODIS_MOD09Q1'
+    lta_json_name = 'MODIS_MOD09Q1_V{collection}'
 
 
 class ModisTerra13A1(Terra, Modis13A1):
     """models modis 13A1 from Terra"""
-    lta_json_name = 'MODIS_MOD13A1'
+    lta_json_name = 'MODIS_MOD13A1_V{collection}'
 
 
 class ModisTerra13A2(Terra, Modis13A2):
     """models modis 13A2 from Terra"""
-    lta_json_name = 'MODIS_MOD13A2'
+    lta_json_name = 'MODIS_MOD13A2_V{collection}'
 
 
 class ModisTerra13A3(Terra, Modis13A3):
     """models modis 13A3 from Terra"""
-    lta_json_name = 'MODIS_MOD13A3'
+    lta_json_name = 'MODIS_MOD13A3_V{collection}'
 
 
 class ModisTerra13Q1(Terra, Modis13Q1):
     """models modis 13Q1 from Terra"""
-    lta_json_name = 'MODIS_MOD13Q1'
+    lta_json_name = 'MODIS_MOD13Q1_V{collection}'
 
 
 class ModisTerra11A1(Terra, Modis11A1):
     """models modis 11A1 from Terra"""
-    lta_json_name = 'MODIS_MOD11A1'
+    lta_json_name = 'MODIS_MOD11A1_V{collection}'
 
 
 class ModisAqua09A1(Aqua, Modis09A1):
     """models modis 09A1 from Aqua"""
-    lta_json_name = 'MODIS_MYD09A1'
+    lta_json_name = 'MODIS_MYD09A1_V{collection}'
 
 
 class ModisAqua09GA(Aqua, Modis09GA):
     """models modis 09GA from Aqua"""
-    lta_json_name = 'MODIS_MYD09GA'
+    lta_json_name = 'MODIS_MYD09GA_V{collection}'
 
 
 class ModisAqua09GQ(Aqua, Modis09GQ):
     """models modis 09GQ from Aqua"""
-    lta_json_name = 'MODIS_MYD09GQ'
+    lta_json_name = 'MODIS_MYD09GQ_V{collection}'
 
 
 class ModisAqua09Q1(Aqua, Modis09Q1):
     """models modis 09Q1 from Aqua"""
-    lta_json_name = 'MODIS_MYD09Q1'
+    lta_json_name = 'MODIS_MYD09Q1_V{collection}'
 
 
 class ModisAqua13A1(Aqua, Modis13A1):
     """models modis 13A1 from Aqua"""
-    lta_json_name = 'MODIS_MYD13A1'
+    lta_json_name = 'MODIS_MYD13A1_V{collection}'
 
 
 class ModisAqua13A2(Aqua, Modis13A2):
     """models modis 13A2 from Aqua"""
-    lta_json_name = 'MODIS_MYD13A2'
+    lta_json_name = 'MODIS_MYD13A2_V{collection}'
 
 
 class ModisAqua13A3(Aqua, Modis13A3):
     """models modis 13A3 from Aqua"""
-    lta_json_name = 'MODIS_MYD13A3'
+    lta_json_name = 'MODIS_MYD13A3_V{collection}'
 
 
 class ModisAqua13Q1(Aqua, Modis13Q1):
     """models modis 13Q1 from Aqua"""
-    lta_json_name = 'MODIS_MYD13Q1'
+    lta_json_name = 'MODIS_MYD13Q1_V{collection}'
 
 
 class ModisAqua11A1(Aqua, Modis11A1):
     """models modis 11A1 from Aqua"""
-    lta_json_name = 'MODIS_MYD11A1'
+    lta_json_name = 'MODIS_MYD11A1_V{collection}'
 
 
 class Landsat(SensorProduct):
@@ -315,6 +323,7 @@ class Landsat(SensorProduct):
             self.correction_level = _idlist[1]
             self.collection_number = _idlist[-2]
             self.collection_category = _idlist[-1]
+            self.lta_json_name = self.lta_json_name.format(collection=int(self.collection_number))
         else:
             self.path = product_id[3:6].lstrip('0')
             self.row = product_id[6:9].lstrip('0')
@@ -323,6 +332,9 @@ class Landsat(SensorProduct):
             self.julian = product_id[9:16]
             self.station = product_id[16:19]
             self.version = product_id[19:21]
+
+    def __repr__(self):
+        return 'Landsat: {}'.format(self.__dict__)
 
     # SR based products are not available for those
     # dates where we are missing auxiliary data
@@ -339,7 +351,7 @@ class LandsatTM(Landsat):
                 AllProducts.sr_ndvi, AllProducts.sr_evi, AllProducts.sr_savi, AllProducts.sr_msavi, AllProducts.sr_ndmi,
                 AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.cloud, AllProducts.pixel_qa]
     lta_name = 'LANDSAT_TM'
-    lta_json_name = 'LANDSAT_TM_C1'
+    lta_json_name = 'LANDSAT_TM_C{collection}'
     sensor_name = 'tm'
 
     def __init__(self, product_id):
@@ -352,7 +364,7 @@ class LandsatETM(Landsat):
                 AllProducts.sr_ndvi, AllProducts.sr_evi, AllProducts.sr_savi, AllProducts.sr_msavi, AllProducts.sr_ndmi,
                 AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.cloud, AllProducts.pixel_qa]
     lta_name = 'LANDSAT_ETM_PLUS'
-    lta_json_name = 'LANDSAT_ETM_C1'
+    lta_json_name = 'LANDSAT_ETM_C{collection}'
     sensor_name = 'etm'
 
     def __init__(self, product_id):
@@ -365,7 +377,7 @@ class LandsatOLITIRS(Landsat):
                 AllProducts.sr_ndvi, AllProducts.sr_evi, AllProducts.sr_savi, AllProducts.sr_msavi, AllProducts.sr_ndmi,
                 AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.cloud, AllProducts.pixel_qa]
     lta_name = 'LANDSAT_8'
-    lta_json_name = 'LANDSAT_8_C1'
+    lta_json_name = 'LANDSAT_8_C{collection}'
     sensor_name = 'olitirs'
 
     def __init__(self, product_id):
@@ -376,7 +388,7 @@ class LandsatOLI(Landsat):
     """Models Landsat OLI only products"""
     products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.stats, AllProducts.pixel_qa]
     lta_name = 'LANDSAT_8'
-    lta_json_name = 'LANDSAT_8_C1'
+    lta_json_name = 'LANDSAT_8_C{collection}'
     sensor_name = 'oli'
 
     def __init__(self, product_id):
@@ -386,7 +398,7 @@ class LandsatOLI(Landsat):
 class LandsatTIRS(Landsat):
     """Models Landsat TIRS only products"""
     lta_name = 'LANDSAT_8'
-    lta_json_name = 'LANDSAT_8_C1'
+    lta_json_name = 'LANDSAT_8_C{collection}'
     sensor_name = 'tirs'
 
     def __init__(self, product_id):
