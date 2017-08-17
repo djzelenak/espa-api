@@ -671,7 +671,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         #           'product_opts', 'priority', 'order_date', 'running']
         query_results = db.fetcharr
 
-        if os.getenv('ESPA_M2M_MODE') == 'True':
+        if os.getenv('ESPA_M2M_MODE') == 'True' and inventory.available():
             logger.info('@@ URLS: FETCH via MACHINE-TO-MACHINE')
             results = self.parse_urls_m2m(query_results)
             logger.info('@@ URLS: COMPLETE via MACHINE-TO-MACHINE')
