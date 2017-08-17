@@ -11,13 +11,15 @@ env:
   - ESPA_API_EMAIL_RECEIVE=someone@nowhere.com
 before_install:
 - make docker-deps-up
+cache: pip
 install: 
 - pip install -r setup/requirements.txt
-cache: pip
+- pip install codecov
 script:
 - "travis_wait 30 sleep 1800 &"
 - "run/runtests"
 after_success:
 #- "/bin/bash deploy"
 - make docker-deps-down
+- codecov
 

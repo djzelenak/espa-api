@@ -178,7 +178,8 @@ class Errors(object):
         '''Indicates that LEDAPS/l8sr TOA could not process a scene because the
         sun was beneath the horizon'''
 
-        keys = ['solar zenith angle out of range']
+        keys = ['solar zenith angle out of range',
+                'Solar zenith angle is out of range']
         status = 'unavailable'
         reason = 'Solar zenith angle out of range, cannot process night scene'
         return self.__find_error(error_message, keys, status, reason)

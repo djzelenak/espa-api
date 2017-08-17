@@ -1,4 +1,5 @@
-# espa-api [![build status][0]][1]
+
+# espa-api [![build status][0]][1] [![Codecov branch][12]][13]
 
 This is an API for interacting with the ESPA ordering system. 
 
@@ -122,3 +123,6 @@ For a language-specific (python) example, please see [an API Demo][11].
 [9]: CHANGELOG.md
 [10]: https://ers.cr.usgs.gov/register/
 [11]: examples/api_demo.ipynb
+[12]: https://img.shields.io/codecov/c/github/USGS-EROS/espa-api/ee_json_api.svg?style=flat-square
+[13]: https://codecov.io/gh/USGS-EROS/espa-api
+
