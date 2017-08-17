@@ -35,17 +35,16 @@ class LTAService(object):
         self.api_version = config.get('bulk.{0}.json.version'.format(mode))
         self.agent = config.get('bulk.{0}.json.username'.format(mode))
         self.agent_wurd = config.get('bulk.{0}.json.password'.format(mode))
-        self.base_url = ('{}/inventory/json/v/{}/'
-                         .format(config.url_for('earthexplorer.json'),
-                                 self.api_version))
+        self.base_url = config.url_for('earthexplorer.json')
         self.current_user = current_user  # CONTACT ID
         self.token = token
         self.ipaddr = ipaddr or socket.gethostbyaddr(socket.gethostname())[2][0]
+        self.external_hosts = config.url_for('landsat.external').split(',')
+        self.load_balancer = config.url_for('landsat.datapool')
+
         if self.current_user and self.token:
             self.set_user_context(self.current_user, ipaddress=self.ipaddr)
 
-        self.external_hosts = config.url_for('landsat.external').split(',')
-        self.load_balancer = config.url_for('landsat.datapool')
     @property
     def base_url(self):
         return self._base_url
