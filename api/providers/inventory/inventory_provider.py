@@ -33,7 +33,7 @@ class InventoryProviderV0(InventoryInterfaceV0):
                 lpdaac_ls.extend(order[key]['inputs'])
 
         if lta_ls:
-            if os.getenv('ESPA_M2M_MODE') == 'True':
+            if os.getenv('ESPA_M2M_MODE') == 'True' and inventory.available():
                 results.update(self.check_dmid(lta_ls, contactid))
             else:
                 if not lta.check_lta_available():
@@ -41,10 +41,13 @@ class InventoryProviderV0(InventoryInterfaceV0):
                     raise InventoryConnectionException(msg)
                 results.update(self.check_LTA(lta_ls))
         if lpdaac_ls:
-            if not lpdaac.check_lpdaac_available():
-                msg = 'Could not connect to LPDAAC data source'
-                raise InventoryConnectionException(msg)
-            results.update(self.check_LPDAAC(lpdaac_ls))
+            if os.getenv('ESPA_M2M_MODE') == 'True' and inventory.available():
+                results.update(self.check_dmid(lpdaac_ls, contactid))
+            else:
+                if not lpdaac.check_lpdaac_available():
+                    msg = 'Could not connect to LPDAAC data source'
+                    raise InventoryConnectionException(msg)
+                results.update(self.check_LPDAAC(lpdaac_ls))
 
         not_avail = []
         for key, val in results.items():
