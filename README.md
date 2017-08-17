@@ -113,8 +113,8 @@ For a more detailed list of User API operations, see the
 
 For a language-specific (python) example, please see [an API Demo](examples/api_demo.ipynb). 
 
-[0]: https://img.shields.io/travis/USGS-EROS/espa-api/feature/codecov.svg?style=flat-square
+[0]: https://img.shields.io/travis/USGS-EROS/espa-api/master.svg?style=flat-square
 [1]: https://travis-ci.org/USGS-EROS/espa-api
-[2]: https://img.shields.io/codecov/c/github/USGS-EROS/espa-api/feature/codecov.svg?style=flat-square
+[2]: https://img.shields.io/codecov/c/github/USGS-EROS/espa-api/master.svg?style=flat-square
 [3]: https://codecov.io/gh/USGS-EROS/espa-api
 
