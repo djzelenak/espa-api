@@ -533,7 +533,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             if stype == 'landsat':
                 start = datetime.datetime.now()
                 auth_token = inventory.get_cached_session()
-                entity_map = inventory.get_cached_convert(auth_token, cid, name_list)
+                entity_map = inventory.get_cached_convert(auth_token, name_list)
                 landsat_urls = inventory.get_download_urls(auth_token, cid, name_list, usage)
                 landsat_urls = {i: landsat_urls.get(entity_map.get(i)) for i in name_list}
                 stop = datetime.datetime.now()
