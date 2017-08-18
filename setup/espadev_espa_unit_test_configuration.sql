@@ -32,7 +32,8 @@ INSERT INTO ordering_configuration (key, value) VALUES
     ('url.dev.ersapi', 'http://host.com'),
 
 -- api.external.lpdaac
-    ('url.dev.modis.datapool', 'hostname:port'),
+    ('url.dev.modis.datapool', 'localhost'),
+    ('url.dev.modis.external', 'localhost,localhost'),
     ('path.aqua_base_source', '/MOLA'),
     ('path.terra_base_source', '/MOLT'),
 
