@@ -274,6 +274,7 @@ class TestInventory(unittest.TestCase):
         self.assertIsNone(api.inventory.check(self.lta_order_good))
 
     @patch('api.external.inventory.requests.post', mockinventory.CachedRequestPreventionSpoof)
+    @patch('api.external.inventory.available', lambda: True)
     @patch('api.external.inventory.get_cached_session', mockinventory.get_cached_session)
     @patch('api.external.inventory.LTACachedService.get_lookup', mockinventory.get_cache_values)
     def test_lta_good(self):
