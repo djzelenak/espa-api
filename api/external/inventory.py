@@ -193,9 +193,10 @@ class LTAService(object):
             if not isinstance(results, dict):
                 raise LTAError('{} ID Lookup failed: {}'
                                .format(sensor_name, product_ids))
+            id_list = dataset_groups[sensor_name]
             if sensor_name.startswith('MODIS'):
                 # WARNING: See above. Need to "undo" the MODIS mapping problem.
-                results = {[i for i in dataset_groups[sensor_name] if k in i
+                results = {[i for i in id_list if k in i
                            ].pop(): v for k,v in results.items()}
             diff = set(id_list) - set(results.keys())
             if diff:
