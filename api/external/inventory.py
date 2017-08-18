@@ -380,10 +380,6 @@ def get_session():
     return LTAService().login()
 
 
-def available(token):
-    return LTAService(token).available()
-
-
 def logout(token):
     return LTAService(token).logout()
 
@@ -410,6 +406,10 @@ def clear_user_context(token):
 
 def get_cached_session():
     return LTACachedService().cached_login()
+
+
+def available():
+    return LTAService(LTACachedService().cached_login()).available()
 
 
 def get_cached_convert(token, product_ids):
