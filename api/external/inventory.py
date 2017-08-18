@@ -6,6 +6,7 @@ import urllib
 import traceback
 import datetime
 import socket
+import re
 
 import requests
 import memcache
@@ -40,9 +41,9 @@ class LTAService(object):
         self.token = token
         self.ipaddr = ipaddr or socket.gethostbyaddr(socket.gethostname())[2][0]
 
-        self.external_landsat_hosts = config.url_for('landsat.external').split(',')
+        self.external_landsat_regex = re.compile(config.url_for('landsat.external'))
         self.landsat_datapool = config.url_for('landsat.datapool')
-        self.external_modis_hosts = config.url_for('modis.external').split(',')
+        self.external_modis_regex = re.compile(config.url_for('modis.external'))
         self.modis_datapool = config.url_for('modis.datapool')
 
         if self.current_user and self.token:
@@ -255,12 +256,10 @@ class LTAService(object):
                 raise LTAError('{} failed fetch download urls: {}'
                                .format(sensor_name, product_ids))
             urls = {i['entityId']: i['url'] for i in results}
-            for host in self.external_landsat_hosts:
-                urls = {k:v.replace(host, self.landsat_datapool)
-                        for k,v in urls.items()}
-            for host in self.external_modis_hosts:
-                urls = {k:v.replace(host, self.modis_datapool)
-                        for k,v in urls.items()}
+            urls = {k: self.external_landsat_regex.sub(self.landsat_datapool, v)
+                    for k,v in urls.items()}
+            urls = {k: self.external_modis_regex.sub(self.modis_datapool, v)
+                    for k,v in urls.items()}
 
             diff = set(ents) - set(urls)
             if diff:
