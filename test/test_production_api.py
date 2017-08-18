@@ -48,6 +48,7 @@ class TestProductionAPI(unittest.TestCase):
         response = api.fetch_production_products(params)
         self.assertTrue('bilbo' in response[0]['orderid'])
 
+    @patch('api.external.inventory.available', lambda : True)
     @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
     @patch('api.external.inventory.get_cached_convert', inventory.get_cached_convert)
     @patch('api.external.inventory.get_download_urls', inventory.get_download_urls)
