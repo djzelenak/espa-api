@@ -23,7 +23,7 @@ INSERT INTO ordering_configuration (key, value) VALUES
     ('soap.client_timeout', '1800'),
 
 -- api.external.m2m
-    ('url.dev.earthexplorer.json', 'http://host.com'),
+    ('url.dev.earthexplorer.json', 'http://host.com/inventory/json/'),
     ('bulk.dev.json.version', '0.0.0'),
     ('bulk.dev.json.username', 'dummy_username'),
     ('bulk.dev.json.password', 'dummy_password'),
