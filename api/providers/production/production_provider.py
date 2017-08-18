@@ -529,37 +529,25 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                         len(name_list), stype, cid, orderid)
             (usage, item) = usage_by_cid[(cid, orderid, stype)]
 
-            landsat_urls = dict()
-            if stype == 'landsat':
+            input_urls = dict()
+            if stype in ('landsat', 'modis'):
                 start = datetime.datetime.now()
                 auth_token = inventory.get_cached_session()
                 entity_map = inventory.get_cached_convert(auth_token, name_list)
-                landsat_urls = inventory.get_download_urls(auth_token, cid, name_list, usage)
-                landsat_urls = {i: landsat_urls.get(entity_map.get(i)) for i in name_list}
+                input_urls = inventory.get_download_urls(auth_token, cid, name_list, usage)
+                input_urls = {i: input_urls.get(entity_map.get(i)) for i in name_list}
                 stop = datetime.datetime.now()
                 interval = stop - start
                 logger.warn('Retrieving download urls took {0} seconds'
                              .format(interval.seconds))
-                logger.warn('Retrieved {0} landsat urls for cid:{1}'.format(len(landsat_urls), cid))
-
-            modis_urls = dict()
-            if stype == 'modis':
-                modis_urls = lpdaac.get_download_urls(name_list)
-                logger.warn('Retrieved {0} modis urls for cid:{1}'.format(len(modis_urls), cid))
+                logger.warn('Retrieved {0} urls for cid:{1}'.format(len(input_urls), cid))
 
             for scene_id in name_list:
                 dload_url = None
-                if stype == 'landsat':
+                if stype in ('landsat', 'modis'):
 
-                    dload_url = landsat_urls.get(scene_id)
+                    dload_url = input_urls.get(scene_id)
                     if dload_url:
-                        logger.debug('download_url was in landsat_urls for {0}'.format(scene_id))
-                        if encode_urls:
-                            dload_url = urllib.quote(dload_url, '')
-
-                elif stype == 'modis':
-                    if 'download_url' in modis_urls[scene_id]:
-                        dload_url = modis_urls[scene_id]['download_url']
                         if encode_urls:
                             dload_url = urllib.quote(dload_url, '')
 
