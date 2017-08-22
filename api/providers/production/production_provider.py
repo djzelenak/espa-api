@@ -1061,7 +1061,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         Handles all submitted landsat products
         :return: True
         """
-        if not lta.check_lta_available():
+        if os.getenv('ESPA_M2M_MODE') == 'True' and not inventory.available():
+            logger.critical('M2M down. Skip handle_submitted_landsat_products...')
+            return False
+        if os.getenv('ESPA_M2M_MODE') != 'True' and not lta.check_lta_available():
             logger.critical('LTA down. Skip handle_submitted_landsat_products...')
             return False
         logger.info('Handling submitted landsat products...')
@@ -1088,7 +1091,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         Moves all submitted modis products to oncache if true
         :return: True
         """
-        if not lpdaac.check_lpdaac_available():
+        if os.getenv('ESPA_M2M_MODE') == 'True' and not inventory.available():
+            logger.critical('M2M down. Skip handle_submitted_modis_products...')
+            return False
+        if os.getenv('ESPA_M2M_MODE') != 'True' and not lpdaac.check_lpdaac_available():
             logger.critical('DAAC down. Skip handle_submitted_modis_products...')
             return False
         logger.info("Handling submitted modis products...")
@@ -1099,18 +1105,35 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             lpdaac_ids = []
             nonlp_ids = []
 
-            for product in modis_products:
-                if lpdaac.input_exists(product.name) is True:
-                    lpdaac_ids.append(product.id)
-                    logger.warn('{0} is on cache'.format(product.name))
-                else:
-                    nonlp_ids.append(product.id)
-                    logger.warn('{0} was not found in the modis data pool'.format(product.name))
+            if os.getenv('ESPA_M2M_MODE') == 'True' and inventory.available():
+                # TODO: This shouldn't be necessary if everything uses m2m...
+                prod_name_list = [p.name for p in modis_products]
+                token = inventory.get_cached_session()
+                results = inventory.get_cached_verify_scenes(token, prod_name_list)
+                valid = list(set(r for r,v in results.items() if v))
+                invalid = list(set(prod_name_list)-set(valid))
 
-            if lpdaac_ids:
-                Scene.bulk_update(lpdaac_ids, {"status": "oncache"})
-            if nonlp_ids:
-                Scene.bulk_update(nonlp_ids, {"status":"unavailable", "note":"not found in modis data pool"})
+                available_ids = [p.id for p in product_list if p.name in valid]
+                if len(available_ids):
+                    Scene.bulk_update(available_ids, {'status': 'oncache', 'note': "''"})
+
+                invalids = [p for p in product_list if p.name in invalid]
+                if len(invalid_ids):
+                    self.set_products_unavailable(invalids, 'No longer found in the archive, please search again')
+
+            else:
+                for product in modis_products:
+                    if lpdaac.input_exists(product.name) is True:
+                        lpdaac_ids.append(product.id)
+                        logger.warn('{0} is on cache'.format(product.name))
+                    else:
+                        nonlp_ids.append(product.id)
+                        logger.warn('{0} was not found in the modis data pool'.format(product.name))
+
+                if lpdaac_ids:
+                    Scene.bulk_update(lpdaac_ids, {"status": "oncache"})
+                if nonlp_ids:
+                    Scene.bulk_update(nonlp_ids, {"status":"unavailable", "note":"not found in modis data pool"})
 
         return True
 
