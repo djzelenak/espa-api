@@ -972,23 +972,38 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         product_list = self.check_dependencies_for_products(product_list)
 
         prod_name_list = [p.name for p in product_list]
-        results = lta.order_scenes(prod_name_list, contact_id)
+        if os.getenv('ESPA_M2M_MODE') == 'True' and inventory.available():
+            token = inventory.get_cached_session()
+            results = inventory.get_cached_verify_scenes(token, prod_name_list)
+            valid = list(set(r for r,v in results.items() if v))
+            invalid = list(set(prod_name_list)-set(valid))
 
-        logger.info("Checking ordering results for contact:{0}".format(contact_id))
+            available_ids = [p.id for p in product_list if p.name in valid]
+            if len(available_ids):
+                Scene.bulk_update(available_ids, {'status': 'oncache', 'note': "''"})
 
-        if 'available' in results and len(results['available']) > 0:
-            available_product_ids = [product.id for product in product_list if product.name in results['available']]
-            Scene.bulk_update(available_product_ids, {"status":"oncache", "note":"''"})
+            invalids = [p for p in product_list if p.name in invalid]
+            if len(invalid_ids):
+                self.set_products_unavailable(invalids, 'No longer found in the archive, please search again')
 
-        if 'ordered' in results and len(results['ordered']) > 0:
-            ordered_product_ids = [product.id for product in product_list if product.name in results['ordered']]
-            Scene.bulk_update(ordered_product_ids, {"status":"onorder", "tram_order_id":results['lta_order_id'], "note":"''"})
+        else:
+            results = lta.order_scenes(prod_name_list, contact_id)
 
-        if 'invalid' in results and len(results['invalid']) > 0:
-            #look to see if they are ee orders.  If true then update the
-            #unit status
-            invalid = [p for p in product_list if p.name in results['invalid']]
-            self.set_products_unavailable(invalid, 'No longer found in the archive, please search again')
+            logger.info("Checking ordering results for contact:{0}".format(contact_id))
+
+            if 'available' in results and len(results['available']) > 0:
+                available_product_ids = [product.id for product in product_list if product.name in results['available']]
+                Scene.bulk_update(available_product_ids, {"status":"oncache", "note":"''"})
+
+            if 'ordered' in results and len(results['ordered']) > 0:
+                ordered_product_ids = [product.id for product in product_list if product.name in results['ordered']]
+                Scene.bulk_update(ordered_product_ids, {"status":"onorder", "tram_order_id":results['lta_order_id'], "note":"''"})
+
+            if 'invalid' in results and len(results['invalid']) > 0:
+                #look to see if they are ee orders.  If true then update the
+                #unit status
+                invalid = [p for p in product_list if p.name in results['invalid']]
+                self.set_products_unavailable(invalid, 'No longer found in the archive, please search again')
 
         return True
 
