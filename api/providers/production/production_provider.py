@@ -1113,11 +1113,11 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 valid = list(set(r for r,v in results.items() if v))
                 invalid = list(set(prod_name_list)-set(valid))
 
-                available_ids = [p.id for p in product_list if p.name in valid]
+                available_ids = [p.id for p in modis_products if p.name in valid]
                 if len(available_ids):
                     Scene.bulk_update(available_ids, {'status': 'oncache', 'note': "''"})
 
-                invalids = [p for p in product_list if p.name in invalid]
+                invalids = [p for p in modis_products if p.name in invalid]
                 if len(invalid_ids):
                     self.set_products_unavailable(invalids, 'No longer found in the archive, please search again')
 
