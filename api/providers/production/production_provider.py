@@ -983,7 +983,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 Scene.bulk_update(available_ids, {'status': 'oncache', 'note': "''"})
 
             invalids = [p for p in product_list if p.name in invalid]
-            if len(invalid_ids):
+            if len(invalids):
                 self.set_products_unavailable(invalids, 'No longer found in the archive, please search again')
 
         else:
@@ -1118,7 +1118,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     Scene.bulk_update(available_ids, {'status': 'oncache', 'note': "''"})
 
                 invalids = [p for p in modis_products if p.name in invalid]
-                if len(invalid_ids):
+                if len(invalids):
                     self.set_products_unavailable(invalids, 'No longer found in the archive, please search again')
 
             else:
