@@ -84,7 +84,7 @@ class TestInventory(unittest.TestCase):
         self.assertIsInstance(token, basestring)
         self.assertTrue(inventory.logout(token))
 
-    @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
+    @patch('api.external.inventory.requests.head', mockinventory.RequestsSpoof)
     def test_api_available(self):
         self.assertTrue(inventory.available())
 

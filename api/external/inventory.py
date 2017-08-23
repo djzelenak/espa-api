@@ -132,11 +132,10 @@ class LTAService(object):
 
         :return: bool
         """
-        endpoint = 'login'
-        payload = dict(username=self.agent, password=self.agent_wurd,
-                       authType='EROS')
-        resp = self._post(endpoint, payload)
-        return resp.get('data') is not None
+        url = self.base_url + 'login'
+        logger.debug('HEAD {}'.format(url))
+        resp = requests.head(url)
+        return resp.ok
 
     def logout(self):
         """
@@ -417,7 +416,7 @@ def get_cached_session():
 
 
 def available():
-    return LTAService(LTACachedService().cached_login()).available()
+    return LTAService().available()
 
 
 def get_cached_convert(token, product_ids):
