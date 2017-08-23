@@ -281,7 +281,7 @@ class TestInventory(unittest.TestCase):
         """
         Check LTA support from the inventory provider
         """
-        os.environ['ESPA_M2M_MODE'] = 'True'
+        os.environ['ESPA_M2M_MODE'] = 'LANDSAT'
         self.assertIsNone(api.inventory.check(self.lta_order_good))
         os.environ['ESPA_M2M_MODE'] = ''
 

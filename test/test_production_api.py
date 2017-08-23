@@ -55,7 +55,7 @@ class TestProductionAPI(unittest.TestCase):
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry',
            mock_production_provider.set_product_retry)
     def test_fetch_production_products_landsat(self):
-        os.environ['ESPA_M2M_MODE'] = 'True'
+        os.environ['ESPA_M2M_MODE'] = 'LANDSAT,MODIS,URLS'
         order_id = self.mock_order.generate_testing_order(self.user_id)
         # need scenes with statuses of 'processing'
         self.mock_order.update_scenes(order_id, 'landsat', 'status', ['processing', 'oncache'])
@@ -63,7 +63,7 @@ class TestProductionAPI(unittest.TestCase):
         params = {'for_user': user.username, 'product_types': ['landsat']}
         response = api.fetch_production_products(params)
         self.assertTrue('bilbo' in response[0]['orderid'])
-        os.environ['ESPA_M2M_MODE'] = 'False'
+        os.environ['ESPA_M2M_MODE'] = ''
 
     @patch('api.external.lta.get_download_urls', lta.get_download_urls)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry',

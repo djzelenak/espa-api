@@ -33,7 +33,7 @@ class InventoryProviderV0(InventoryInterfaceV0):
                 lpdaac_ls.extend(order[key]['inputs'])
 
         if lta_ls:
-            if os.getenv('ESPA_M2M_MODE') == 'True' and inventory.available():
+            if 'LANDSAT' in os.getenv('ESPA_M2M_MODE', '') and inventory.available():
                 results.update(self.check_dmid(lta_ls, contactid))
             else:
                 if not lta.check_lta_available():
@@ -41,7 +41,7 @@ class InventoryProviderV0(InventoryInterfaceV0):
                     raise InventoryConnectionException(msg)
                 results.update(self.check_LTA(lta_ls))
         if lpdaac_ls:
-            if os.getenv('ESPA_M2M_MODE') == 'True' and inventory.available():
+            if 'MODIS' in os.getenv('ESPA_M2M_MODE', '') and inventory.available():
                 results.update(self.check_dmid(lpdaac_ls, contactid))
             else:
                 if not lpdaac.check_lpdaac_available():
