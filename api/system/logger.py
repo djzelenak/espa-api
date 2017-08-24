@@ -24,7 +24,7 @@ ilogger.setLevel(logging.DEBUG)
 
 espa_log_dir = os.getenv('ESPA_LOG_DIR')
 if espa_log_dir:
-    ih = FileHandler(os.path.join(espa_log_dir, 'espa-api-flask.log'))
+    ih = FileHandler(os.path.join(espa_log_dir, 'espa-api-info.log'))
 else:
     ih = StreamHandler(stream=sys.stdout)
 eh = SMTPHandler(mailhost='localhost', fromaddr=config.get('apiemailsender'), toaddrs=config.get('ESPA_API_EMAIL_RECEIVE').split(','), subject='ESPA API ERROR')
