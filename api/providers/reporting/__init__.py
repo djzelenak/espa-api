@@ -30,16 +30,18 @@ REPORTS = {
         'description': 'Input product type counts',
         'query': r'''SELECT
                      COUNT(*) "Total",
-                     SUM(CASE WHEN name LIKE 'LC8%' THEN 1 ELSE 0 END) "OLI/TIRS",
-                     SUM(CASE WHEN name LIKE 'LO8%' THEN 1 ELSE 0 END) "OLI",
-                     SUM(CASE WHEN name LIKE 'LE7%' THEN 1 ELSE 0 END) "ETM",
-                     SUM(CASE WHEN name LIKE 'LT%' THEN 1 ELSE 0 END) "TM",
+                     SUM(CASE WHEN name LIKE 'LC08%' THEN 1 ELSE 0 END) "OLI/TIRS",
+                     SUM(CASE WHEN name LIKE 'LO08%' THEN 1 ELSE 0 END) "OLI",
+                     SUM(CASE WHEN name LIKE 'LE07%' THEN 1 ELSE 0 END) "ETM",
+                     SUM(CASE WHEN name LIKE 'LT0%' THEN 1 ELSE 0 END) "TM",
                      SUM(CASE WHEN name LIKE 'MOD09%' THEN 1 ELSE 0 END) "MOD09",
                      SUM(CASE WHEN name LIke 'MYD09%' THEN 1 ELSE 0 END) "MYD09",
                      SUM(CASE WHEN name LIKE 'MOD13%' THEN 1 ELSE 0 END) "MOD13",
-                     SUM(CASE WHEN name LIKE 'MYD13%' THEN 1 ELSE 0 END) "MYD13"
+                     SUM(CASE WHEN name LIKE 'MYD13%' THEN 1 ELSE 0 END) "MYD13",
+                     SUM(CASE WHEN name LIKE 'MOD11%' THEN 1 ELSE 0 END) "MOD11",
+                     SUM(CASE WHEN name LIKE 'MYD11%' THEN 1 ELSE 0 END) "MYD11"
                      FROM ordering_scene
-                     WHERE status != 'purged' '''
+                     WHERE status not in ('purged', 'cancelled', 'complete', 'unavailable') '''
     },
     'machine_performance': {
         'display_name': 'Machines - 24 Hour Performance',
@@ -78,7 +80,7 @@ REPORTS = {
                      s.status "Status",
                      s.note "Note" ,
                      s.retry_after "Retry After",
-                     '/ordering/order-status/' || o.orderid || '/' as "Order Link"
+                     '/logfile/' || o.orderid || '/' || s.name as "Order Link"
                      FROM ordering_scene s
                      JOIN ordering_order o ON
                      o.id = s.order_id
@@ -97,7 +99,7 @@ REPORTS = {
                     u.last_name "Last Name"
                     FROM ordering_order o, auth_user u
                     WHERE o.user_id = u.id
-                    AND o.status != 'purged'
+                    AND o.status not in ( 'purged', 'cancelled' )
                     GROUP BY u.email, u.first_name, u.last_name
                     ORDER BY "Total Orders" DESC'''
     },
@@ -152,11 +154,12 @@ REPORTS = {
                      u.first_name "First Name",
                      u.last_name "Last Name",
                      SUM(case when s.status = 'error' then 1 else 0 end) "Error",
+                     SUM(case when s.status = 'retry' then 1 else 0 end) "Retry",
                      SUM(case when s.status = 'onorder' then 1 else 0 end) "On Order"
                      FROM ordering_scene s, ordering_order o, auth_user u
                      WHERE s.order_id = o.id
                      AND o.user_id = u.id
-                     AND s.status != 'purged'
+                     AND s.status not in ('purged', 'cancelled')
                      GROUP BY u.email, u.first_name, u.last_name
                      ORDER BY "Total Active Scenes" DESC'''
     },
@@ -185,8 +188,8 @@ REPORTS = {
                      JOIN ordering_order o on u.id = o.user_id
                      JOIN ordering_scene s on o.id = s.order_id
                      WHERE s.completion_date IS NOT NULL
-                     AND o.status != 'purged'
-                     AND s.status != 'purged'
+                     AND o.status not in ( 'purged', 'cancelled' )
+                     AND s.status not in ( 'purged', 'cancelled' )
                      ORDER BY s.completion_date DESC LIMIT 100'''
     },
     'aggregate_product_counts': {
@@ -220,6 +223,7 @@ REPORTS = {
                      JOIN auth_user u on u.id = o.user_id
                      WHERE s.status not in ('complete',
                                             'unavailable',
+                                            'cancelled',
                                             'purged')
                      GROUP BY u.username,
                               u.email,
@@ -252,7 +256,8 @@ REPORTS = {
                      AND o.status = 'ordered'
                      AND s.status = 'oncache'
                      AND q.email = u.email
-                     ORDER BY q.running ASC, o.order_date ASC'''
+                     ORDER BY q.running ASC, o.order_date ASC
+                     LIMIT 25'''
     }
 }
 
