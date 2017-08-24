@@ -1040,7 +1040,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         :return: list
         """
         products_need_check = {
-            'lst': 'http://' + config.url_for('modis.datapool')  # LST requires ASTER GED
+            'lst': config.url_for('modis.datapool')  # LST requires ASTER GED
         }
         passed_dep_check = list()
         for s in scene_list:
