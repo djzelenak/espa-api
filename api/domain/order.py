@@ -265,14 +265,11 @@ class Order(object):
         :param params: additional SQL query parameters
         :return: list of scene objects
         """
-        scene_list = []
         user_orders = Order.where({'user_id': user_id})
-        for order in user_orders:
-            scenes = order.scenes(params)
-            if scenes:
-                for i in scenes:
-                    scene_list.append(i)
-
+        if params is None:
+            params = dict()
+        params.update({'order_id': [o.id for o in user_orders]})
+        scene_list = Scene.where(params)
         return scene_list
 
     @classmethod
