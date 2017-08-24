@@ -8,7 +8,7 @@ from api.domain.mocks.user import MockUser
 from api.domain.order import Order, OptionsConversion
 from api.domain.scene import Scene
 from api.domain.user import User
-from api.external.mocks import lta, lpdaac, onlinecache, nlaps, hadoop
+from api.external.mocks import lta, inventory, lpdaac, onlinecache, nlaps, hadoop
 from api.interfaces.production.version1 import API
 from api.notification import emails
 from api.providers.production.mocks.production_provider import MockProductionProvider
@@ -41,20 +41,37 @@ class TestProductionAPI(unittest.TestCase):
            mock_production_provider.set_product_retry)
     def test_fetch_production_products_modis(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
-        # need scenes with statuses of 'processing' and 'ordered'
-        self.mock_order.update_scenes(order_id, 'status', ['processing', 'ordered', 'oncache'])
+        # need scenes with statuses of 'processing'
+        self.mock_order.update_scenes(order_id, 'modis', 'status', ['processing', 'oncache'])
         user = User.find(self.user_id)
         params = {'for_user': user.username, 'product_types': ['modis']}
         response = api.fetch_production_products(params)
         self.assertTrue('bilbo' in response[0]['orderid'])
 
-    @patch('api.external.lta.get_download_urls', lta.get_download_urls)
+    @patch('api.external.inventory.available', lambda : True)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.get_cached_convert', inventory.get_cached_convert)
+    @patch('api.external.inventory.get_download_urls', inventory.get_download_urls)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry',
            mock_production_provider.set_product_retry)
     def test_fetch_production_products_landsat(self):
+        os.environ['ESPA_M2M_MODE'] = 'LANDSAT,MODIS,URLS'
+        order_id = self.mock_order.generate_testing_order(self.user_id)
+        # need scenes with statuses of 'processing'
+        self.mock_order.update_scenes(order_id, 'landsat', 'status', ['processing', 'oncache'])
+        user = User.find(self.user_id)
+        params = {'for_user': user.username, 'product_types': ['landsat']}
+        response = api.fetch_production_products(params)
+        self.assertTrue('bilbo' in response[0]['orderid'])
+        os.environ['ESPA_M2M_MODE'] = ''
+
+    @patch('api.external.lta.get_download_urls', lta.get_download_urls)
+    @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry',
+           mock_production_provider.set_product_retry)
+    def test_fetch_production_products_landsat_LEGACY(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
         # need scenes with statuses of 'processing' and 'ordered'
-        self.mock_order.update_scenes(order_id, 'status', ['processing','oncache','ordered'])
+        self.mock_order.update_scenes(order_id, 'landsat', 'status', ['processing', 'oncache'])
         user = User.find(self.user_id)
         params = {'for_user': user.username, 'product_types': ['landsat']}
         response = api.fetch_production_products(params)
@@ -62,7 +79,7 @@ class TestProductionAPI(unittest.TestCase):
 
     def test_fetch_production_products_plot(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
-        self.mock_order.update_scenes(order_id, 'status', ['complete'])
+        self.mock_order.update_scenes(order_id, ('landsat', 'modis'), 'status', ['complete'])
         order = Order.find(order_id)
         plot_scene = order.scenes({'name': 'plot'})[0]
         plot_scene.name = 'plot'
@@ -345,11 +362,11 @@ class TestProductionAPI(unittest.TestCase):
     def test_production_handle_retry_products(self):
         prev = datetime.datetime.now() - datetime.timedelta(hours=1)
         order_id = self.mock_order.generate_testing_order(self.user_id)
-        self.mock_order.update_scenes(order_id, 'status', ['retry'])
-        self.mock_order.update_scenes(order_id, 'retry_after', [prev])
+        self.mock_order.update_scenes(order_id, 'landsat', 'status', ['retry'])
+        self.mock_order.update_scenes(order_id, 'landsat', 'retry_after', [prev])
         scenes = Order.find(order_id).scenes({'status': 'retry'})
         production_provider.handle_retry_products(scenes)
-        for s in Scene.where({'order_id': order_id}):
+        for s in Scene.where({'order_id': order_id, 'sensor_type': 'landsat'}):
             self.assertTrue(s.status == 'submitted')
 
     #@patch('api.external.lta.get_available_orders', lta.get_available_orders)
@@ -546,7 +563,7 @@ class TestProductionAPI(unittest.TestCase):
     def test_catch_orphaned_scenes(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
         # need scenes with statuses of 'queued'
-        self.mock_order.update_scenes(order_id, 'status', ['queued'])
+        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'plot'), 'status', ['queued'])
         response = production_provider.catch_orphaned_scenes()
         self.assertTrue(response)
 

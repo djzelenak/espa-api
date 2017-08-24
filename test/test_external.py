@@ -10,8 +10,11 @@ from api.external.mocks import hadoop as mockhadoop
 from api.external import lta
 from api.external.mocks import lta as mocklta
 from api.external.hadoop import HadoopHandler
+from api.external.mocks import inventory as mockinventory
 
 from api.external import lpdaac
+from api.external import inventory
+from api import ProductNotImplemented
 
 class TestLPDAAC(unittest.TestCase):
     def setUp(self):
@@ -35,44 +38,6 @@ class TestLTA(unittest.TestCase):
     def tearDown(self):
         os.environ['espa_api_testing'] = ''
 
-    @patch('api.external.lta.requests.post', mocklta.get_verify_scenes_response)
-    def test_verify_scenes(self):
-        resp = lta.verify_scenes(self.scene_ids)
-        for item in self.scene_ids:
-            self.assertTrue(item in resp.keys())
-            self.assertTrue(resp[item])
-
-    @patch('api.external.lta.requests.post')
-    def test_verify_scenes_fail(self, mock_requests):
-        mock_requests.return_value = MagicMock(ok=False, reason='Testing Failure')
-        with self.assertRaises(Exception):
-            resp = lta.verify_scenes(self.scene_ids)
-
-    @patch('api.external.lta.requests.post', mocklta.get_order_scenes_response_main)
-    def test_order_scenes(self):
-        resp = lta.order_scenes(self.scene_ids, self.contact_id)
-        self.assertIn('ordered', resp)
-        self.assertEqual(len(self.scene_ids), len(resp['ordered']))
-
-    @patch('api.external.lta.requests.post')
-    def test_order_scenes_fail(self, mock_requests):
-        mock_requests.return_value = MagicMock(ok=False, reason='Testing Failure')
-        with self.assertRaises(Exception):
-            resp = lta.order_scenes(self.scene_ids, self.contact_id)
-
-    @patch('api.external.lta.requests.post', mocklta.get_order_scenes_response_main)
-    def test_get_download_urls(self):
-        resp = lta.get_download_urls(self.scene_ids, self.contact_id)
-        for item in self.scene_ids:
-            self.assertIn(item, resp)
-            self.assertEqual('available', resp[item]['status'])
-
-    @patch('api.external.lta.requests.post')
-    def test_get_download_urls_fail(self, mock_requests):
-        mock_requests.return_value = MagicMock(ok=False, reason='Testing Failure')
-        with self.assertRaises(Exception):
-            resp = lta.get_download_urls(self.scene_ids, self.contact_id)
-
     #@patch('api.external.lta.OrderUpdateServiceClient.update_order', mocklta.return_update_order_resp)
     @patch('api.external.lta.SoapClient', mocklta.MockSudsClient)
     def test_get_available_orders(self):
@@ -94,6 +59,133 @@ class TestLTA(unittest.TestCase):
     def test_update_order_incomplete(self):
         resp = lta.update_order_status('failure', self.lta_unit_number, 'C')
         self.assertFalse(resp.success)
+
+
+class TestInventory(unittest.TestCase):
+    """
+    Provide testing for the EarthExplorer JSON API (Machine-2-Machine)
+    """
+    def setUp(self):
+        os.environ['espa_api_testing'] = 'True'
+        self.token = '2fd976601eef1ebd632b545a8fef11a3'
+        self.usage = 'espa-production@email.com-20170801-01-01'
+        self.collection_ids = ['LC08_L1TP_156063_20170207_20170216_01_T1',
+                               'LE07_L1TP_028028_20130510_20160908_01_T1',
+                               'LT05_L1TP_032028_20120425_20160830_01_T1']
+        self.contact_id = 0
+
+    def tearDown(self):
+        os.environ['espa_api_testing'] = ''
+
+    @patch('api.external.inventory.requests.get', mockinventory.RequestsSpoof)
+    @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
+    def test_api_login(self):
+        token = inventory.get_session()
+        self.assertIsInstance(token, basestring)
+        self.assertTrue(inventory.logout(token))
+
+    @patch('api.external.inventory.requests.head', mockinventory.RequestsSpoof)
+    def test_api_available(self):
+        self.assertTrue(inventory.available())
+
+    @patch('api.external.inventory.requests.get', mockinventory.RequestsSpoof)
+    @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
+    def test_api_id_lookup(self):
+        entity_ids = inventory.convert(self.token, self.contact_id, self.collection_ids)
+        self.assertEqual(set(self.collection_ids), set(entity_ids))
+
+    @patch('api.external.inventory.requests.get', mockinventory.RequestsSpoof)
+    @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
+    def test_api_validation(self):
+        expected = {k: True for k in self.collection_ids}
+        results = inventory.verify_scenes(self.token, self.contact_id, self.collection_ids)
+        self.assertItemsEqual(expected, results)
+
+    @patch('api.external.inventory.requests.get', mockinventory.RequestsSpoof)
+    @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
+    def test_api_get_download_urls(self):
+        entity_ids = inventory.convert(self.token, self.contact_id, self.collection_ids)
+        results = inventory.get_download_urls(self.token, self.contact_id, self.collection_ids, self.usage)
+        self.assertIsInstance(results, dict)
+        ehost, ihost = 'invalid.com', '127.0.0.1'
+        results = {k:v.replace(ehost, ihost) for k,v in results.items()}
+        self.assertEqual(set(entity_ids.values()), set(results))
+        ip_address_host_regex = 'http://\d+\.\d+\.\d+\.\d+/.*\.tar\.gz'
+        for pid in entity_ids.values():
+            self.assertRegexpMatches(results.get(pid), ip_address_host_regex)
+
+    @patch('api.external.inventory.requests.get', mockinventory.RequestsSpoof)
+    @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
+    def test_set_user_context(self):
+        success = inventory.set_user_context(self.token, self.contact_id)
+        self.assertTrue(success)
+
+    @patch('api.external.inventory.requests.get', mockinventory.RequestsSpoof)
+    @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
+    def test_clear_user_context(self):
+        success = inventory.clear_user_context(self.token)
+        self.assertTrue(success)
+
+    def test_id_sensor_limits(self):
+        with self.assertRaisesRegexp(ProductNotImplemented, 'is not a supported sensor product'):
+            _ = inventory.convert(self.token, self.contact_id, ['bad_id_yo'])
+
+    @patch('api.external.inventory.requests.get', mockinventory.RequestsSpoof)
+    @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
+    def test_bad_id_lookup(self):
+        with self.assertRaisesRegexp(inventory.LTAError, 'ID Lookup failed'):
+            _ = inventory.convert(self.token, self.contact_id, ['LC08_L1TP_000000_19000101_00000000_00_T1'])
+
+    @patch('api.external.inventory.requests.post', mockinventory.BadRequestSpoofError)
+    def test_error_code_halt(self):
+        expected = 'UNKNOWN: A fake server error occurred'
+        with self.assertRaisesRegexp(inventory.LTAError, expected):
+            _ = inventory.get_session()
+
+    @patch('api.external.inventory.requests.get', mockinventory.BadRequestSpoofNegative)
+    @patch('api.external.inventory.requests.post', mockinventory.BadRequestSpoofNegative)
+    def test_false_data_response(self):
+        expected = 'Set user context ESPA failed for user {}'.format(self.contact_id)
+        with self.assertRaisesRegexp(inventory.LTAError, expected):
+            _ = inventory.set_user_context(self.token, self.contact_id)
+
+
+class TestCachedInventory(unittest.TestCase):
+    """
+    Provide testing for the CACHED EarthExplorer JSON API
+        (FIXME: this still requires an active memcached session)
+    """
+    @patch('api.external.inventory.requests.get', mockinventory.RequestsSpoof)
+    @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
+    def setUp(self):
+        os.environ['espa_api_testing'] = 'True'
+        self.token = inventory.get_cached_session()  # Initial "real" request
+        self.collection_ids = ['LC08_L1TP_156063_20170207_20170216_01_T1',
+                               'LE07_L1TP_028028_20130510_20160908_01_T1',
+                               'LT05_L1TP_032028_20120425_20160830_01_T1']
+        _ = inventory.get_cached_convert(self.token, self.collection_ids)
+        _ = inventory.get_cached_verify_scenes(self.token, self.collection_ids)
+
+    def tearDown(self):
+        os.environ['espa_api_testing'] = ''
+
+    @patch('api.external.inventory.requests.post', mockinventory.CachedRequestPreventionSpoof)
+    def test_cached_login(self):
+        token = inventory.get_cached_session()
+        self.assertIsInstance(token, basestring)
+
+    @patch('api.external.inventory.requests.get', mockinventory.CachedRequestPreventionSpoof)
+    @patch('api.external.inventory.requests.post', mockinventory.CachedRequestPreventionSpoof)
+    def test_cached_lookup(self):
+        entity_ids = inventory.get_cached_convert(self.token, self.collection_ids)
+        self.assertEqual(set(self.collection_ids), set(entity_ids))
+
+    @patch('api.external.inventory.requests.get', mockinventory.CachedRequestPreventionSpoof)
+    @patch('api.external.inventory.requests.post', mockinventory.CachedRequestPreventionSpoof)
+    def test_cached_verify_scenes(self):
+        expected = {k: True for k in self.collection_ids}
+        results = inventory.get_cached_verify_scenes(self.token, self.collection_ids)
+        self.assertItemsEqual(expected, results)
 
 
 class TestNLAPS(unittest.TestCase):

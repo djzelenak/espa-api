@@ -1,24 +1,23 @@
 
-# espa-api [![build status][0]][1] [![Codecov branch][2]][3]
+# espa-api [![build status][0]][1] [![Codecov branch][12]][13]
 
 This is an API for interacting with the ESPA ordering system. 
 
 For questions regarding this source code, or the ESPA project, please use the
-[Landsat Contact Us](https://landsat.usgs.gov/contact) page and specify
-USGS ESPA in the "Subject" section.
+[Landsat Contact Us][2] page and specify USGS ESPA in the "Subject" section.
 
 ## Related Pages
-* [Description of Products Available](docs/AVAILABLE-PRODUCTS.md)
-* [Abbreviations & Definitions](docs/TERMS.md)
-* [ESPA Customizations](docs/CUSTOMIZATION.md)
-* **[Available Resources List](docs/API-RESOURCES-LIST.md)**
+* [Description of Products Available][3]
+* [Abbreviations & Definitions][4]
+* [ESPA Customizations][5]
+* **[Available Resources List][6]**
 
 <details>
 <summary>Need a scene list?</summary>
 The USGS EROS offers two resources for finding valid scene acquisitions:
 
-1. [USGS/EROS Inventory Service API](https://earthexplorer.usgs.gov/inventory/documentation)
-1. [Entire Collection of Metadata](https://landsat.usgs.gov/download-entire-collection-metadata)
+1. [USGS/EROS Inventory Service API][7]
+1. [Entire Collection of Metadata][8]
 </details>
 
 ## User API
@@ -29,11 +28,10 @@ endpoints for providing available projections, resampling methods, and output fo
 
 Now that the User API has reached a stable version 1.0, it will always be 
 backwards compatible using a _never remove, only add_ strategy. If there will 
-ever be a need to break compatibility, it will be announced in the 
-[Changelog](CHANGELOG.md).
+ever be a need to break compatibility, it will be announced in the [Changelog][9].
 
 All user interactions with API functions must be accompanied by valid credentials. 
-Accounts are managed in the [USGS EROS Registration system](https://ers.cr.usgs.gov/register/).
+Accounts are managed in the [USGS EROS Registration system][10].
 
 The api host is `https://espa.cr.usgs.gov/api`. 
 
@@ -108,13 +106,23 @@ curl --user <erosusername>:<erospassword> \
 }
 ```
 
-For a more detailed list of User API operations, see the 
-[Available Resources List](docs/API-RESOURCES-LIST.md). 
+For a more detailed list of User API operations, see the [Available Resources List][6]. 
 
-For a language-specific (python) example, please see [an API Demo](examples/api_demo.ipynb). 
+For a language-specific (python) example, please see [an API Demo][11]. 
 
-[0]: https://img.shields.io/travis/USGS-EROS/espa-api/master.svg?style=flat-square
+
+[0]: https://img.shields.io/travis/USGS-EROS/espa-api/ee_json_api.svg?style=flat-square
 [1]: https://travis-ci.org/USGS-EROS/espa-api
-[2]: https://img.shields.io/codecov/c/github/USGS-EROS/espa-api/master.svg?style=flat-square
-[3]: https://codecov.io/gh/USGS-EROS/espa-api
+[2]: https://landsat.usgs.gov/contact
+[3]: docs/AVAILABLE-PRODUCTS.md
+[4]: docs/TERMS.md
+[5]: docs/CUSTOMIZATION.md
+[6]: docs/API-RESOURCES-LIST.md
+[7]: https://earthexplorer.usgs.gov/inventory/documentation
+[8]: https://landsat.usgs.gov/download-entire-collection-metadata
+[9]: CHANGELOG.md
+[10]: https://ers.cr.usgs.gov/register/
+[11]: examples/api_demo.ipynb
+[12]: https://img.shields.io/codecov/c/github/USGS-EROS/espa-api/ee_json_api.svg?style=flat-square
+[13]: https://codecov.io/gh/USGS-EROS/espa-api
 

@@ -143,7 +143,7 @@ class API(object):
             # perform validation, raises ValidationException
             order = self.validation.validate(order, user.username)
             # performs inventory check, raises InventoryException
-            self.inventory.check(order)
+            self.inventory.check(order, user.contactid)
             # track metrics
             self.metrics.collect(order)
             # capture the order

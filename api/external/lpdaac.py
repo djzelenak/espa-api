@@ -39,8 +39,7 @@ class LPDAACService(object):
         Simple wrapper to check if lpdacc is up
         :return: bool
         """
-        url = 'http://{}'.format(self.datapool)
-        return utils.connections.is_reachable(url, timeout=1)
+        return utils.connections.is_reachable(self.datapool, timeout=1)
 
     def input_exists(self, product):
         '''Determines if a LPDAAC product is available for download

@@ -552,7 +552,6 @@ class OrderWrapperServiceClient(LTAService):
         else:
             return False
 
-
 class OrderUpdateServiceClient(LTASoapService):
 
     service_name = 'orderupdate'

@@ -22,11 +22,18 @@ INSERT INTO ordering_configuration (key, value) VALUES
     ('soap.cache_location', '/tmp/suds'),
     ('soap.client_timeout', '1800'),
 
+-- api.external.m2m
+    ('url.dev.earthexplorer.json', 'http://host.com/inventory/json/'),
+    ('bulk.dev.json.version', '0.0.0'),
+    ('bulk.dev.json.username', 'dummy_username'),
+    ('bulk.dev.json.password', 'dummy_password'),
+
 -- api.external.ers
     ('url.dev.ersapi', 'http://host.com'),
 
 -- api.external.lpdaac
-    ('url.dev.modis.datapool', 'hostname:port'),
+    ('url.dev.modis.datapool', 'localhost'),
+    ('url.dev.modis.external', 'localhost,localhost'),
     ('path.aqua_base_source', '/MOLA'),
     ('path.terra_base_source', '/MOLT'),
 
