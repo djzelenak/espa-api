@@ -6,7 +6,7 @@ env:
   global:
   - COMMIT=${TRAVIS_COMMIT::8}
   - ESPA_ENV=dev
-  - ESPA_MEMCACHE_HOST=localhost:30070
+  - ESPA_MEMCACHE_HOST=memcached:11211
   - ESPA_CONFIG_PATH=${TRAVIS_BUILD_DIR}/run/config.ini
   - ESPA_API_EMAIL_RECEIVE=someone@nowhere.com
 before_install:
