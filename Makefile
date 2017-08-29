@@ -12,6 +12,7 @@ docker-shell:
 	docker run -it --entrypoint=/bin/bash usgseros/$(WORKERIMAGE)
 
 docker-deps-up:
+	docker network create backend
 	docker-compose -f setup/docker-compose.yml up -d
 
 docker-deps-up-nodaemon:
@@ -19,6 +20,7 @@ docker-deps-up-nodaemon:
 
 docker-deps-down:
 	docker-compose -f setup/docker-compose.yml down
+	docker network rm backend
 
 deploy-pypi:
 
