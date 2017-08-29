@@ -25,3 +25,8 @@ services:
 volumes:
   postgres-volume:
 
+networks:
+  default:
+    external:
+      name: backend
+
