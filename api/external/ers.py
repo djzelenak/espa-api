@@ -60,9 +60,13 @@ class ERSApi(object):
         :param passw: ERS password
         :return: dict
         """
-        auth_resp = self._api_post('/auth', {'username': user,
-                                             'password': passw,
-                                             'client_secret': self._secret})
+        if passw:
+            auth_resp = self._api_post('/auth', {'username': user,
+                                                 'password': passw,
+                                                 'client_secret': self._secret})
+        else:
+            auth_resp = {'data': {'authToken': user}, 'errors': None}
+
         if not auth_resp['errors']:
             headers = {'X-AuthToken': auth_resp['data']['authToken']}
             user_resp = self._api_get('/me', headers)
