@@ -657,4 +657,12 @@ class ValidationProvider(ValidationInterfaceV0):
         """
         return copy.deepcopy(self.schema.request_schema)
 
+    def fetch_product_types(self):
+        """
+        Pass along the values/readable-names for product-types
+        :return: dict
+        """
+        return sn.ProductNames().groups()
+
+
     __call__ = validate

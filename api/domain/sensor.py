@@ -20,8 +20,49 @@ with open(os.path.join(__location__, 'domain/restricted.yaml')) as f:
 
 
 class ProductNames(object):
-    @classmethod
-    def get(cls):
+    product_names = {
+        "source_metadata": "Input Product Metadata",
+        "l1": "Input Products",
+        "pixel_qa": "Pixel QA",
+        "toa": "Top of Atmosphere Reflectance",
+        "bt": "Brightness Temperature",
+        "cloud": "Cloud Mask",
+        "sr": "Surface Reflectance",
+        "lst": "Land Surface Temperature",
+        "swe": "Dynamic Surface Water Extent",
+        "sr_ndvi": "NDVI",
+        "sr_evi": "EVI",
+        "sr_savi": "SAVI",
+        "sr_msavi": "MSAVI",
+        "sr_ndmi": "NDMI",
+        "sr_nbr": "NBR",
+        "sr_nbr2": "NBR2",
+        "stats": "Plotting & Statistics"
+    }
+    grouping = {
+        "Source Products": ("l1", "source_metadata"),
+        "Climate Data Records": ("sr", "lst"),
+        "Essential Climate Variables": ("swe",),
+        "Other Landsat Level-2 Products": ("toa", "bt", "pixel_qa",
+                                           {"Spectral Indices": ("sr_ndvi", "sr_evi", "sr_savi",
+                                                                 "sr_msavi", "sr_ndmi", "sr_nbr",
+                                                                 "sr_nbr2")})
+    }
+
+    def groups(self):
+        """ Gives human-readable mappings and logical-groups to all orderable products"""
+        retdata = dict()
+        for name1, values1 in self.grouping.items():
+            retdata[name1] = dict()
+            for name2 in values1:
+                if isinstance(name2, dict):
+                    for name3, values3 in name2.items():
+                        retdata[name1][name3] = {self.product_names.get(m): m for m in values3}
+                elif isinstance(name2, basestring):
+                    retdata[name1][self.product_names.get(name2)] = name2
+        return retdata
+
+    def get(self):
         """ Defines the mapping between products and sensor variables
         :return: AllProducts class (namedtuple)
         """

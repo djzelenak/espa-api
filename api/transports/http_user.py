@@ -286,6 +286,8 @@ class ValidationInfo(Resource):
             response = espa.validation.fetch_resampling()
         elif 'order-schema' in param:
             response = espa.validation.fetch_order_schema()
+        elif 'product-groups' in param:
+            response = espa.validation.fetch_product_types()
 
         return response
 
