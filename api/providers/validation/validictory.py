@@ -33,6 +33,33 @@ class OrderValidatorV0(validictory.SchemaValidator):
         self._itemcount = {}
         super(OrderValidatorV0, self).validate(data, schema)
 
+    def validate_pixel_units(self, x, fieldname, schema, path, valid_cs_units=('meters',)):
+        """Validates that the coordinate system output units match as required for the projection (+units=m)"""
+        if fieldname in x:
+            if 'image_extents' in self.data_source:
+                if not self.validate_type_object(self.data_source['image_extents']):
+                    return
+                if not 'units' in self.data_source['image_extents']:
+                    return
+                if self.data_source['image_extents']['units'] not in valid_cs_units:
+                    msg = ('image_extents units must be in "{}" for projection "{}", not "{}"'
+                           .format(','.join(valid_cs_units), fieldname,
+                                   self.data_source['image_extents']['units']))
+                    self._errors.append(msg)
+                    return
+
+            if 'resize' in self.data_source:
+                if not self.validate_type_object(self.data_source['resize']):
+                    return
+                if not self.validate_type_string(self.data_source['resize'].get('pixel_size_units')):
+                    return
+                if self.data_source['resize'].get('pixel_size_units') not in valid_cs_units:
+                    msg = ('resize units must be in "{}" for projection "{}", not "{}"'
+                           .format(','.join(valid_cs_units), fieldname,
+                                   self.data_source['resize'].get('pixel_size_units')))
+                    self._errors.append(msg)
+                    return
+
     def validate_extents(self, x, fieldname, schema, path, pixel_count=200000000):
         if 'resize' not in self.data_source and 'image_extents' not in self.data_source:
             return
@@ -56,18 +83,11 @@ class OrderValidatorV0(validictory.SchemaValidator):
         if 'projection' in self.data_source:
             if not self.validate_type_object(self.data_source['projection']):
                 return
-            if 'lonlat' in self.data_source['projection']:
-                if 'image_extents' in self.data_source:
-                    if not self.validate_type_object(self.data_source['image_extents']):
-                        return
-                    if not 'units' in self.data_source['image_extents']:
-                        return
-                    if self.data_source['image_extents']['units'] != 'dd':
-                        msg = ('{}:{} must be "dd" for projection "lonlat", not "{}"'
-                               .format(path, fieldname,
-                                       self.data_source['image_extents']['units']))
-                        self._errors.append(msg)
-                        return
+            if 'image_extents' in self.data_source:
+                if not self.validate_type_object(self.data_source['image_extents']):
+                    return
+                if 'units' not in self.data_source['image_extents']:
+                    return
 
         if 'resize' in self.data_source:
             if not self.validate_type_object(self.data_source['resize']):
