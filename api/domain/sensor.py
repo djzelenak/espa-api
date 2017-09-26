@@ -26,17 +26,22 @@ class ProductNames(object):
     def groups(self, staff_role=False):
         """ Gives human-readable mappings and logical-groups to all orderable products"""
         retdata = dict()
-        for i in products['products']:
-            # TODO: implement staff_role by currently authenticated user
-            # if not staff_role and i in restricted['all']['role']:
-            #     continue
-            retdata.update({i: products['products'][i]})
+        for category_name in products['categories']:
+            prods = [p for p, v in products['products'].items() if v['category'] == category_name]
+            for i in prods:
+                # TODO: implement staff_role by currently authenticated user
+                # if not staff_role and i in restricted['all']['role']:
+                #     continue
+                if category_name not in retdata:
+                    retdata[category_name] = products['categories'][category_name]
+                    retdata[category_name]['products'] = list()
 
-            category_name = products['categories'][products['products'][i]['category']]['title']
-            retdata[i].update({'category_name': category_name})
+                rdat = {i: products['products'][i]}
 
-            is_plotable = i in restricted['stats']['products'] if i != 'stats' else None
-            retdata[i].update({'is_plotable': is_plotable})
+                is_plotable = i in restricted['stats']['products'] if i != 'stats' else None
+                rdat.update({'is_plotable': is_plotable})
+
+                retdata[category_name]['products'].append(rdat)
 
         return retdata
 
