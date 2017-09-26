@@ -516,16 +516,15 @@ class BaseValidationSchema(object):
                          'required': True,
                          'enum': {'dd': 'Decimal Degrees', 'meters': 'Meters'}}}
 
-    resize = {'meters': {'type': 'number',
-                         'title': 'Meters',
-                         'required': False,
-                         'minimum': 30,
-                         'maximum': 5000},
-              'dd': {'type': 'number',
-                     'title': 'Decimal degrees',
-                     'required': False,
-                     'minimum': 0.0002695,
-                     'maximum': 0.0449155}}
+    resize = {'pixel_size': {'type': 'number',
+                             'title': 'Pixel Size',
+                             'required': True,
+                             'pixel_size_dd_rng': (0.0002695, 0.0449155),
+                             'pixel_size_meters_rng': (30, 5000)},
+              'pixel_size_units': {'type': 'string',
+                                   'title': 'Pixel Size Units',
+                                   'required': True,
+                                   'enum': {'dd': 'Decimal Degrees', 'meters': 'Meters'}}}
 
     request_schema = {'type': 'object',
                       'set_ItemCount': ('inputs', 5000),
