@@ -139,11 +139,11 @@ class OrderValidatorV0(validictory.SchemaValidator):
         cmin = min(count_ls)
         if cmax > pixel_count:
             msg = ('{}:{} pixel count is greater than maximum size of {}'
-                   ' pixels'.format(path, fieldname, cmax))
+                   ' pixels'.format(path, fieldname, pixel_count))
             self._errors.append(msg)
         elif cmin < 1:
             msg = ('{}:{} pixel count value falls below acceptable threshold'
-                   ' of 1 pixel'.format(path, fieldname, cmin))
+                   ' of 1 pixel'.format(path, fieldname))
             self._errors.append(msg)
 
     #     if 'image_extents' in self.data_source:
