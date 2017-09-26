@@ -18,48 +18,26 @@ from api.util import julian_date_check, julian_from_date
 with open(os.path.join(__location__, 'domain/restricted.yaml')) as f:
     restricted = yaml.load(f.read())
 
+# Grab human-readable product names/categories
+with open(os.path.join(__location__, 'domain/products.yaml')) as f:
+    products = yaml.load(f.read())
 
 class ProductNames(object):
-    product_names = {
-        "source_metadata": "Input Product Metadata",
-        "l1": "Input Products",
-        "pixel_qa": "Pixel QA",
-        "toa": "Top of Atmosphere Reflectance",
-        "bt": "Brightness Temperature",
-        "cloud": "Cloud Mask",
-        "sr": "Surface Reflectance",
-        "lst": "Land Surface Temperature",
-        "swe": "Dynamic Surface Water Extent",
-        "sr_ndvi": "NDVI",
-        "sr_evi": "EVI",
-        "sr_savi": "SAVI",
-        "sr_msavi": "MSAVI",
-        "sr_ndmi": "NDMI",
-        "sr_nbr": "NBR",
-        "sr_nbr2": "NBR2",
-        "stats": "Plotting & Statistics"
-    }
-    grouping = {
-        "Source Products": ("l1", "source_metadata"),
-        "Climate Data Records": ("sr", "lst"),
-        "Essential Climate Variables": ("swe",),
-        "Other Landsat Level-2 Products": ("toa", "bt", "pixel_qa",
-                                           {"Spectral Indices": ("sr_ndvi", "sr_evi", "sr_savi",
-                                                                 "sr_msavi", "sr_ndmi", "sr_nbr",
-                                                                 "sr_nbr2")})
-    }
-
-    def groups(self):
+    def groups(self, staff_role=False):
         """ Gives human-readable mappings and logical-groups to all orderable products"""
         retdata = dict()
-        for name1, values1 in self.grouping.items():
-            retdata[name1] = dict()
-            for name2 in values1:
-                if isinstance(name2, dict):
-                    for name3, values3 in name2.items():
-                        retdata[name1][name3] = {self.product_names.get(m): m for m in values3}
-                elif isinstance(name2, basestring):
-                    retdata[name1][self.product_names.get(name2)] = name2
+        for i in products['products']:
+            # TODO: implement staff_role by currently authenticated user
+            # if not staff_role and i in restricted['all']['role']:
+            #     continue
+            retdata.update({i: products['products'][i]})
+
+            category_name = products['categories'][products['products'][i]['category']]['title']
+            retdata[i].update({'category_name': category_name})
+
+            is_plotable = i in restricted['stats']['products'] if i != 'stats' else None
+            retdata[i].update({'is_plotable': is_plotable})
+
         return retdata
 
     def get(self):
@@ -67,20 +45,10 @@ class ProductNames(object):
         :return: AllProducts class (namedtuple)
         """
         # API product values
-        product_names = ["source_metadata", "l1", "pixel_qa",
-                         "toa", "bt", "cloud",
-                         "sr", "lst", "swe",
-                         "sr_ndvi", "sr_evi", "sr_savi", "sr_msavi", "sr_ndmi",
-                         "sr_nbr", "sr_nbr2",
-                         "stats"]
+        product_names = tuple(products['products'].keys())
         prods = namedtuple('AllProducts', product_names)
         # Internal code names
-        return prods("source_metadata", "l1", "pixel_qa",
-                     "toa", "bt", "cloud",
-                     "sr", "lst", "swe",
-                     "sr_ndvi", "sr_evi", "sr_savi", "sr_msavi", "sr_ndmi",
-                     "sr_nbr", "sr_nbr2",
-                     "stats")
+        return prods(*product_names)
 AllProducts = ProductNames().get()
 
 class SensorProduct(object):

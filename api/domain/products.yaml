@@ -1,0 +1,66 @@
+products: 
+  source_metadata: 
+    category: source
+    title: "Input Product Metadata"
+  l1: 
+    category: source
+    title: "Input Products"
+  pixel_qa: 
+    category: lsat
+    title: "Pixel QA"
+  toa: 
+    category: lsat
+    title: "Top of Atmosphere Reflectance"
+  bt: 
+    category: lsat
+    title: "Brightness Temperature"
+  cloud: 
+    category: lsat
+    title: "Cloud Mask"
+  sr: 
+    category: cdr
+    title: "Surface Reflectance"
+  lst: 
+    category: cdr
+    title: "Land Surface Temperature"
+  swe: 
+    category: ecv
+    title: "Dynamic Surface Water Extent"
+  sr_ndvi: 
+    category: indices
+    title: "NDVI"
+  sr_evi: 
+    category: indices
+    title: "EVI"
+  sr_savi: 
+    category: indices
+    title: "SAVI"
+  sr_msavi: 
+    category: indices
+    title: "MSAVI"
+  sr_ndmi: 
+    category: indices
+    title: "NDMI"
+  sr_nbr: 
+    category: indices
+    title: "NBR"
+  sr_nbr2: 
+    category: indices
+    title: "NBR2"
+  stats: 
+    category: stats
+    title: "Summary Statistics"
+
+categories: 
+  source:
+    title: "Source Products"
+  cdr:
+    title: "Climate Data Records"
+  ecv:
+    title: "Essential Climate Variables"
+  lsat:
+    title: "Other Landsat Level-2 Products"
+  indices:
+    title: "Spectral Indices"
+  stats:
+    title: "Plotting & Statistics"
