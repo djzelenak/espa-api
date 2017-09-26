@@ -30,6 +30,7 @@ class ProductNames(object):
             if category_name not in retdata:
                 retdata[category_name] = products['categories'][category_name]
                 retdata[category_name]['products'] = dict()
+                retdata[category_name]['rank'] = products['categories'][category_name]['rank']
 
             prods = {p: v for p, v in products['products'].items()
                      if v['category'] == category_name}
@@ -42,7 +43,8 @@ class ProductNames(object):
                 rdat = {product: {
                     'is_plotable': is_plotable,
                     'title': struct['title'],
-                    'required_customizations': list()
+                    'required_customizations': list(),
+                    'rank': struct['rank']
                 }}
                 retdata[category_name]['products'].update(rdat)
 
