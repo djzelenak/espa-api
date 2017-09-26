@@ -567,7 +567,6 @@ class BaseValidationSchema(object):
                                                 'enum': formats},
                                      'resize': {'type': 'object',
                                                 'title': 'Pixel Resizing',
-                                                # 'dependencies': ['projection'],# Units should change with projection..
                                                 'properties': resize},
                                      'resampling_method': {'type': 'string',
                                                            'title': 'Resample Method',
