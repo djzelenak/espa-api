@@ -258,6 +258,30 @@ class OrderValidatorV0(validictory.SchemaValidator):
                        .format(path, val_range[0], val_range[1]))
                 self._errors.append(msg)
 
+    def validate_ps_dd_rng(self, x, fieldname, schema, path, val_range):
+        """Validates the pixel size given for Decimal Degrees is within a given range"""
+        value = x.get(fieldname)
+
+        if isinstance(value, (int, long, float, Decimal)):
+            if 'pixel_size_units' in x:
+                if x['pixel_size_units'] == 'dd':
+                    if not val_range[0] <= value <= val_range[1]:
+                        msg = ('Value of {} must fall between {} and {} decimal degrees'
+                               .format(path, val_range[0], val_range[1]))
+                        self._errors.append(msg)
+
+    def validate_ps_meters_rng(self, x, fieldname, schema, path, val_range):
+        """Validates the pixel size given for Meters is within a given range"""
+        value = x.get(fieldname)
+
+        if isinstance(value, (int, long, float, Decimal)):
+            if 'pixel_size_units' in x:
+                if x['pixel_size_units'] == 'meters':
+                    if not val_range[0] <= value <= val_range[1]:
+                        msg = ('Value of {} must fall between {} and {} meters'
+                               .format(path, val_range[0], val_range[1]))
+                        self._errors.append(msg)
+
     def validate_stats(self, x, fieldname, schema, path, stats):
         """
         Validate that requests for stats are accompanied by logical products
@@ -519,8 +543,8 @@ class BaseValidationSchema(object):
     resize = {'pixel_size': {'type': 'number',
                              'title': 'Pixel Size',
                              'required': True,
-                             'pixel_size_dd_rng': (0.0002695, 0.0449155),
-                             'pixel_size_meters_rng': (30, 5000)},
+                             'ps_dd_rng': (0.0002695, 0.0449155),
+                             'ps_meters_rng': (30, 5000)},
               'pixel_size_units': {'type': 'string',
                                    'title': 'Pixel Size Units',
                                    'required': True,
