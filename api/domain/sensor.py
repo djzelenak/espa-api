@@ -27,21 +27,24 @@ class ProductNames(object):
         """ Gives human-readable mappings and logical-groups to all orderable products"""
         retdata = dict()
         for category_name in products['categories']:
-            prods = [p for p, v in products['products'].items() if v['category'] == category_name]
-            for i in prods:
+            if category_name not in retdata:
+                retdata[category_name] = products['categories'][category_name]
+                retdata[category_name]['products'] = dict()
+
+            prods = {p: v for p, v in products['products'].items()
+                     if v['category'] == category_name}
+            for product, struct in prods.items():
                 # TODO: implement staff_role by currently authenticated user
                 # if not staff_role and i in restricted['all']['role']:
                 #     continue
-                if category_name not in retdata:
-                    retdata[category_name] = products['categories'][category_name]
-                    retdata[category_name]['products'] = list()
-
-                rdat = {i: products['products'][i]}
-
-                is_plotable = i in restricted['stats']['products'] if i != 'stats' else None
-                rdat.update({'is_plotable': is_plotable})
-
-                retdata[category_name]['products'].append(rdat)
+                is_plotable = (product in restricted['stats']['products']
+                               if product != 'stats' else None)
+                rdat = {product: {
+                    'is_plotable': is_plotable,
+                    'title': struct['title'],
+                    'required_customizations': list()
+                }}
+                retdata[category_name]['products'].update(rdat)
 
         return retdata
 
