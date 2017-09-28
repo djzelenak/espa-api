@@ -146,30 +146,30 @@ class Emails(object):
                                  'email custserv@usgs.gov with any questions.', '', '',
                                  'Requested products', '-------------------------------------------'
                                  ],
-                    'failed': ['{orderid} has failed, and the reason can be found at {url}', '', '',
-                               'This order will remain available for 10 days.', '', '',
-                               'Please contact Customer Services at 1-800-252-4547 or '
-                               'email custserv@usgs.gov with any questions.', '', '',
-                               'Requested products', '-------------------------------------------'
-                               ]
+                    'unsuccessful': ['{orderid} was unsuccessful, and the reason can be found at {url}', '', '',
+                                     'This order will remain available for 10 days.', '', '',
+                                     'Please contact Customer Services at 1-800-252-4547 or '
+                                     'email custserv@usgs.gov with any questions.', '', '',
+                                     'Requested products', '-------------------------------------------'
+                                     ]
                     }
 
         scenes = order.scenes({'status': 'compelete'})
-        status = 'complete' if len(scenes) > 0 else 'failed'
+        status = 'complete' if len(scenes) > 0 else 'unsuccessful'
         outmessage = messages[status]
 
         email = order.user_email()
         url = self.__order_status_url(order.orderid)
         bdl_url = "https://github.com/USGS-EROS/espa-bulk-downloader"
 
-        scenes = order.scenes({"status": "complete"})
+        scenes = order.scenes()
         pbs = order.products_by_sensor()
 
         for product in scenes:
             if product.sensor_type == 'plot':
                 line = "plotting & statistics"
             else:
-                if status == 'complete':
+                if product.status == 'complete':
                     line = "{}: {}".format(product.name, ", ".join(pbs[product.name]))
                 else:
                     line = "{}: {}".format(product.name, product.note.strip())
