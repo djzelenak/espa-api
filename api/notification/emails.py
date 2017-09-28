@@ -154,7 +154,7 @@ class Emails(object):
                                      ]
                     }
 
-        scenes = order.scenes({'status': 'compelete'})
+        scenes = order.scenes({'status': 'complete'})
         status = 'complete' if len(scenes) > 0 else 'unsuccessful'
         outmessage = messages[status]
 
