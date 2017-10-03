@@ -1,4 +1,6 @@
 ## Change Notes
+###### October 2017
+* Restrict orders of only Landsat Level-1
 ###### July 2017
 * Upgrade remote calls for Hadoop2
 * Add production-api reset queued/processing scene status
