@@ -392,10 +392,13 @@ class OrderValidatorV0(validictory.SchemaValidator):
 
         restr_source = self.restricted['source']
         sensors = avail_prods.keys()
+        parse_customize = lambda c: ((c in self.data_source) and
+                                     (self.data_source.get(c) != restr_source.get(c)))
         if not set(sensors) - set(restr_source['sensors']):
             if not set(req_prods) - set(restr_source['products']):
-                msg = restr_source['message'].strip()
-                self._errors.append(msg)
+                if not any(map(parse_customize, restr_source['custom'])):
+                    msg = restr_source['message'].strip()
+                    self._errors.append(msg)
 
 
     def validate_oneormoreobjects(self, x, fieldname, schema, path, key_list):
