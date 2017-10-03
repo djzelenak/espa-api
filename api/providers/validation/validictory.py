@@ -391,7 +391,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
                     self._errors.append(msg)
 
         restr_source = self.restricted['source']
-        sensors = (s for s in self.data_source.keys() if s in sn.SensorCONST.instances.keys())
+        sensors = [s for s in self.data_source.keys() if s in sn.SensorCONST.instances.keys()]
         other_sensors = set(sensors) - set(restr_source['sensors'])
         parse_customize = lambda c: ((c in self.data_source) and
                                      (self.data_source.get(c) != restr_source.get(c)))
