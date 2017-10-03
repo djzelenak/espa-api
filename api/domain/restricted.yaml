@@ -90,5 +90,5 @@ source:
     format: gtiff
     custom: [format, image_extents, resize, projection]
     message: >
-        order includes only Landsat Level-1 data products, please see
-        https://earthexplorer.usgs.gov/inventory/documentation
+        order includes only Landsat Level-1 data products, please contact
+        User Services for other available options
