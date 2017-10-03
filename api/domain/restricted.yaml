@@ -82,3 +82,13 @@ etm7:
         swe:
             - "< 2016151 | > 2016164"
             - "< 2017071 | > 2017076"
+
+# This is an order which should go through alternative channels
+source:
+    sensors: [olitirs8_collection, etm7_collection, tm4_collection, tm5_collection]
+    products: [l1, source_metadata]
+    format: gtiff
+    custom: [format, image_extents, resize, projection]
+    message: >
+        order includes only Landsat Level-1 data products, please contact
+        User Services for other available options

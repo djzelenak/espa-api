@@ -242,6 +242,41 @@ class TestValidation(unittest.TestCase):
                 with self.assertRaisesRegexp(exc_type, err_message):
                     api.validation.validate(invalid_order, self.staffuser.username)
 
+    def test_l1_only_restricted(self):
+        """ Landsat Level-1 data needs to go through other channels """
+        invalid_order = {
+            "olitirs8_collection": {
+                "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"], 
+                "products": ["l1"]
+            },
+            "format": "gtiff"
+        }
+        with self.assertRaisesRegexp(ValidationException, 'Landsat Level-1 data products'):
+            api.validation.validate(invalid_order, self.staffuser.username)
+
+    def test_l1_only_restricted_override(self):
+        """ Customizations or other sensors should override Level-1 restrictions """
+        valid_orders = [{
+            "olitirs8_collection": {
+                "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"], 
+                "products": ["l1"]
+            },
+            "format": "envi"
+            },
+            {
+            "olitirs8_collection": {
+                "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"], 
+                "products": ["l1"]
+            },
+            "myd13a2": {
+                "inputs": ["myd13a2.a2017249.h19v06.006.2017265235022"],
+                "products": ["l1"]
+            },
+            "format": "gtiff"
+        }]
+        for vorder in valid_orders:
+            api.validation.validate(vorder, self.staffuser.username)
+
     # def test_validate_utm_zone(self):
     #     invalid_order = copy.deepcopy(self.base_order)
     #     invalid_order['projection'] = {'utm': {'zone': 50, 'zone_ns': 'north'}}
