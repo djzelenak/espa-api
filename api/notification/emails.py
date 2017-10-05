@@ -138,36 +138,46 @@ class Emails(object):
         if not isinstance(order, Order):
             order = Order.find(order)
 
+        messages = {'complete': ['{orderid} is now complete and can be downloaded from {url}', '', '',
+                                 'For large orders, the ESPA Bulk Downloader is available {bdurl}', '', '',
+                                 'This order will remain available for 10 days. Any data not downloaded '
+                                 'will need to be reordered after this time.', '', '',
+                                 'Please contact Customer Services at 1-800-252-4547 or '
+                                 'email custserv@usgs.gov with any questions.', '', '',
+                                 'Requested products', '-------------------------------------------'
+                                 ],
+                    'unsuccessful': ['{orderid} was unsuccessful, and the reason can be found at {url}', '', '',
+                                     'This order will remain available for 10 days.', '', '',
+                                     'Please contact Customer Services at 1-800-252-4547 or '
+                                     'email custserv@usgs.gov with any questions.', '', '',
+                                     'Requested products', '-------------------------------------------'
+                                     ]
+                    }
+
+        scenes = order.scenes({'status': 'complete'})
+        status = 'complete' if len(scenes) > 0 else 'unsuccessful'
+        outmessage = messages[status]
+
         email = order.user_email()
         url = self.__order_status_url(order.orderid)
         bdl_url = "https://github.com/USGS-EROS/espa-bulk-downloader"
 
-        m = list()
-        m.append("%s is now complete and can be downloaded " % order.orderid)
-        m.append("from %s.\n\n" % url)
-        m.append("For large orders, the ESPA Bulk Downloader is available %s \n\n" % bdl_url)
-        m.append("This order will remain available for 10 days.  ")
-        m.append("Any data not downloaded will need to be reordered ")
-        m.append("after this time.\n\n")
-        m.append("Please contact Customer Services at 1-800-252-4547 or ")
-        m.append("email custserv@usgs.gov with any questions.\n\n")
-        m.append("Requested products\n")
-        m.append("-------------------------------------------\n")
-
-        scenes = order.scenes({"status": "complete"})
+        scenes = order.scenes()
         pbs = order.products_by_sensor()
 
         for product in scenes:
             if product.sensor_type == 'plot':
                 line = "plotting & statistics"
             else:
-                line = "{}: {}".format(product.name, ", ".join(pbs[product.name]))
+                if product.status == 'complete':
+                    line = "{}: {}".format(product.name, ", ".join(pbs[product.name]))
+                else:
+                    line = "{}: {}".format(product.name, product.note.strip())
+            outmessage.append(line)
 
-            m.append("%s\n" % line)
-
-        m.append(contact_footer)
-        body = ''.join(m)
-        subject = 'USGS ESPA Processing for %s complete' % order.orderid
+        outmessage.append(contact_footer)
+        body = '\n'.join(outmessage).format(url=url, bdurl=bdl_url, orderid=order.orderid)
+        subject = 'USGS ESPA Processing for {} {}'.format(order.orderid, status)
 
         return self.__send(recipient=email, subject=subject, body=body)
 

@@ -23,7 +23,7 @@ ilogger = logging.getLogger("api")
 ilogger.setLevel(logging.DEBUG)
 
 espa_log_dir = os.getenv('ESPA_LOG_DIR')
-if espa_log_dir:
+if espa_log_dir and not os.getenv('ESPA_LOG_STDOUT'):
     ih = FileHandler(os.path.join(espa_log_dir, 'espa-api-info.log'))
 else:
     ih = StreamHandler(stream=sys.stdout)
