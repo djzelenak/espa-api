@@ -1,4 +1,10 @@
 ## Change Notes
+###### October 2017
+* Restrict orders of only Landsat Level-1
+###### September 2017
+* Modify email if all products in order fail
+###### August 2017
+* Begin using M2M for input validation (`ESPA_M2M_MODE`)
 ###### July 2017
 * Upgrade remote calls for Hadoop2
 * Add production-api reset queued/processing scene status

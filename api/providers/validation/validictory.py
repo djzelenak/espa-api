@@ -410,6 +410,19 @@ class OrderValidatorV0(validictory.SchemaValidator):
                            .format(d, path.split('.products')[0], scene_ids))
                     self._errors.append(msg)
 
+        restr_source = self.restricted['source']
+        sensors = [s for s in self.data_source.keys() if s in sn.SensorCONST.instances.keys()]
+        other_sensors = set(sensors) - set(restr_source['sensors'])
+        parse_customize = lambda c: ((c in self.data_source) and
+                                     (self.data_source.get(c) != restr_source.get(c)))
+        if not other_sensors:
+            if not set(req_prods) - set(restr_source['products']):
+                if not any(map(parse_customize, restr_source['custom'])):
+                    msg = restr_source['message'].strip()
+                    if msg not in self._errors:
+                        self._errors.append(msg)
+
+
     def validate_oneormoreobjects(self, x, fieldname, schema, path, key_list):
         """Validates that at least one value is present from the list"""
         val = x.get(fieldname)
