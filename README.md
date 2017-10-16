@@ -111,7 +111,7 @@ For a more detailed list of User API operations, see the [Available Resources Li
 For a language-specific (python) example, please see [an API Demo][11]. 
 
 
-[0]: https://img.shields.io/travis/USGS-EROS/espa-api/ee_json_api.svg?style=flat-square
+[0]: https://img.shields.io/travis/USGS-EROS/espa-api/master.svg?style=flat-square
 [1]: https://travis-ci.org/USGS-EROS/espa-api
 [2]: https://landsat.usgs.gov/contact
 [3]: docs/AVAILABLE-PRODUCTS.md
@@ -123,6 +123,6 @@ For a language-specific (python) example, please see [an API Demo][11].
 [9]: CHANGELOG.md
 [10]: https://ers.cr.usgs.gov/register/
 [11]: examples/api_demo.ipynb
-[12]: https://img.shields.io/codecov/c/github/USGS-EROS/espa-api/ee_json_api.svg?style=flat-square
+[12]: https://img.shields.io/codecov/c/github/USGS-EROS/espa-api/master.svg?style=flat-square
 [13]: https://codecov.io/gh/USGS-EROS/espa-api
 
