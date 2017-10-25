@@ -1,7 +1,7 @@
 ---
 all:
     role:
-        - lst
+        - st
         - swe
         - cloud
         - restricted_prod
@@ -32,11 +32,11 @@ stats:
         - 'sr_ndmi'
         - 'sr_nbr'
         - 'sr_nbr2'
-        - 'lst'
+        - 'st'
 
 olitirs8:
     role:
-        - lst
+        - st
     by_date:
         sr:
             - "< 2016050 | > 2016058"

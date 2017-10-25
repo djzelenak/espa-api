@@ -27,9 +27,9 @@ products:
     category: cdr
     title: "Surface Reflectance"
     rank: 0
-  lst: 
+  st:
     category: cdr
-    title: "Land Surface Temperature"
+    title: "Surface Temperature"
     rank: 1
   swe: 
     category: ecv
