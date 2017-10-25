@@ -28,7 +28,7 @@ a request to `https://espa.cr.usgs.gov/api/v1/available-products`
 | MODIS 11A1  | :heavy_check_mark: | :heavy_check_mark: |:heavy_check_mark:|
 
 ### ESPA Higher-Level CDR/ECV Outputs
-|  | TOA | SR | BT | LST | DSWE | CLOUD
+|  | TOA | SR | BT | ST | DSWE | CLOUD
 |:------------- |:------------- |:------------- |:------------- |:------------- |:------------- |:------------- |
 | Landsat 4 TM | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | Landsat 5 TM | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |

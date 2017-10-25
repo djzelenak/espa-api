@@ -624,7 +624,7 @@ class TestProductionAPI(unittest.TestCase):
                    'include_cfmask': False,
                    'include_customized_source_data': False,
                    'include_dswe': False,
-                   'include_lst': False,
+                   'include_st': False,
                    'include_solr_index': False,
                    'include_source_data': False,
                    'include_source_metadata': False,

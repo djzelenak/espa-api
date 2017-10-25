@@ -1,4 +1,6 @@
 ## Change Notes
+###### November 2017
+* Changes to Landsat "ST" terminology
 ###### October 2017
 * Restrict orders of only Landsat Level-1
 * Add human-readable `title` to objects in JSON order-schema
