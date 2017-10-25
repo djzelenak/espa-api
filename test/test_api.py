@@ -242,11 +242,39 @@ class TestValidation(unittest.TestCase):
                 with self.assertRaisesRegexp(exc_type, err_message):
                     api.validation.validate(invalid_order, self.staffuser.username)
 
+    def test_projection_units_geographic(self):
+        """
+        Make sure Geographic (latlon) projection only accepts "dd" units
+        """
+        part_order = {
+            "olitirs8_collection": {
+                "inputs": ['lc08_l1tp_015035_20140713_20170304_01_t1'],
+                "products": ["l1"]
+            },
+            "projection": {"lonlat": None},
+            "format": "gtiff",
+            "resampling_method": "cc"
+            }
+        bad_parts = {
+            "resize": {"pixel_size": 30, "pixel_size_units": "meters"},
+            "image_extents": {"north": 80, "south": -80,
+                              "east": 170, "west": -170, "units": "meters"},
+            }
+
+        err_msg = '{} units must be in "dd" for projection "lonlat"'
+        exc_type = ValidationException
+
+        for bname in bad_parts:
+            invalid_order = copy.deepcopy(part_order)
+            invalid_order.update({bname: bad_parts.get(bname)})
+            with self.assertRaisesRegexp(exc_type, err_msg.format(bname)):
+                api.validation.validate(invalid_order, self.staffuser.username)
+
     def test_l1_only_restricted(self):
         """ Landsat Level-1 data needs to go through other channels """
         invalid_order = {
             "olitirs8_collection": {
-                "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"], 
+                "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
                 "products": ["l1"]
             },
             "format": "gtiff"
@@ -258,14 +286,14 @@ class TestValidation(unittest.TestCase):
         """ Customizations or other sensors should override Level-1 restrictions """
         valid_orders = [{
             "olitirs8_collection": {
-                "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"], 
+                "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
                 "products": ["l1"]
             },
             "format": "envi"
             },
             {
             "olitirs8_collection": {
-                "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"], 
+                "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
                 "products": ["l1"]
             },
             "myd13a2": {

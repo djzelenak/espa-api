@@ -66,7 +66,8 @@ transport_api.add_resource(ValidationInfo,
                            '/api/v<version>/projections',
                            '/api/v<version>/formats',
                            '/api/v<version>/resampling-methods',
-                           '/api/v<version>/order-schema')
+                           '/api/v<version>/order-schema',
+                           '/api/v<version>/product-groups')
 
 transport_api.add_resource(ListOrders,
                            '/api/v<version>/list-orders',

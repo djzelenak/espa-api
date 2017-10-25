@@ -33,6 +33,33 @@ class OrderValidatorV0(validictory.SchemaValidator):
         self._itemcount = {}
         super(OrderValidatorV0, self).validate(data, schema)
 
+    def validate_pixel_units(self, x, fieldname, schema, path, valid_cs_units=('meters',)):
+        """Validates that the coordinate system output units match as required for the projection (+units=m)"""
+        if fieldname in x:
+            if 'image_extents' in self.data_source:
+                if not self.validate_type_object(self.data_source['image_extents']):
+                    return
+                if not 'units' in self.data_source['image_extents']:
+                    return
+                if self.data_source['image_extents']['units'] not in valid_cs_units:
+                    msg = ('image_extents units must be in "{}" for projection "{}", not "{}"'
+                           .format(','.join(valid_cs_units), fieldname,
+                                   self.data_source['image_extents']['units']))
+                    self._errors.append(msg)
+                    return
+
+            if 'resize' in self.data_source:
+                if not self.validate_type_object(self.data_source['resize']):
+                    return
+                if not self.validate_type_string(self.data_source['resize'].get('pixel_size_units')):
+                    return
+                if self.data_source['resize'].get('pixel_size_units') not in valid_cs_units:
+                    msg = ('resize units must be in "{}" for projection "{}", not "{}"'
+                           .format(','.join(valid_cs_units), fieldname,
+                                   self.data_source['resize'].get('pixel_size_units')))
+                    self._errors.append(msg)
+                    return
+
     def validate_extents(self, x, fieldname, schema, path, pixel_count=200000000):
         if 'resize' not in self.data_source and 'image_extents' not in self.data_source:
             return
@@ -56,18 +83,11 @@ class OrderValidatorV0(validictory.SchemaValidator):
         if 'projection' in self.data_source:
             if not self.validate_type_object(self.data_source['projection']):
                 return
-            if 'lonlat' in self.data_source['projection']:
-                if 'image_extents' in self.data_source:
-                    if not self.validate_type_object(self.data_source['image_extents']):
-                        return
-                    if not 'units' in self.data_source['image_extents']:
-                        return
-                    if self.data_source['image_extents']['units'] != 'dd':
-                        msg = ('{}:{} must be "dd" for projection "lonlat", not "{}"'
-                               .format(path, fieldname,
-                                       self.data_source['image_extents']['units']))
-                        self._errors.append(msg)
-                        return
+            if 'image_extents' in self.data_source:
+                if not self.validate_type_object(self.data_source['image_extents']):
+                    return
+                if 'units' not in self.data_source['image_extents']:
+                    return
 
         if 'resize' in self.data_source:
             if not self.validate_type_object(self.data_source['resize']):
@@ -139,11 +159,11 @@ class OrderValidatorV0(validictory.SchemaValidator):
         cmin = min(count_ls)
         if cmax > pixel_count:
             msg = ('{}:{} pixel count is greater than maximum size of {}'
-                   ' pixels'.format(path, fieldname, cmax))
+                   ' pixels'.format(path, fieldname, pixel_count))
             self._errors.append(msg)
         elif cmin < 1:
             msg = ('{}:{} pixel count value falls below acceptable threshold'
-                   ' of 1 pixel'.format(path, fieldname, cmin))
+                   ' of 1 pixel'.format(path, fieldname))
             self._errors.append(msg)
 
     #     if 'image_extents' in self.data_source:
@@ -266,11 +286,11 @@ class OrderValidatorV0(validictory.SchemaValidator):
             if 'pixel_size_units' in x:
                 if x['pixel_size_units'] == 'dd':
                     if not val_range[0] <= value <= val_range[1]:
-                        msg = ('Value of {} must fall between {} and {}'
+                        msg = ('Value of {} must fall between {} and {} decimal degrees'
                                .format(path, val_range[0], val_range[1]))
                         self._errors.append(msg)
 
-    def validate_ps_meter_rng(self, x, fieldname, schema, path, val_range):
+    def validate_ps_meters_rng(self, x, fieldname, schema, path, val_range):
         """Validates the pixel size given for Meters is within a given range"""
         value = x.get(fieldname)
 
@@ -278,7 +298,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
             if 'pixel_size_units' in x:
                 if x['pixel_size_units'] == 'meters':
                     if not val_range[0] <= value <= val_range[1]:
-                        msg = ('Value of {} must fall between {} and {}'
+                        msg = ('Value of {} must fall between {} and {} meters'
                                .format(path, val_range[0], val_range[1]))
                         self._errors.append(msg)
 
@@ -444,105 +464,150 @@ class OrderValidatorV0(validictory.SchemaValidator):
 
 
 class BaseValidationSchema(object):
-    formats = ['gtiff', 'hdf-eos2', 'envi', 'netcdf']
+    formats = {'gtiff':    'GeoTiff',
+               'envi':     'ENVI',
+               'hdf-eos2': 'HDF-EOS2',
+               'netcdf':   'NetCDF'}
 
-    resampling_methods = ['nn', 'bil', 'cc']
+    resampling_methods = {'nn':  'Nearest Neighbor',
+                          'bil': 'Bilinear Interpolation',
+                          'cc':  'Cubic Convolution'}
 
     projections = {'aea': {'type': 'object',
+                           'title': 'Albers Equal Area',
+                           'pixel_units':  ('meters', 'dd'),
                            'properties': {'standard_parallel_1': {'type': 'number',
+                                                                  'title': '1st Standard Parallel',
                                                                   'required': True,
                                                                   'minimum': -90,
                                                                   'maximum': 90},
                                           'standard_parallel_2': {'type': 'number',
+                                                                  'title': '2nd Standard Parallel',
                                                                   'required': True,
                                                                   'minimum': -90,
                                                                   'maximum': 90},
                                           'central_meridian': {'type': 'number',
+                                                               'title': 'Central Meridian',
                                                                'required': True,
                                                                'minimum': -180,
                                                                'maximum': 180},
                                           'latitude_of_origin': {'type': 'number',
+                                                                 'title': 'Latitude of Origin',
                                                                  'required': True,
                                                                  'minimum': -90,
                                                                  'maximum': 90},
                                           'false_easting': {'type': 'number',
+                                                            'title': 'False Easting (meters)',
                                                             'required': True},
                                           'false_northing': {'type': 'number',
+                                                             'title': 'False Northing (meters)',
                                                              'required': True},
                                           'datum': {'type': 'string',
+                                                    'title': 'Datum',
                                                     'required': True,
-                                                    'enum': ['wgs84', 'nad27', 'nad83']}}},
+                                                    'enum': {'wgs84': 'World Geodetic System 1984',
+                                                             'nad27': 'North American Datum 1927',
+                                                             'nad83': 'North American Datum 1983'}}}},
                    'utm': {'type': 'object',
+                           'pixel_units':  ('meters', 'dd'),
+                           'title': 'Universal Transverse Mercator',
                            'properties': {'zone': {'type': 'integer',
+                                                   'title': 'UTM Grid Zone Number',
                                                    'required': True,
                                                    'minimum': 1,
                                                    'maximum': 60},
                                           'zone_ns': {'type': 'string',
+                                                      'title': 'UTM Hemisphere',
                                                       'required': True,
-                                                      'enum': ['north', 'south']}}},
-                   'lonlat': {'type': 'null'},
+                                                      'enum': {'north': 'North', 'south': 'South'}}}},
+                   'lonlat': {'type': 'null',
+                              'pixel_units': ('dd',),
+                              'title': 'Geographic'},
                    'sinu': {'type': 'object',
+                            'title': 'Sinusoidal',
+                            'pixel_units': ('meters', 'dd'),
                             'properties': {'central_meridian': {'type': 'number',
+                                                                'title': 'Central Meridian',
                                                                 'required': True,
                                                                 'minimum': -180,
                                                                 'maximum': 180},
                                            'false_easting': {'type': 'number',
+                                                             'title': 'False Easting (meters)',
                                                              'required': True},
                                            'false_northing': {'type': 'number',
+                                                              'title': 'False Northing (meters)',
                                                               'required': True}}},
                    'ps': {'type': 'object',
+                          'title': 'Polar Stereographic',
+                          'pixel_units': ('meters', 'dd'),
                           'properties': {'longitudinal_pole': {'type': 'number',
+                                                               'title': 'Longitudinal Pole',
                                                                'required': True,
                                                                'minimum': -180,
                                                                'maximum': 180},
                                          'latitude_true_scale': {'type': 'number',
+                                                                 'title': 'Latitude True Scale',
                                                                  'required': True,
                                                                  'abs_rng': (60, 90)},
                                          'false_easting': {'type': 'number',
-                                                             'required': True},
+                                                           'title': 'False Easting (meters)',
+                                                           'required': True},
                                          'false_northing': {'type': 'number',
+                                                            'title': 'False Northing (meters)',
                                                             'required': True}}}}
 
     extents = {'north': {'type': 'number',
+                         'title': 'Upper left Y coordinate',
                          'required': True},
                'south': {'type': 'number',
+                         'title': 'Lower right Y coordinate',
                          'required': True},
                'east': {'type': 'number',
+                        'title': 'Lower right X coordinate',
                         'required': True},
                'west': {'type': 'number',
+                        'title': 'Upper left X coordinate',
                         'required': True},
                'units': {'type': 'string',
+                         'title': 'Coordinate system units',
                          'required': True,
-                         'enum': ['dd', 'meters']}}
+                         'enum': {'dd': 'Decimal Degrees', 'meters': 'Meters'}}}
 
     resize = {'pixel_size': {'type': 'number',
+                             'title': 'Pixel Size',
                              'required': True,
                              'ps_dd_rng': (0.0002695, 0.0449155),
-                             'ps_meter_rng': (30, 5000)},
+                             'ps_meters_rng': (30, 5000)},
               'pixel_size_units': {'type': 'string',
+                                   'title': 'Pixel Size Units',
                                    'required': True,
-                                   'enum': ['dd', 'meters']}}
+                                   'enum': {'dd': 'Decimal Degrees', 'meters': 'Meters'}}}
 
     request_schema = {'type': 'object',
                       'set_ItemCount': ('inputs', 5000),
                       'extents': 200000000,
                       'properties': {'projection': {'properties': projections,
                                                     'type': 'object',
-                                                    # 'enum_keys': self.projections.keys(),
+                                                    'title': 'Reproject Products',
                                                     'single_obj': True},
                                      'image_extents': {'type': 'object',
+                                                       'title': 'Modify Image Extents',
                                                        'properties': extents,
-                                                       # 'enum_keys': self.extents.keys(),
                                                        'dependencies': ['projection']},
                                      'format': {'type': 'string',
+                                                'title': 'Output Format',
                                                 'required': True,
                                                 'enum': formats},
                                      'resize': {'type': 'object',
+                                                'title': 'Pixel Resizing',
                                                 'properties': resize},
                                      'resampling_method': {'type': 'string',
+                                                           'title': 'Resample Method',
                                                            'enum': resampling_methods},
-                                     'plot_statistics': {'type': 'boolean'},
+                                     'plot_statistics': {'type': 'boolean',
+                                                         'title': 'Plot Output Product Statistics'},
                                      'note': {'type': 'string',
+                                              'title': 'Order Description (optional)',
                                               'required': False,
                                               'blank': True}}}
 
@@ -669,5 +734,13 @@ class ValidationProvider(ValidationInterfaceV0):
         :return: dict
         """
         return copy.deepcopy(self.schema.request_schema)
+
+    def fetch_product_types(self):
+        """
+        Pass along the values/readable-names for product-types
+        :return: dict
+        """
+        return sn.ProductNames().groups()
+
 
     __call__ = validate

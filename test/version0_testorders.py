@@ -274,6 +274,10 @@ class InvalidOrders(object):
 
         return results
 
+    def invalidate_title(self, old, new):
+        # Title is not something we want to check
+        return []
+
     def invalidate_dependencies(self, dependency, mapping):
         """
         Remove dependencies, one at a time
@@ -504,7 +508,7 @@ class InvalidOrders(object):
 
         return results
 
-    def invalidate_ps_meter_rng(self, rng, mapping):
+    def invalidate_ps_meters_rng(self, rng, mapping):
         """
         Set values outside of the valid range
         """
@@ -520,7 +524,7 @@ class InvalidOrders(object):
             upd = self.build_update_dict(mapping[:-1], {'pixel_size': val, 'pixel_size_units': 'meters'})
             exc = ("Value of {} must fall between {} and {}"
                    .format('.'.join(mapping), rng[0], rng[1]))
-            results.append((self.update_dict(order, upd), 'ps_meter_rng', exc))
+            results.append((self.update_dict(order, upd), 'ps_meters_rng', exc))
 
         return results
 
@@ -703,4 +707,22 @@ class InvalidOrders(object):
 
             results.append((self.update_dict(order, upd), 'role_restricted', exc))
 
+        return results
+
+    def invalidate_pixel_units(self, units, mapping):
+        """
+        Put an invalid projection output into a limited projection (like, geographic)
+        """
+        order = copy.deepcopy(self.valid_order)
+        results = []
+
+        parts = {'resize': 'pixel_size_units',
+                 'image_extents': 'units'}
+
+        val = 'meters'
+        for p, n in parts.items():
+            if p in order and val not in units:
+                upd = self.build_update_dict((p, n), 'meters')
+                exc = '{object} units must be in "dd" for projection'.format(object=p)
+                results.append((self.update_dict(order, upd), p, exc))
         return results

@@ -516,8 +516,11 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         usage_by_cid = {}
         for result in query_results:
             cid, orderid = result['contactid'], result['orderid']
-            stype, sname = (result['sensor_type'],
-                            sensor.instance(result['name']).shortname)
+            if result['sensor_type'] in ('landsat', 'modis'):
+                stype, sname = (result['sensor_type'],
+                                sensor.instance(result['name']).shortname)
+            else:
+                stype = sname = 'plot'
             usage = orderid
             usage_by_cid[(cid, orderid, stype)] = (usage, result)
             names_by_cid.setdefault((cid, orderid, stype), []).append(result['name'])

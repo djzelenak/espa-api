@@ -18,28 +18,47 @@ from api.util import julian_date_check, julian_from_date
 with open(os.path.join(__location__, 'domain/restricted.yaml')) as f:
     restricted = yaml.load(f.read())
 
+# Grab human-readable product names/categories
+with open(os.path.join(__location__, 'domain/products.yaml')) as f:
+    products = yaml.load(f.read())
 
 class ProductNames(object):
-    @classmethod
-    def get(cls):
+    def groups(self, staff_role=False):
+        """ Gives human-readable mappings and logical-groups to all orderable products"""
+        retdata = dict()
+        for category_name in products['categories']:
+            if category_name not in retdata:
+                retdata[category_name] = products['categories'][category_name]
+                retdata[category_name]['products'] = dict()
+                retdata[category_name]['rank'] = products['categories'][category_name]['rank']
+
+            prods = {p: v for p, v in products['products'].items()
+                     if v['category'] == category_name}
+            for product, struct in prods.items():
+                # TODO: implement staff_role by currently authenticated user
+                # if not staff_role and i in restricted['all']['role']:
+                #     continue
+                is_plotable = (product in restricted['stats']['products']
+                               if product != 'stats' else None)
+                rdat = {product: {
+                    'is_plotable': is_plotable,
+                    'title': struct['title'],
+                    'required_customizations': list(),
+                    'rank': struct['rank']
+                }}
+                retdata[category_name]['products'].update(rdat)
+
+        return retdata
+
+    def get(self):
         """ Defines the mapping between products and sensor variables
         :return: AllProducts class (namedtuple)
         """
         # API product values
-        product_names = ["source_metadata", "l1", "pixel_qa",
-                         "toa", "bt", "cloud",
-                         "sr", "lst", "swe",
-                         "sr_ndvi", "sr_evi", "sr_savi", "sr_msavi", "sr_ndmi",
-                         "sr_nbr", "sr_nbr2",
-                         "stats"]
+        product_names = tuple(products['products'].keys())
         prods = namedtuple('AllProducts', product_names)
         # Internal code names
-        return prods("source_metadata", "l1", "pixel_qa",
-                     "toa", "bt", "cloud",
-                     "sr", "lst", "swe",
-                     "sr_ndvi", "sr_evi", "sr_savi", "sr_msavi", "sr_ndmi",
-                     "sr_nbr", "sr_nbr2",
-                     "stats")
+        return prods(*product_names)
 AllProducts = ProductNames().get()
 
 class SensorProduct(object):

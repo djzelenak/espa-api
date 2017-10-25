@@ -1,6 +1,8 @@
 ## Change Notes
 ###### October 2017
 * Restrict orders of only Landsat Level-1
+* Add human-readable `title` to objects in JSON order-schema
+* Add allowed `pixel_units` against output projections
 ###### September 2017
 * Modify email if all products in order fail
 ###### August 2017

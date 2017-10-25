@@ -61,8 +61,9 @@ class ERSApi(object):
         :return: dict
         """
         auth_resp = self._api_post('/auth', {'username': user,
-                                             'password': passw,
-                                             'client_secret': self._secret})
+                                                'password': passw,
+                                                'client_secret': self._secret})
+
         if not auth_resp['errors']:
             headers = {'X-AuthToken': auth_resp['data']['authToken']}
             user_resp = self._api_get('/me', headers)

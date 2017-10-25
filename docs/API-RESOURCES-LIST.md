@@ -184,19 +184,23 @@ curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/projec
 // Response:
 {
     "aea": {
+        "title": "Albers Equal Area",
+        "pixel_units": ["meters", "dd"],
         "properties": {
             "central_meridian": {
+                "title": "Central Meridian",
                 "maximum": 180, 
                 "minimum": -180, 
                 "required": true, 
                 "type": "number"
             }, 
             "datum": {
-                "enum": [
-                    "wgs84", 
-                    "nad27", 
-                    "nad83"
-                ], 
+                "title": "Datum",
+                "enum":{
+                    "nad27": "North American Datum 1927",
+                    "nad83": "North American Datum 1983",
+                    "wgs84": "World Geodetic System 1984"
+                }, 
                 "required": true, 
                 "type": "string"
             } // ...
@@ -204,6 +208,8 @@ curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/projec
         "type": "object"
     }, 
     "lonlat": {
+        "title": "Geographic",
+        "pixel_units": ["dd"],
         "type": "null"
     } // ...
 }        
@@ -218,11 +224,10 @@ curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/format
 ```json
 // Response: 
 {
-  "formats": [
-    "gtiff", 
-    "hdf-eos2" // ...
-  ]
-}
+  "formats": {
+    "envi": "ENVI",
+    "gtiff": "GeoTiff", // ...
+  }
 ```
 
 <a id="apiResamp"></a>**GET /api/v0/resampling-methods**
@@ -234,11 +239,11 @@ curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/resamp
 ```json
 // Response: 
 {
-  "resampling_methods": [
-    "nn", 
-    "bil", 
-    "cc"
-  ]
+  "resampling_methods": {
+    "nn": "Nearest Neighbor", 
+    "bil": "Bilinear Interpolation", 
+    "cc": "Cubic Convolution"
+  }
 }
 ```
 
@@ -492,12 +497,13 @@ curl --user <erosusername>:<erospassword> https://espa.cr.usgs.gov/api/v0/order-
             "type": "object"
         }, 
         "format": {
-            "enum": [
-                "gtiff", 
-                "hdf-eos2", 
-                "envi", 
-                "netcdf"
-            ], 
+            "enum": {
+                "envi": "ENVI",
+                "gtiff": "GeoTiff",
+                "hdf-eos2": "HDF-EOS2",
+                "netcdf": "NetCDF"
+            }, 
+            "title": "Output Format",
             "required": true, 
             "type": "string"
         } // ...
