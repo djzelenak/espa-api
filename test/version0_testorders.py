@@ -278,6 +278,10 @@ class InvalidOrders(object):
         # Title is not something we want to check
         return []
 
+    def invalidate_display_rank(self, old, new):
+        # display_rank is not something we want to check
+        return []
+
     def invalidate_dependencies(self, dependency, mapping):
         """
         Remove dependencies, one at a time
