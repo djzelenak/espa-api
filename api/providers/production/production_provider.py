@@ -1327,6 +1327,8 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         Note: This problem arises from lack of job scheduler grace when e.g. running out of memory
         """
+        if not len(scenes):
+            return
 
         sids = [int(s.id) for s in scenes]
         self.catch_orphaned_scenes()
