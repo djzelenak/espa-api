@@ -1355,8 +1355,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         scenes = Scene.where({'failed_lta_status_update IS NOT': None, 'order_id': pending_orders})
         self.handle_failed_ee_updates(scenes)
 
-        orders = Order.where({'status': 'cancelled',
-                              'completion_email_sent IS': None, 'id': pending_orders})
+        search = {'status': 'cancelled',  'completion_email_sent IS': None}
+        if user:
+                search.update(user_id=user.id)
+        orders = Order.where(search)
         self.handle_cancelled_orders(orders)
 
         scenes = Scene.where({'status': 'submitted', 'sensor_type': 'landsat', 'order_id': pending_orders})[:500]
