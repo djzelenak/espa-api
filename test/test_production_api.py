@@ -579,6 +579,29 @@ class TestProductionAPI(unittest.TestCase):
         for s in Scene.where({'order_id': order_id}):
             self.assertTrue(s.orphaned)
 
+    @patch('api.external.hadoop.HadoopHandler.job_names_ids',
+           hadoop.jobs_names_ids)
+    def test_handle_stuck_jobs(self):
+        order_id = self.mock_order.generate_testing_order(self.user_id)
+        # Make some really old jobs
+        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'plot'), 'status', ['processing'])
+        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'plot'), 'status_modified', [datetime.datetime(1900, 1, 1)])
+        scenes = Scene.where({'status': 'processing', 'order_id': order_id})
+        n_scenes = len(scenes)
+        response = production_provider.handle_stuck_jobs(scenes)
+        self.assertTrue(response)
+
+        scenes = Scene.where({'status': 'processing', 'order_id': order_id, 'reported_orphan is not': None})
+        self.assertEqual(n_scenes, len(scenes))
+
+        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'plot'), 'reported_orphan', [datetime.datetime(1900, 1, 1)])
+        response = production_provider.handle_stuck_jobs(scenes)
+        self.assertTrue(response)
+
+        scenes = Scene.where({'status': 'processing', 'order_id': order_id})
+        self.assertEqual(0, len(scenes))
+
+
     def test_convert_product_options(self):
         """
         Test the conversion procedure to make sure that the new format for orders converts
