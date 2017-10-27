@@ -1322,6 +1322,22 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                             'scene {}\n{}'.format(s.id, e))
         return True
 
+    def handle_stuck_jobs(self, scenes):
+        """ Monitoring for long-overdue products, and auto-resubmission
+
+        Note: This problem arises from lack of job scheduler grace when e.g. running out of memory
+        """
+
+        sids = [int(s.id) for s in scenes]
+        self.catch_orphaned_scenes()
+        scenes = Scene.where({'id': sids})
+
+        orphaned_scenes = [s for s in scenes if s.orphaned]
+        if len(orphaned_scenes):
+            logger.warning('Found {N} orphaned products, retrying...'.format(N=len(orphaned_scenes)))
+            Scene.bulk_update([s.id for s in orphaned_scenes], {'status': 'submitted'})
+        return True
+
     def handle_orders(self, username=None):
         """
         Logic handler for how we accept orders + products into the system
@@ -1344,6 +1360,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         products = Scene.where({'status': 'onorder', 'tram_order_id IS NOT': None, 'order_id': pending_orders})
         self.handle_onorder_landsat_products(products)
+
+        time_jobs_stuck = datetime.datetime.now() - datetime.timedelta(hours=6) # not expected to change
+        products = Scene.where({'status': ('queued', 'processing'), 'status_modified <': time_jobs_stuck})
+        self.handle_stuck_jobs(products)
 
         now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
         products = Scene.where({'status': 'retry', 'retry_after <': now, 'order_id': pending_orders})
