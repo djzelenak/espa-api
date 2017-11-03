@@ -11,6 +11,7 @@ from api.domain.user import User
 from api.external.mocks import lta, inventory, lpdaac, onlinecache, nlaps, hadoop
 from api.interfaces.production.version1 import API
 from api.notification import emails
+from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.providers.production.mocks.production_provider import MockProductionProvider
 from api.providers.production.production_provider import ProductionProvider
 from api.system.mocks import errors
@@ -19,6 +20,7 @@ from mock import patch
 api = API()
 production_provider = ProductionProvider()
 mock_production_provider = MockProductionProvider()
+cfg = ConfigurationProvider()
 
 
 class TestProductionAPI(unittest.TestCase):
@@ -55,7 +57,8 @@ class TestProductionAPI(unittest.TestCase):
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry',
            mock_production_provider.set_product_retry)
     def test_fetch_production_products_landsat(self):
-        os.environ['ESPA_M2M_MODE'] = 'LANDSAT,MODIS,URLS'
+        cfg.put('system.m2m_url_enabled', 'True')
+        cfg.put('system.m2m_val_enabled', 'True')
         order_id = self.mock_order.generate_testing_order(self.user_id)
         # need scenes with statuses of 'processing'
         self.mock_order.update_scenes(order_id, 'landsat', 'status', ['processing', 'oncache'])
@@ -63,7 +66,8 @@ class TestProductionAPI(unittest.TestCase):
         params = {'for_user': user.username, 'product_types': ['landsat']}
         response = api.fetch_production_products(params)
         self.assertTrue('bilbo' in response[0]['orderid'])
-        os.environ['ESPA_M2M_MODE'] = ''
+        cfg.put('system.m2m_url_enabled', 'False')
+        cfg.put('system.m2m_val_enabled', 'False')
 
     @patch('api.external.lta.get_download_urls', lta.get_download_urls)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry',
