@@ -167,7 +167,7 @@ class TestValidation(unittest.TestCase):
             valid_order = copy.deepcopy(self.base_order)
             valid_order['projection'] = {proj: testorders.good_test_projections[proj]}
             if 'lonlat' not in valid_order['projection']:
-                valid_order['resize'] = {"pixel_size": 500, "pixel_size_units": "meters"}
+                valid_order['resize'] = {"pixel_size": 30, "pixel_size_units": "meters"}
 
             try:
                 good = api.validation(valid_order, self.staffuser.username)
