@@ -165,6 +165,48 @@ class OrderValidatorV0(validictory.SchemaValidator):
                                self.data_source['projection'].keys()[0]))
                 self._errors.append(msg)
 
+        if 'image_extents' in self.data_source and 'projection' in self.data_source:
+            # Validate UTM zone matches image_extents
+            #   East/West: Zone Buffer 3 UTM zones (abs(Lat) < 80)
+            #   North/South: Equator buffer of 5 degrees
+            if self.validate_type_object(self.data_source['projection'].get('utm')):
+                if not self.validate_type_integer(self.data_source['projection']['utm'].get('zone')):
+                    return
+                if not self.validate_type_string(self.data_source['projection']['utm'].get('zone_ns')):
+                    return
+                if self.data_source['image_extents']['units'] != 'dd':
+                    return
+                if max(map(abs, [self.data_source['image_extents']['north'],
+                                 self.data_source['image_extents']['south']])) < 80:
+                    cdict = dict(inzone=self.data_source['projection']['utm']['zone'],
+                                east=self.data_source['image_extents']['east'],
+                                west=self.data_source['image_extents']['west'],
+                                zbuffer=3)
+                    if not self.is_utm_zone_nearby(**cdict):
+                        msg = ('image_extents ({east}E,{west}W) are not near the'
+                               ' requested UTM zone ({inzone})'
+                               .format(**cdict))
+                        self._errors.append(msg)
+                north = max([self.data_source['image_extents']['north'],
+                             self.data_source['image_extents']['south']])
+                if self.data_source['projection']['utm']['zone'] == 'south':
+                    north *= -1
+                nsbuffer = -5 # degrees
+                if north < nsbuffer:
+                    projection = self.data_source['projection']['utm'].copy()
+                    projection.update(self.data_source['image_extents'].copy())
+                    msg = ('image_extents ({north}N,{south}S) are not near the'
+                           ' requested UTM Zone Hemisphere ({zone_ns})'
+                           .format(**projection))
+                    self._errors.append(msg)
+
+
+    @staticmethod
+    def is_utm_zone_nearby(inzone, east, west, zbuffer=3):
+        def long2utm(dd_lon):
+            return (math.floor((dd_lon + 180) / 6.) % 60) + 1
+        return (long2utm(west) - zbuffer) <= inzone <= (long2utm(east) + zbuffer)
+
     @staticmethod
     def calc_extent(xmax, ymax, xmin, ymin, extent_units, resize_units, resize_pixel):
         """Calculate a good estimate of the number of pixels contained
