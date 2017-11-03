@@ -662,15 +662,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         #           'product_opts', 'priority', 'order_date', 'running']
         query_results = db.fetcharr
 
-        if 'URLS' in os.getenv('ESPA_M2M_MODE', '') and inventory.available():
-            logger.info('@@ URLS: FETCH via MACHINE-TO-MACHINE')
-            results = self.parse_urls_m2m(query_results)
-            logger.info('@@ URLS: COMPLETE via MACHINE-TO-MACHINE')
+        if config.is_m2m_url_enabled and inventory.available():
+            return self.parse_urls_m2m(query_results)
         else:
-            logger.info('@@ URLS: FETCH via OrderWrapperService')
-            results = self.parse_urls_owrapper(query_results)
-            logger.info('@@ URLS: COMPLETE via OrderWrapperService')
-        return results
+            return self.parse_urls_owrapper(query_results)
 
     def load_ee_orders(self, contact_id=None):
         """
@@ -975,7 +970,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         product_list = self.check_dependencies_for_products(product_list)
 
         prod_name_list = [p.name for p in product_list]
-        if 'LANDSAT' in os.getenv('ESPA_M2M_MODE', '') and inventory.available():
+        if config.is_m2m_url_enabled:
             token = inventory.get_cached_session()
             results = inventory.get_cached_verify_scenes(token, prod_name_list)
             valid = list(set(r for r,v in results.items() if v))
@@ -1064,10 +1059,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         Handles all submitted landsat products
         :return: True
         """
-        if 'LANDSAT' in os.getenv('ESPA_M2M_MODE', '') and not inventory.available():
+        if config.is_m2m_url_enabled and not inventory.available():
             logger.critical('M2M down. Skip handle_submitted_landsat_products...')
             return False
-        if 'LANDSAT' not in os.getenv('ESPA_M2M_MODE', '') and not lta.check_lta_available():
+        elif not lta.check_lta_available():
             logger.critical('LTA down. Skip handle_submitted_landsat_products...')
             return False
         logger.info('Handling submitted landsat products...')
@@ -1094,10 +1089,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         Moves all submitted modis products to oncache if true
         :return: True
         """
-        if 'MODIS' in os.getenv('ESPA_M2M_MODE', '') and not inventory.available():
+        if config.is_m2m_url_enabled and not inventory.available():
             logger.critical('M2M down. Skip handle_submitted_modis_products...')
             return False
-        if 'MODIS' not in os.getenv('ESPA_M2M_MODE', '') and not lpdaac.check_lpdaac_available():
+        elif not lpdaac.check_lpdaac_available():
             logger.critical('DAAC down. Skip handle_submitted_modis_products...')
             return False
         logger.info("Handling submitted modis products...")
@@ -1108,7 +1103,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             lpdaac_ids = []
             nonlp_ids = []
 
-            if 'MODIS' in os.getenv('ESPA_M2M_MODE', '') and inventory.available():
+            if config.is_m2m_url_enabled:
                 # TODO: This shouldn't be necessary if everything uses m2m...
                 prod_name_list = [p.name for p in modis_products]
                 token = inventory.get_cached_session()
