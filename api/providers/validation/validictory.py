@@ -48,18 +48,6 @@ class OrderValidatorV0(validictory.SchemaValidator):
                     self._errors.append(msg)
                     return
 
-            if 'resize' in self.data_source:
-                if not self.validate_type_object(self.data_source['resize']):
-                    return
-                if not self.validate_type_string(self.data_source['resize'].get('pixel_size_units')):
-                    return
-                if self.data_source['resize'].get('pixel_size_units') not in valid_cs_units:
-                    msg = ('resize units must be in "{}" for projection "{}", not "{}"'
-                           .format(','.join(valid_cs_units), fieldname,
-                                   self.data_source['resize'].get('pixel_size_units')))
-                    self._errors.append(msg)
-                    return
-
     def validate_extents(self, x, fieldname, schema, path, pixel_count=200000000):
         if 'resize' not in self.data_source and 'image_extents' not in self.data_source:
             return
@@ -165,6 +153,17 @@ class OrderValidatorV0(validictory.SchemaValidator):
             msg = ('{}:{} pixel count value falls below acceptable threshold'
                    ' of 1 pixel'.format(path, fieldname))
             self._errors.append(msg)
+
+        # Restrict Pixel-Size in decimal degrees for Geographic Projection only, else Meters
+        if 'projection' in self.data_source and 'resize' in self.data_source:
+            valid_units = 'meters'
+            if 'lonlat' in self.data_source['projection']:
+                valid_units = 'dd'
+            if self.data_source['resize']['pixel_size_units'] != valid_units:
+                msg = ('resize units must be in "{}" for projection "{}"'
+                       .format(valid_units,
+                               self.data_source['projection'].keys()[0]))
+                self._errors.append(msg)
 
     @staticmethod
     def calc_extent(xmax, ymax, xmin, ymin, extent_units, resize_units, resize_pixel):
