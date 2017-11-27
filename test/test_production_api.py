@@ -11,6 +11,7 @@ from api.domain.user import User
 from api.external.mocks import lta, inventory, lpdaac, onlinecache, nlaps, hadoop
 from api.interfaces.production.version1 import API
 from api.notification import emails
+from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.providers.production.mocks.production_provider import MockProductionProvider
 from api.providers.production.production_provider import ProductionProvider
 from api.system.mocks import errors
@@ -19,6 +20,7 @@ from mock import patch
 api = API()
 production_provider = ProductionProvider()
 mock_production_provider = MockProductionProvider()
+cfg = ConfigurationProvider()
 
 
 class TestProductionAPI(unittest.TestCase):
@@ -55,7 +57,8 @@ class TestProductionAPI(unittest.TestCase):
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry',
            mock_production_provider.set_product_retry)
     def test_fetch_production_products_landsat(self):
-        os.environ['ESPA_M2M_MODE'] = 'LANDSAT,MODIS,URLS'
+        cfg.put('system.m2m_url_enabled', 'True')
+        cfg.put('system.m2m_val_enabled', 'True')
         order_id = self.mock_order.generate_testing_order(self.user_id)
         # need scenes with statuses of 'processing'
         self.mock_order.update_scenes(order_id, 'landsat', 'status', ['processing', 'oncache'])
@@ -63,7 +66,8 @@ class TestProductionAPI(unittest.TestCase):
         params = {'for_user': user.username, 'product_types': ['landsat']}
         response = api.fetch_production_products(params)
         self.assertTrue('bilbo' in response[0]['orderid'])
-        os.environ['ESPA_M2M_MODE'] = ''
+        cfg.put('system.m2m_url_enabled', 'False')
+        cfg.put('system.m2m_val_enabled', 'False')
 
     @patch('api.external.lta.get_download_urls', lta.get_download_urls)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry',
@@ -579,6 +583,29 @@ class TestProductionAPI(unittest.TestCase):
         for s in Scene.where({'order_id': order_id}):
             self.assertTrue(s.orphaned)
 
+    @patch('api.external.hadoop.HadoopHandler.job_names_ids',
+           hadoop.jobs_names_ids)
+    def test_handle_stuck_jobs(self):
+        order_id = self.mock_order.generate_testing_order(self.user_id)
+        # Make some really old jobs
+        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'plot'), 'status', ['processing'])
+        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'plot'), 'status_modified', [datetime.datetime(1900, 1, 1)])
+        scenes = Scene.where({'status': 'processing', 'order_id': order_id})
+        n_scenes = len(scenes)
+        response = production_provider.handle_stuck_jobs(scenes)
+        self.assertTrue(response)
+
+        scenes = Scene.where({'status': 'processing', 'order_id': order_id, 'reported_orphan is not': None})
+        self.assertEqual(n_scenes, len(scenes))
+
+        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'plot'), 'reported_orphan', [datetime.datetime(1900, 1, 1)])
+        response = production_provider.handle_stuck_jobs(scenes)
+        self.assertTrue(response)
+
+        scenes = Scene.where({'status': 'processing', 'order_id': order_id})
+        self.assertEqual(0, len(scenes))
+
+
     def test_convert_product_options(self):
         """
         Test the conversion procedure to make sure that the new format for orders converts
@@ -624,7 +651,7 @@ class TestProductionAPI(unittest.TestCase):
                    'include_cfmask': False,
                    'include_customized_source_data': False,
                    'include_dswe': False,
-                   'include_lst': False,
+                   'include_st': False,
                    'include_solr_index': False,
                    'include_source_data': False,
                    'include_source_metadata': False,

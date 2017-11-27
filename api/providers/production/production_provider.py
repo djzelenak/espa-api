@@ -662,15 +662,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         #           'product_opts', 'priority', 'order_date', 'running']
         query_results = db.fetcharr
 
-        if 'URLS' in os.getenv('ESPA_M2M_MODE', '') and inventory.available():
-            logger.info('@@ URLS: FETCH via MACHINE-TO-MACHINE')
-            results = self.parse_urls_m2m(query_results)
-            logger.info('@@ URLS: COMPLETE via MACHINE-TO-MACHINE')
+        if config.is_m2m_url_enabled and inventory.available():
+            return self.parse_urls_m2m(query_results)
         else:
-            logger.info('@@ URLS: FETCH via OrderWrapperService')
-            results = self.parse_urls_owrapper(query_results)
-            logger.info('@@ URLS: COMPLETE via OrderWrapperService')
-        return results
+            return self.parse_urls_owrapper(query_results)
 
     def load_ee_orders(self, contact_id=None):
         """
@@ -975,7 +970,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         product_list = self.check_dependencies_for_products(product_list)
 
         prod_name_list = [p.name for p in product_list]
-        if 'LANDSAT' in os.getenv('ESPA_M2M_MODE', '') and inventory.available():
+        if config.is_m2m_url_enabled:
             token = inventory.get_cached_session()
             results = inventory.get_cached_verify_scenes(token, prod_name_list)
             valid = list(set(r for r,v in results.items() if v))
@@ -1043,7 +1038,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         :return: list
         """
         products_need_check = {
-            'lst': config.url_for('modis.datapool')  # LST requires ASTER GED
+            'st': config.url_for('modis.datapool')  # ST requires ASTER GED
         }
         passed_dep_check = list()
         for s in scene_list:
@@ -1064,10 +1059,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         Handles all submitted landsat products
         :return: True
         """
-        if 'LANDSAT' in os.getenv('ESPA_M2M_MODE', '') and not inventory.available():
+        if config.is_m2m_url_enabled and not inventory.available():
             logger.critical('M2M down. Skip handle_submitted_landsat_products...')
             return False
-        if 'LANDSAT' not in os.getenv('ESPA_M2M_MODE', '') and not lta.check_lta_available():
+        elif not lta.check_lta_available():
             logger.critical('LTA down. Skip handle_submitted_landsat_products...')
             return False
         logger.info('Handling submitted landsat products...')
@@ -1094,10 +1089,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         Moves all submitted modis products to oncache if true
         :return: True
         """
-        if 'MODIS' in os.getenv('ESPA_M2M_MODE', '') and not inventory.available():
+        if config.is_m2m_url_enabled and not inventory.available():
             logger.critical('M2M down. Skip handle_submitted_modis_products...')
             return False
-        if 'MODIS' not in os.getenv('ESPA_M2M_MODE', '') and not lpdaac.check_lpdaac_available():
+        elif not lpdaac.check_lpdaac_available():
             logger.critical('DAAC down. Skip handle_submitted_modis_products...')
             return False
         logger.info("Handling submitted modis products...")
@@ -1108,7 +1103,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             lpdaac_ids = []
             nonlp_ids = []
 
-            if 'MODIS' in os.getenv('ESPA_M2M_MODE', '') and inventory.available():
+            if config.is_m2m_url_enabled:
                 # TODO: This shouldn't be necessary if everything uses m2m...
                 prod_name_list = [p.name for p in modis_products]
                 token = inventory.get_cached_session()
@@ -1322,6 +1317,24 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                             'scene {}\n{}'.format(s.id, e))
         return True
 
+    def handle_stuck_jobs(self, scenes):
+        """ Monitoring for long-overdue products, and auto-resubmission
+
+        Note: This problem arises from lack of job scheduler grace when e.g. running out of memory
+        """
+        if not len(scenes):
+            return
+
+        sids = [int(s.id) for s in scenes]
+        self.catch_orphaned_scenes()
+        scenes = Scene.where({'id': sids})
+
+        orphaned_scenes = [s for s in scenes if s.orphaned]
+        if len(orphaned_scenes):
+            logger.warning('Found {N} orphaned products, retrying...'.format(N=len(orphaned_scenes)))
+            Scene.bulk_update([s.id for s in orphaned_scenes], {'status': 'submitted'})
+        return True
+
     def handle_orders(self, username=None):
         """
         Logic handler for how we accept orders + products into the system
@@ -1345,6 +1358,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         products = Scene.where({'status': 'onorder', 'tram_order_id IS NOT': None, 'order_id': pending_orders})
         self.handle_onorder_landsat_products(products)
 
+        time_jobs_stuck = datetime.datetime.now() - datetime.timedelta(hours=6) # not expected to change
+        products = Scene.where({'status': ('queued', 'processing'), 'status_modified <': time_jobs_stuck})
+        self.handle_stuck_jobs(products)
+
         now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
         products = Scene.where({'status': 'retry', 'retry_after <': now, 'order_id': pending_orders})
         self.handle_retry_products(products)
@@ -1355,8 +1372,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         scenes = Scene.where({'failed_lta_status_update IS NOT': None, 'order_id': pending_orders})
         self.handle_failed_ee_updates(scenes)
 
-        orders = Order.where({'status': 'cancelled',
-                              'completion_email_sent IS': None, 'id': pending_orders})
+        search = {'status': 'cancelled',  'completion_email_sent IS': None}
+        if user:
+                search.update(user_id=user.id)
+        orders = Order.where(search)
         self.handle_cancelled_orders(orders)
 
         scenes = Scene.where({'status': 'submitted', 'sensor_type': 'landsat', 'order_id': pending_orders})[:500]

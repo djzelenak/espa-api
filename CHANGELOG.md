@@ -1,4 +1,8 @@
 ## Change Notes
+###### November 2017
+* Changes to Landsat "ST" terminology (staff only)
+* Image extents (below 80N/S) must match +/-3 UTM zones
+* Pixel Resize must match output projection
 ###### October 2017
 * Restrict orders of only Landsat Level-1
 * Add human-readable `title` to objects in JSON order-schema
@@ -6,7 +10,7 @@
 ###### September 2017
 * Modify email if all products in order fail
 ###### August 2017
-* Begin using M2M for input validation (`ESPA_M2M_MODE`)
+* Begin using M2M for input validation
 ###### July 2017
 * Upgrade remote calls for Hadoop2
 * Add production-api reset queued/processing scene status

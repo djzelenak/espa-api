@@ -16,7 +16,6 @@
 | HTTPS         | Hyper Text Transfer Protocol Secure|
 | JSON          | Javascript Object Notation |
 | LCMAP         | Land Change Monitoring Assessment and Prediction|
-| LST           | Land Surface Temperature |
 | LTA           | Long Term Archive      |
 | LPDAAC        | Land Process Distributed Active Archive |
 | MODIS         | Moderate Resolution Imaging Spectroradiometer |
@@ -29,6 +28,7 @@
 | OLI/TIRS      | Operational Land Imager/Thermal Infrared Sensor |
 | SAVI          | Soil Adjusted Vegetation Index |
 | SR            | Surface Reflectance |
+| ST            | Surface Temperature |
 | TOA           | Top Of Atmosphere |
 | TIRS          | Thermal Infrared Sensor |
 | TM            | Thematic Mapper |
