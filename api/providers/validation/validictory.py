@@ -48,18 +48,6 @@ class OrderValidatorV0(validictory.SchemaValidator):
                     self._errors.append(msg)
                     return
 
-            if 'resize' in self.data_source:
-                if not self.validate_type_object(self.data_source['resize']):
-                    return
-                if not self.validate_type_string(self.data_source['resize'].get('pixel_size_units')):
-                    return
-                if self.data_source['resize'].get('pixel_size_units') not in valid_cs_units:
-                    msg = ('resize units must be in "{}" for projection "{}", not "{}"'
-                           .format(','.join(valid_cs_units), fieldname,
-                                   self.data_source['resize'].get('pixel_size_units')))
-                    self._errors.append(msg)
-                    return
-
     def validate_extents(self, x, fieldname, schema, path, pixel_count=200000000):
         if 'resize' not in self.data_source and 'image_extents' not in self.data_source:
             return
@@ -166,28 +154,58 @@ class OrderValidatorV0(validictory.SchemaValidator):
                    ' of 1 pixel'.format(path, fieldname))
             self._errors.append(msg)
 
-    #     if 'image_extents' in self.data_source:
-    #         # Validate UTM zone matches image_extents
-    #         if self.validate_type_object(self.data_source['projection'].get('utm')):
-    #             if not self.validate_type_integer(self.data_source['projection']['utm'].get('zone')):
-    #                 return
-    #             if not self.data_source['image_extents']['units'] == 'dd':
-    #                 return
-    #             cdict = dict(inzone=self.data_source['projection']['utm']['zone'],
-    #                          east=self.data_source['image_extents']['east'],
-    #                          west=self.data_source['image_extents']['west'],
-    #                          zbuffer=3)
-    #             if not self.is_utm_zone_nearby(**cdict):
-    #                 msg = ('image_extents ({east}E,{west}W) are not near the'
-    #                        ' requested UTM zone ({inzone})'
-    #                        .format(**cdict))
-    #                 self._errors.append(msg)
-    #
-    # @staticmethod
-    # def is_utm_zone_nearby(inzone, east, west, zbuffer=3):
-    #     def long2utm(dd_lon):
-    #         return (math.floor((dd_lon + 180) / 6.) % 60) + 1
-    #     return (long2utm(west) - zbuffer) <= inzone <= (long2utm(east) + zbuffer)
+        # Restrict Pixel-Size in decimal degrees for Geographic Projection only, else Meters
+        if 'projection' in self.data_source and 'resize' in self.data_source:
+            valid_units = 'meters'
+            if 'lonlat' in self.data_source['projection']:
+                valid_units = 'dd'
+            if self.data_source['resize']['pixel_size_units'] != valid_units:
+                msg = ('resize units must be in "{}" for projection "{}"'
+                       .format(valid_units,
+                               self.data_source['projection'].keys()[0]))
+                self._errors.append(msg)
+
+        if 'image_extents' in self.data_source and 'projection' in self.data_source:
+            # Validate UTM zone matches image_extents
+            #   East/West: Zone Buffer 3 UTM zones (abs(Lat) < 80)
+            #   North/South: Equator buffer of 5 degrees
+            if self.validate_type_object(self.data_source['projection'].get('utm')):
+                if not self.validate_type_integer(self.data_source['projection']['utm'].get('zone')):
+                    return
+                if not self.validate_type_string(self.data_source['projection']['utm'].get('zone_ns')):
+                    return
+                if self.data_source['image_extents']['units'] != 'dd':
+                    return
+                if max(map(abs, [self.data_source['image_extents']['north'],
+                                 self.data_source['image_extents']['south']])) < 80:
+                    cdict = dict(inzone=self.data_source['projection']['utm']['zone'],
+                                east=self.data_source['image_extents']['east'],
+                                west=self.data_source['image_extents']['west'],
+                                zbuffer=3)
+                    if not self.is_utm_zone_nearby(**cdict):
+                        msg = ('image_extents ({east}E,{west}W) are not near the'
+                               ' requested UTM zone ({inzone})'
+                               .format(**cdict))
+                        self._errors.append(msg)
+                north = max([self.data_source['image_extents']['north'],
+                             self.data_source['image_extents']['south']])
+                if self.data_source['projection']['utm']['zone'] == 'south':
+                    north *= -1
+                nsbuffer = -5 # degrees
+                if north < nsbuffer:
+                    projection = self.data_source['projection']['utm'].copy()
+                    projection.update(self.data_source['image_extents'].copy())
+                    msg = ('image_extents ({north}N,{south}S) are not near the'
+                           ' requested UTM Zone Hemisphere ({zone_ns})'
+                           .format(**projection))
+                    self._errors.append(msg)
+
+
+    @staticmethod
+    def is_utm_zone_nearby(inzone, east, west, zbuffer=3):
+        def long2utm(dd_lon):
+            return (math.floor((dd_lon + 180) / 6.) % 60) + 1
+        return (long2utm(west) - zbuffer) <= inzone <= (long2utm(east) + zbuffer)
 
     @staticmethod
     def calc_extent(xmax, ymax, xmin, ymin, extent_units, resize_units, resize_pixel):

@@ -15,6 +15,7 @@ from api.domain.mocks.order import MockOrder
 from api.domain.mocks.user import MockUser
 from api.domain.order import Order
 from api.domain.user import User
+from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.providers.production.mocks.production_provider import MockProductionProvider
 from api.providers.production.production_provider import ProductionProvider
 from api.external.mocks import lta as mocklta
@@ -25,6 +26,7 @@ from mock import patch
 api = APIv1()
 production_provider = ProductionProvider()
 mock_production_provider = MockProductionProvider()
+cfg = ConfigurationProvider()
 
 
 class TestAPI(unittest.TestCase):
@@ -164,6 +166,8 @@ class TestValidation(unittest.TestCase):
         for proj in testorders.good_test_projections:
             valid_order = copy.deepcopy(self.base_order)
             valid_order['projection'] = {proj: testorders.good_test_projections[proj]}
+            if 'lonlat' not in valid_order['projection']:
+                valid_order['resize'] = {"pixel_size": 30, "pixel_size_units": "meters"}
 
             try:
                 good = api.validation(valid_order, self.staffuser.username)
@@ -344,9 +348,9 @@ class TestInventory(unittest.TestCase):
         """
         Check LTA support from the inventory provider
         """
-        os.environ['ESPA_M2M_MODE'] = 'LANDSAT'
+        cfg.put('system.m2m_val_enabled', 'True')
         self.assertIsNone(api.inventory.check(self.lta_order_good))
-        os.environ['ESPA_M2M_MODE'] = ''
+        cfg.put('system.m2m_val_enabled', 'False')
 
     @patch('api.external.lta.requests.post', mocklta.get_verify_scenes_response_invalid)
     @patch('api.external.lta.check_lta_available', lambda: True)

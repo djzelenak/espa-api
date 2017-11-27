@@ -308,7 +308,7 @@ class Order(object):
              'include_sr_savi': False,  # soil adjusted vegetation
              'include_sr_msavi': False,  # modified soil adjusted veg
              'include_sr_evi': False,  # enhanced vegetation
-             'include_lst': False,  # land surface temperature
+             'include_st': False,  # surface temperature
              'include_solr_index': False,  # solr search index record
              'include_cfmask': False,  # (deprecated) not
              'include_statistics': False}  # should we do stats & plots?
@@ -673,7 +673,7 @@ class OptionsConversion(object):
                 ('include_sr_savi', 'sr_savi', True),
                 ('include_sr_msavi', 'sr_msavi', True),
                 ('include_sr_evi', 'sr_evi', True),
-                ('include_lst', 'lst', True),
+                ('include_st', 'st', True),
                 ('include_cfmask', 'cloud', True),
                 ('include_pixel_qa', 'pixel_qa', True)]
 

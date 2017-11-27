@@ -366,7 +366,7 @@ class Landsat(SensorProduct):
 
 class LandsatTM(Landsat):
     """Models Landsat TM only products"""
-    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr, AllProducts.lst, AllProducts.swe,
+    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr, AllProducts.st, AllProducts.swe,
                 AllProducts.sr_ndvi, AllProducts.sr_evi, AllProducts.sr_savi, AllProducts.sr_msavi, AllProducts.sr_ndmi,
                 AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.cloud, AllProducts.pixel_qa]
     lta_name = 'LANDSAT_TM'
@@ -379,7 +379,7 @@ class LandsatTM(Landsat):
 
 class LandsatETM(Landsat):
     """Models Landsat ETM only products"""
-    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr, AllProducts.lst, AllProducts.swe,
+    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr, AllProducts.st, AllProducts.swe,
                 AllProducts.sr_ndvi, AllProducts.sr_evi, AllProducts.sr_savi, AllProducts.sr_msavi, AllProducts.sr_ndmi,
                 AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.cloud, AllProducts.pixel_qa]
     lta_name = 'LANDSAT_ETM_PLUS'
@@ -392,7 +392,7 @@ class LandsatETM(Landsat):
 
 class LandsatOLITIRS(Landsat):
     """Models Landsat OLI/TIRS only products"""
-    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr, AllProducts.lst, AllProducts.swe,
+    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr, AllProducts.st, AllProducts.swe,
                 AllProducts.sr_ndvi, AllProducts.sr_evi, AllProducts.sr_savi, AllProducts.sr_msavi, AllProducts.sr_ndmi,
                 AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.cloud, AllProducts.pixel_qa]
     lta_name = 'LANDSAT_8'

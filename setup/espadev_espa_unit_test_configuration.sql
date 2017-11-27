@@ -28,6 +28,9 @@ INSERT INTO ordering_configuration (key, value) VALUES
     ('bulk.dev.json.username', 'dummy_username'),
     ('bulk.dev.json.password', 'dummy_password'),
 
+    ('system.m2m_url_enabled', 'False'),
+    ('system.m2m_val_enabled', 'False'),
+
 -- api.external.ers
     ('url.dev.ersapi', 'http://host.com'),
 
