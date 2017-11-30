@@ -3,23 +3,6 @@
 
 This is an API for interacting with the ESPA ordering system. 
 
-For questions regarding this source code, or the ESPA project, please use the
-[Landsat Contact Us][2] page and specify USGS ESPA in the "Subject" section.
-
-## Related Pages
-* [Description of Products Available][3]
-* [Abbreviations & Definitions][4]
-* [ESPA Customizations][5]
-* **[Available Resources List][6]**
-
-<details>
-<summary>Need a scene list?</summary>
-The USGS EROS offers two resources for finding valid scene acquisitions:
-
-1. [USGS/EROS Inventory Service API][7]
-1. [Entire Collection of Metadata][8]
-</details>
-
 ## User API
 The User API is public facing and available for anyone to code and interact with.  
 Version 1 provides the minimum functionality necessary to determine available 
@@ -34,6 +17,21 @@ All user interactions with API functions must be accompanied by valid credential
 Accounts are managed in the [USGS EROS Registration system][10].
 
 The api host is `https://espa.cr.usgs.gov/api`. 
+
+### Related Pages
+* [Description of Products Available][3]
+* [Abbreviations & Definitions][4]
+* [ESPA Customizations][5]
+* **[Available Resources List][6]**
+
+<details>
+<summary>Need a scene list?</summary>
+The USGS EROS offers two resources for finding valid scene acquisitions:
+
+1. [USGS/EROS Inventory Service API][7]
+1. [Entire Collection of Metadata][8]
+</details>
+
 
 ### Quick Unix Walk-through
 
@@ -109,6 +107,14 @@ curl --user <erosusername>:<erospassword> \
 For a more detailed list of User API operations, see the [Available Resources List][6]. 
 
 For a language-specific (python) example, please see [an API Demo][11]. 
+
+#### Support Information
+
+This project is unsupported software provided by the U.S. Geological Survey (USGS) Earth Resources Observation and Science (EROS) Land Satellite Data Systems (LSDS) Project. For questions regarding products produced by this source code, please contact the [Landsat Contact Us][2] page and specify USGS Level-2 in the "Regarding" section.
+
+#### Disclaimer
+
+This software is preliminary or provisional and is subject to revision. It is being provided to meet the need for timely best science. The software has not received final approval by the U.S. Geological Survey (USGS). No warranty, expressed or implied, is made by the USGS or the U.S. Government as to the functionality of the software and related material nor shall the fact of release constitute any such warranty. The software is provided on the condition that neither the USGS nor the U.S. Government shall be held liable for any damages resulting from the authorized or unauthorized use of the software.
 
 
 [0]: https://img.shields.io/travis/USGS-EROS/espa-api/master.svg?style=flat-square
