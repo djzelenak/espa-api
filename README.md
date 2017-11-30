@@ -9,10 +9,6 @@ Version 1 provides the minimum functionality necessary to determine available
 products from a list of inputs, place orders, and view order status. There are 
 endpoints for providing available projections, resampling methods, and output formats.
 
-Now that the User API has reached a stable version 1.0, it will always be 
-backwards compatible using a _never remove, only add_ strategy. If there will 
-ever be a need to break compatibility, it will be announced in the [Changelog][9].
-
 All user interactions with API functions must be accompanied by valid credentials. 
 Accounts are managed in the [USGS EROS Registration system][10].
 
@@ -38,71 +34,12 @@ The USGS EROS offers two resources for finding valid scene acquisitions:
 The ESPA ordering system provides an API for users to interact with using
 simple HTTP communications through the programming language of their choice.
 
-For example, to find what products ESPA can produce for a given Landsat 
-acquisition: 
-```bash
-curl  --user <erosusername>:<erospassword> \
-    https://espa.cr.usgs.gov/api/v0/available-products/LC08_L1TP_029030_20161008_20170220_01_T1
-```
-```json
-// Response: 
-{
-    "olitirs8_collection": {
-        "inputs": [
-            "LC08_L1TP_029030_20161008_20170220_01_T1"
-        ], 
-        "products": [
-            "source_metadata", "l1", "toa", "bt", 
-            "sr", "sr_ndvi", "sr_evi", "sr_savi", "sr_msavi", "sr_ndmi", "sr_nbr", "sr_nbr2", 
-            "stats"
-        ]
-    }
-}
-
-```
-
-Then, if the acquisition can be processed into a desired product, create a 
-processing order request, including at minimum the output formatting:
-```bash
-curl  --user <erosusername>:<erospassword> \
-    -d '{
-          "note": "this is going to be sweet...",
-          "format": "gtiff",
-          "olitirs8_collection": {
-                "inputs": ["LC08_L1TP_029030_20161008_20170220_01_T1"], 
-                "products": ["sr_ndvi"]
-            }
-        }' https://espa.cr.usgs.gov/api/v0/order 
-```
-```json
-// Response: 
-{
-  "orderid": "espa-production@email.com-05222017-185100-725",
-  "status": "ordered"
-}
-```
-
-Finally, use this order-ID to determine when the scene has completed processing, 
-and get the download URL while the output is still on disk:
-```bash
-curl --user <erosusername>:<erospassword> \
-    https://espa.cr.usgs.gov/api/v0/item-status/espa-production@email.com-05222017-185100-725
-```
-```json
-// Response: 
-{
-  "espa-production@email.com-05222017-185100-725": [
-    {
-      "cksum_download_url": "https://.../orders/.../LC080290302016100801T1-SC20170329224231.md5",
-      "completion_date": "1997-01-01T23:59:59.908435",
-      "name": "LC08_L1TP_029030_20161008_20170220_01_T1",
-      "note": "",
-      "product_dload_url": "https://.../orders/.../LC080290302016100801T1-SC20170329224231.tar.gz",
-      "status": "complete"
-    }
-  ]
-}
-```
+1. To find what products ESPA can produce for a given Landsat 
+acquisition: [/available-products](docs/API-RESOURCES-LIST.md#apiProdsPost)
+1. If the acquisition can be processed into a desired product, create a 
+processing order request: [/order](docs/API-RESOURCES-LIST.md#apiSubmitOrder)
+1. When processing has completed, get the download URL while the output is 
+still available: [/item-status](docs/API-RESOURCES-LIST.md#apiItemStats)
 
 For a more detailed list of User API operations, see the [Available Resources List][6]. 
 
