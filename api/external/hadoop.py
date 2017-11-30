@@ -34,8 +34,7 @@ class HadoopHandler(object):
         resp = cache.get(cache_key)
 
         if not resp:
-            _stdout = self.list_jobs()['stdout']
-            _id_name_list = [str(i).rstrip('\n') for i in _stdout]
+            _id_name_list =  self.list_jobs()
             resp = {}
             for ids in _id_name_list:
                 ids_list = ids.split(' ')
