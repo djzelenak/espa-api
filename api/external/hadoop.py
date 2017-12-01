@@ -34,11 +34,7 @@ class HadoopHandler(object):
         resp = cache.get(cache_key)
 
         if not resp:
-            _id_name_list =  self.list_jobs()
-            resp = {}
-            for ids in _id_name_list:
-                ids_list = ids.split(' ')
-                resp[ids_list[1]] = ids_list[0]
+            resp = self.list_jobs()
             cache.set(cache_key, resp, 180)
 
         return resp
