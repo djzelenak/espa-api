@@ -82,13 +82,16 @@ class OnlineCache(object):
 
         # this should be the dir where the order is held
         logger.info('Deleting {} from online cache'.format(path))
+        # TODO: if storage system supports immutable options
+        # >>> sudo chattr -fR -i {0};rm -rf {0}
+        # However, nfs does not support this extended attributes
         try:
-            self.execute_command('sudo chattr -fR -i {0};rm -rf {0}'.format(path))
-        except OnlineCacheException:
-            # in the event /lustre is mounted to an NFS system
-            logger.info("onlinecache delete, chattr error, attempting chmod instead...")
-            self.execute_command('chmod -R 644 {0};rm -rf {0}'.format(path))
-
+            cmd = 'chmod -R 744 {0};rm -rf {0}'.format(path)
+            self.execute_command(cmd)
+        except OnlineCacheException as exc:
+            logger.critical('Failed to remove files from output cache. '
+                            'Command: {} Error: {}'.format(cmd, exc))
+            return False
         return True
 
     def list(self, orderid=None):
