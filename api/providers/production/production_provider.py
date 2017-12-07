@@ -110,7 +110,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 onlinecache.delete(orderid, filename=product_file)
                 onlinecache.delete(orderid, filename=cksum_file)
             else:
-                logger.critical('ERR file was not found: {}'
+                logger.warning('ERR file was not found: {}'
                                 .format(completed_file_location))
             Scene.bulk_update([scene.id], Scene.cancel_opts())
             return False
@@ -874,6 +874,9 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         :return: True
         """
         for order in orders:
+            if len(order.scenes({'status': 'cancelled'})) != len(order.scenes()):
+                logger.warning('Cancelled order %s has outstanding scenes', order.orderid)
+                continue
             if not order.completion_email_sent:
                 if onlinecache.exists(order.orderid):
                     onlinecache.delete(order.orderid)
