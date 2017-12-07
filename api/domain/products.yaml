@@ -2,85 +2,85 @@ products:
   source_metadata: 
     category: source
     title: "Input Product Metadata"
-    rank: 1
+    display_rank: 1
   l1: 
     category: source
     title: "Input Products"
-    rank: 0
+    display_rank: 0
   pixel_qa: 
     category: l2p
     title: "Pixel QA"
-    rank: 4
+    display_rank: 4
   toa: 
     category: l2p
     title: "Top of Atmosphere Reflectance"
-    rank: 2
+    display_rank: 2
   bt: 
     category: l2p
     title: "Brightness Temperature"
-    rank: 3
+    display_rank: 3
   cloud: 
     category: l2p
     title: "Cloud Mask"
-    rank: -1
+    display_rank: -1
   sr: 
     category: l2p
     title: "Surface Reflectance"
-    rank: 0
+    display_rank: 0
   st:
     category: l2p
     title: "Surface Temperature"
-    rank: 1
+    display_rank: 1
   swe: 
     category: l3p
     title: "Dynamic Surface Water Extent"
-    rank: 0
+    display_rank: 0
   sr_ndvi: 
     category: indices
     title: "NDVI"
-    rank: 0
+    display_rank: 0
   sr_evi: 
     category: indices
     title: "EVI"
-    rank: 1
+    display_rank: 1
   sr_savi: 
     category: indices
     title: "SAVI"
-    rank: 2
+    display_rank: 2
   sr_msavi: 
     category: indices
     title: "MSAVI"
-    rank: 3
+    display_rank: 3
   sr_ndmi: 
     category: indices
     title: "NDMI"
-    rank: 4
+    display_rank: 4
   sr_nbr: 
     category: indices
     title: "NBR"
-    rank: 5
+    display_rank: 5
   sr_nbr2: 
     category: indices
     title: "NBR2"
-    rank: 6
+    display_rank: 6
   stats: 
     category: stats
     title: "Summary Statistics"
-    rank: 0
+    display_rank: 0
 
 categories: 
   source:
     title: "Source Products"
-    rank: 0
+    display_rank: 0
   l2p:
     title: "Level-2 Products"
-    rank: 1
+    display_rank: 1
   l3p:
     title: "Level-3 Products"
-    rank: 2
+    display_rank: 2
   indices:
     title: "Spectral Indices"
-    rank: 3
+    display_rank: 3
   stats:
     title: "Plotting & Statistics"
-    rank: 4
+    display_rank: 4
