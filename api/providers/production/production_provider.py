@@ -1349,6 +1349,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             user = User.by_username(username)
             logger.warn('@USER {} ({})'.format(user.username, user.email))
             filters.update(user_id=user.id)
+
+        contactid = user.contactid if user else None
+        self.load_ee_orders(contactid)
+
         pending_orders = [o.id for o in Order.where(filters)]
         if len(pending_orders) < 1:
             logger.error('No pending orders found: {}'.format(filters))
@@ -1368,9 +1372,6 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
         products = Scene.where({'status': 'retry', 'retry_after <': now, 'order_id': pending_orders})
         self.handle_retry_products(products)
-
-        contactid = user.contactid if user else None
-        self.load_ee_orders(contactid)
 
         scenes = Scene.where({'failed_lta_status_update IS NOT': None, 'order_id': pending_orders})
         self.handle_failed_ee_updates(scenes)
