@@ -41,7 +41,7 @@ class ProductNames(object):
                 is_plotable = (product in restricted['stats']['products']
                                if product != 'stats' else None)
                 rdat = {product: {
-                    'is_plotable': is_plotable,
+                    'is_plotable': is_plotable if product != 'l1' else True,
                     'title': struct['title'],
                     'required_customizations': list(),
                     'display_rank': struct['display_rank']
