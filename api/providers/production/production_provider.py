@@ -1063,10 +1063,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         :return: True
         """
         if config.is_m2m_url_enabled and not inventory.available():
-            logger.critical('M2M down. Skip handle_submitted_landsat_products...')
+            logger.warning('M2M down. Skip handle_submitted_landsat_products...')
             return False
         elif not lta.check_lta_available():
-            logger.critical('LTA down. Skip handle_submitted_landsat_products...')
+            logger.warning('LTA down. Skip handle_submitted_landsat_products...')
             return False
         logger.info('Handling submitted landsat products...')
         # Here's the real logic for this handling submitted landsat products
@@ -1093,10 +1093,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         :return: True
         """
         if config.is_m2m_url_enabled and not inventory.available():
-            logger.critical('M2M down. Skip handle_submitted_modis_products...')
+            logger.warning('M2M down. Skip handle_submitted_modis_products...')
             return False
         elif not lpdaac.check_lpdaac_available():
-            logger.critical('DAAC down. Skip handle_submitted_modis_products...')
+            logger.warning('DAAC down. Skip handle_submitted_modis_products...')
             return False
         logger.info("Handling submitted modis products...")
 
