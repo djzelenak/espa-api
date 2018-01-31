@@ -11,13 +11,15 @@ from api.notification import contact_footer
 from cStringIO import StringIO
 
 from email.mime.text import MIMEText
-from smtplib import SMTP
+from smtplib import SMTP, SMTPServerDisconnected
 
 from validate_email import validate_email
 
 from api.domain.order import Order
 from api.domain.scene import Scene
 from api.providers.configuration.configuration_provider import ConfigurationProvider
+
+from api.system.logger import ilogger as logger
 
 config = ConfigurationProvider()
 
@@ -35,7 +37,7 @@ class Emails(object):
         _base_url = _base_url.replace("status", "order-status")
         return ''.join([_base_url, '/', orderid])
 
-    def send_email(self, recipient, subject, body):
+    def send_email(self, recipient, subject, body, tries=10):
         '''Sends an email to a receipient on the behalf of espa'''
 
         def _validate(email):
@@ -54,13 +56,27 @@ class Emails(object):
             raise ValueError("Unsupported datatype for recipient:%s"
                              % type(recipient))
 
+        logger.debug('Sending email: {} {}'.format(recipient, subject))
         msg = MIMEText(body)
         msg['Subject'] = subject
         msg['To'] = to_header
         msg['From'] = config.get('email.espa_address')
-        s = SMTP(host=config.get('email.espa_server'))
-        s.sendmail(msg['From'], recipient, msg.as_string())
-        s.quit()
+        for retry in range(1, tries+1):
+            try:
+                s = SMTP(host=config.get('email.espa_server'), timeout=1)
+                s.sendmail(msg['From'], recipient, msg.as_string())
+                s.quit()
+            except SMTPServerDisconnected:
+                logger.warning('Attempt {} failed to send email, will retry'
+                               .format(retry))
+            else:
+                break
+        if retry >= tries:
+            msg = ('Sending email failed {} times! {} {} ({})'
+                   .format(retry, recipient, subject,
+                           config.get('email.espa_server')))
+            logger.critical(msg)
+            raise RuntimeError(msg)
 
         return True
 
