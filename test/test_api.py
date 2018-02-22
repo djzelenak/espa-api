@@ -319,8 +319,8 @@ class TestInventory(unittest.TestCase):
         self.lpdaac_prod_good = u'MOD09A1.A2016305.h11v04.006.2016314200836'
         self.lpdaac_prod_bad = u'MOD09A1.A2016305.h11v04.006.9999999999999'
 
-        self.lta_order_good = {'olitirs8': {'inputs': [self.lta_prod_good]}}
-        self.lta_order_bad = {'olitirs8': {'inputs': [self.lta_prod_bad]}}
+        self.lta_order_good = {'etm7_collection': {'inputs': [self.lta_prod_good]}}
+        self.lta_order_bad = {'olitirs8_collection': {'inputs': [self.lta_prod_bad]}}
 
         self.lpdaac_order_good = {'mod09a1': {'inputs': [self.lpdaac_prod_good]}}
         self.lpdaac_order_bad = {'mod09a1': {'inputs': [self.lpdaac_prod_bad]}}
