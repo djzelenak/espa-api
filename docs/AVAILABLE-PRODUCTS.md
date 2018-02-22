@@ -14,7 +14,7 @@ a request to `https://espa.cr.usgs.gov/api/v1/available-products`
 | Landsat 8 TIRS | :x: | :x: | :x: | :x: | :x: |
 | Landsat 8 OLITIRS | :heavy_check_mark: | :heavy_check_mark: |:heavy_check_mark:|
 
-### Input Higher-Level 
+### Input Higher-Level
 |  | Original Data | Original Metadata | Customized Data |
 |:------------- |:------------- |:------------- |:------------- |
 | MODIS 09A1  | :heavy_check_mark: | :heavy_check_mark: |:heavy_check_mark:|
@@ -28,23 +28,23 @@ a request to `https://espa.cr.usgs.gov/api/v1/available-products`
 | MODIS 11A1  | :heavy_check_mark: | :heavy_check_mark: |:heavy_check_mark:|
 
 ### ESPA Higher-Level CDR/ECV Outputs
-|  | TOA | SR | BT | ST | DSWE | CLOUD
-|:------------- |:------------- |:------------- |:------------- |:------------- |:------------- |:------------- |
-| Landsat 4 TM | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
-| Landsat 5 TM | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
-| Landsat 7 ETM+ | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
-| Landsat 8 OLI | :heavy_check_mark: | :x: | :x: | :x: | :heavy_check_mark: | :heavy_check_mark: |
+|  | TOA | SR | BT | ST | DSWE
+|:------------- |:------------- |:------------- |:------------- |:------------- |:------------- |
+| Landsat 4 TM | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| Landsat 5 TM | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| Landsat 7 ETM+ | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| Landsat 8 OLI | :heavy_check_mark: | :x: | :x: | :x: | :heavy_check_mark: |
 | Landsat 8 TIRS | :x: | :x: | :x: | :x: | :x: | :x: |
-| Landsat 8 OLITIRS | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
-| MODIS 09A1  | :x: | :x: | :x: | :x: | :x: | :x: |
-| MODIS 09GA  | :x: | :x: | :x: | :x: | :x: | :x: |
-| MODIS 09GQ  | :x: | :x: | :x: | :x: | :x: | :x: |
-| MODIS 09Q1  | :x: | :x: | :x: | :x: | :x: | :x: |
-| MODIS 13A1  | :x: | :x: | :x: | :x: | :x: | :x: |
-| MODIS 13A2  | :x: | :x: | :x: | :x: | :x: | :x: |
-| MODIS 13A3  | :x: | :x: | :x: | :x: | :x: | :x: |
-| MODIS 13Q1  | :x: | :x: | :x: | :x: | :x: | :x: |
-| MODIS 11A1  | :x: | :x: | :x: | :x: | :x: | :x: |
+| Landsat 8 OLITIRS | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| MODIS 09A1  | :x: | :x: | :x: | :x: | :x: |
+| MODIS 09GA  | :x: | :x: | :x: | :x: | :x: |
+| MODIS 09GQ  | :x: | :x: | :x: | :x: | :x: |
+| MODIS 09Q1  | :x: | :x: | :x: | :x: | :x: |
+| MODIS 13A1  | :x: | :x: | :x: | :x: | :x: |
+| MODIS 13A2  | :x: | :x: | :x: | :x: | :x: |
+| MODIS 13A3  | :x: | :x: | :x: | :x: | :x: |
+| MODIS 13Q1  | :x: | :x: | :x: | :x: | :x: |
+| MODIS 11A1  | :x: | :x: | :x: | :x: | :x: |
 
 ### ESPA SR-based Spectral Indices
 |  | NDVI | EVI | SAVI | MSAVI | NDMI | NBR | NBR2 |
@@ -66,10 +66,10 @@ a request to `https://espa.cr.usgs.gov/api/v1/available-products`
 | MODIS 11A1  | :x: | :x: | :x: | :x: | :x: | :x: | :x: |
 
 ### Notes
-Statistics and plotting are available for all ESPA output products, except the Cloud Mask.
+Statistics and plotting are available for all ESPA output products.
 
-MODIS products are not generally available for additional processing levels as they 
-have already been processed to a level beyond level 1 by the datasource: 
+MODIS products are not generally available for additional processing levels as they
+have already been processed to a level beyond level 1 by the datasource:
 
 * MODIS 09 series is at SR
 * MODIS 13 series is at NDVI/EVI

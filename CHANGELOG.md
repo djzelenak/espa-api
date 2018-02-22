@@ -1,4 +1,6 @@
 ## Change Notes
+###### March 2018
+* Final deprecation of Landsat Precollection-based & Cfmask products
 ###### November 2017
 * Changes to Landsat "ST" terminology (staff only)
 * Image extents (below 80N/S) must match +/-3 UTM zones
@@ -14,13 +16,13 @@
 ###### July 2017
 * Upgrade remote calls for Hadoop2
 * Add production-api reset queued/processing scene status
-###### June 2017 
+###### June 2017
 * Ability to cancel orders
 * Put all errors/warnings in "messages" JSON field
 * Remove CFMask product (replaced by `pixel_qa`)
 * Bug fixes for API responses (HTTP Codes, Messages)
 * Add JSON filters to available-products, orders, and item-status
-* Remove `POST` http method from available-products 
+* Remove `POST` http method from available-products
 ###### April 2017
 * Restrict ordering of pre-collection landsat inputs
 ###### March 2017
