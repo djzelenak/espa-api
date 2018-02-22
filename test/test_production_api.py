@@ -385,14 +385,14 @@ class TestProductionAPI(unittest.TestCase):
     @patch('api.external.lta.get_user_name', lta.get_user_name)
     def test_production_load_ee_orders_partial(self):
         order = Order.find(self.mock_order.generate_ee_testing_order(self.user_id, partial=True))
-        self.assertTrue(order.product_opts == {'format': 'gtiff',
+        self.assertEqual(order.product_opts, {'format': 'gtiff',
                                                'etm7': {'inputs': ['LE07_L1TP_026027_20170912_20171008_01_T1'],
                                                         'products': ['sr']}})
         key = 'system.load_ee_orders_enabled'
         self.assertEqual(api.get_production_key(key)[key], 'True')
         production_provider.load_ee_orders()
         reorder = Order.find(order.id)
-        self.assertTrue(reorder.product_opts == {'format': 'gtiff',
+        self.assertEqual(reorder.product_opts, {'format': 'gtiff',
                                                'etm7': {'inputs': ['LE07_L1TP_026027_20170912_20171008_01_T1'],
                                                         'products': ['sr']},
                                                'tm5': {'inputs': ['LT05_L1TP_025027_20110913_20160830_01_T1'],
