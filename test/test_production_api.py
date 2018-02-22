@@ -386,16 +386,16 @@ class TestProductionAPI(unittest.TestCase):
     def test_production_load_ee_orders_partial(self):
         order = Order.find(self.mock_order.generate_ee_testing_order(self.user_id, partial=True))
         self.assertEqual(order.product_opts, {'format': 'gtiff',
-                                               'etm7': {'inputs': ['LE07_L1TP_026027_20170912_20171008_01_T1'],
+                                               'etm7_collection': {'inputs': ['LE07_L1TP_026027_20170912_20171008_01_T1'],
                                                         'products': ['sr']}})
         key = 'system.load_ee_orders_enabled'
         self.assertEqual(api.get_production_key(key)[key], 'True')
         production_provider.load_ee_orders()
         reorder = Order.find(order.id)
         self.assertEqual(reorder.product_opts, {'format': 'gtiff',
-                                               'etm7': {'inputs': ['LE07_L1TP_026027_20170912_20171008_01_T1'],
+                                               'etm7_collection': {'inputs': ['LE07_L1TP_026027_20170912_20171008_01_T1'],
                                                         'products': ['sr']},
-                                               'tm5': {'inputs': ['LT05_L1TP_025027_20110913_20160830_01_T1'],
+                                               'tm5_collection': {'inputs': ['LT05_L1TP_025027_20110913_20160830_01_T1'],
                                                         'products': ['sr']}})
 
     @patch('api.external.lta.update_order_status', lta.update_order_status)
