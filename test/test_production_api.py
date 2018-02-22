@@ -386,16 +386,16 @@ class TestProductionAPI(unittest.TestCase):
     def test_production_load_ee_orders_partial(self):
         order = Order.find(self.mock_order.generate_ee_testing_order(self.user_id, partial=True))
         self.assertTrue(order.product_opts == {'format': 'gtiff',
-                                               'etm7': {'inputs': ['LE70900652008327EDC00'],
+                                               'etm7': {'inputs': ['LE07_L1TP_026027_20170912_20171008_01_T1'],
                                                         'products': ['sr']}})
         key = 'system.load_ee_orders_enabled'
         self.assertEqual(api.get_production_key(key)[key], 'True')
         production_provider.load_ee_orders()
         reorder = Order.find(order.id)
         self.assertTrue(reorder.product_opts == {'format': 'gtiff',
-                                               'etm7': {'inputs': ['LE70900652008327EDC00'],
+                                               'etm7': {'inputs': ['LE07_L1TP_026027_20170912_20171008_01_T1'],
                                                         'products': ['sr']},
-                                               'tm5': {'inputs': ['LT50900652008327EDC00'],
+                                               'tm5': {'inputs': ['LT05_L1TP_025027_20110913_20160830_01_T1'],
                                                         'products': ['sr']}})
 
     @patch('api.external.lta.update_order_status', lta.update_order_status)
@@ -596,19 +596,17 @@ class TestProductionAPI(unittest.TestCase):
         Test the conversion procedure to make sure that the new format for orders converts
         to the old format
         """
-        scenes = ['LE70480272012076EDC00', 'LC80500272013196LGN00',
-                  'LT40480271983028PAC00', 'LT50490262009162PAC03']
+        scenes = ['LE07_L1TP_026027_20170912_20171008_01_T1', 'LC08_L1TP_025027_20160521_20170223_01_T1',
+                  'LT05_L1TP_025027_20110913_20160830_01_T1']
 
         includes = ['include_sr', 'include_sr_toa',
                     'include_sr_thermal']
 
-        new_format = {u'etm7': {u'inputs': [u'LE70480272012076EDC00'],
+        new_format = {u'etm7_collection': {u'inputs': [u'LE07_L1TP_026027_20170912_20171008_01_T1'],
                                 u'products': [u'sr']},
-                      u'olitirs8': {u'inputs': [u'LC80500272013196LGN00'],
+                      u'olitirs8_collection': {u'inputs': [u'LC08_L1TP_025027_20160521_20170223_01_T1'],
                                     u'products': [u'toa']},
-                      u'tm4': {u'inputs': [u'LT40480271983028PAC00'],
-                               u'products': [u'cloud']},
-                      u'tm5': {u'inputs': [u'LT50490262009162PAC03'],
+                      u'tm5_collection': {u'inputs': [u'LT05_L1TP_025027_20110913_20160830_01_T1'],
                                u'products': [u'bt']},
                       u'format': u'gtiff',
                       u'image_extents': {u'east': -2265585.0,

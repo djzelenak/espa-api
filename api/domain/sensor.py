@@ -67,7 +67,7 @@ class SensorProduct(object):
     # landsat sceneid, modis tile name, aster granule id, etc.
     product_id = None
 
-    # lt5, le7, mod, myd, etc
+    # lt05, le07, mod, myd, etc
     sensor_code = None
 
     # tm, etm, terra, aqua, etc
@@ -330,27 +330,16 @@ class Landsat(SensorProduct):
         product_id = product_id.strip()
         super(Landsat, self).__init__(product_id)
 
-        # only the collections product ids include underscores
-        if '_' in product_id:
-            # lt05_l1tp_042034_20011103_20160706_01_a1
-            _idlist = product_id.split('_')
-            self.year = _idlist[3][:4]
-            self.doy = julian_from_date(_idlist[3][:4], _idlist[3][4:6], _idlist[3][6:8])
-            self.julian = self.year + self.doy
-            self.path = _idlist[2][:3].lstrip('0')
-            self.row = _idlist[2][3:].lstrip('0')
-            self.correction_level = _idlist[1]
-            self.collection_number = _idlist[-2]
-            self.collection_category = _idlist[-1]
-            self.lta_json_name = self.lta_json_name.format(collection=int(self.collection_number))
-        else:
-            self.path = product_id[3:6].lstrip('0')
-            self.row = product_id[6:9].lstrip('0')
-            self.year = product_id[9:13]
-            self.doy = product_id[13:16]
-            self.julian = product_id[9:16]
-            self.station = product_id[16:19]
-            self.version = product_id[19:21]
+        _idlist = product_id.split('_')
+        self.year = _idlist[3][:4]
+        self.doy = julian_from_date(_idlist[3][:4], _idlist[3][4:6], _idlist[3][6:8])
+        self.julian = self.year + self.doy
+        self.path = _idlist[2][:3].lstrip('0')
+        self.row = _idlist[2][3:].lstrip('0')
+        self.correction_level = _idlist[1]
+        self.collection_number = _idlist[-2]
+        self.collection_category = _idlist[-1]
+        self.lta_json_name = self.lta_json_name.format(collection=int(self.collection_number))
 
     def __repr__(self):
         return 'Landsat: {}'.format(self.__dict__)
@@ -503,27 +492,17 @@ class Landsat8OLITIRS(LandsatOLITIRS, Landsat8):
 class SensorCONST(object):
     # shortname: regex, class object, sample product name)
     instances = {
-        'tm4': (r'^lt4\d{3}\d{3}\d{4}\d{3}[a-z]{3}[a-z0-9]{2}$', Landsat4TM, 'LT42181092013069PFS00'),
-
         'tm4_collection': (r'^lt04_{1}\w{4}_{1}[0-9]{6}_{1}[0-9]{8}_{1}[0-9]{8}_{1}[0-9]{2}_{1}\w{2}$',
                            Landsat4TM, 'lt04_l1tp_042034_20011103_20160706_01_a1'),
-
-        'tm5': (r'^lt5\d{3}\d{3}\d{4}\d{3}[a-z]{3}[a-z0-9]{2}$', Landsat5TM, 'LT52181092013069PFS00'),
 
         'tm5_collection': (r'^lt05_{1}\w{4}_{1}[0-9]{6}_{1}[0-9]{8}_{1}[0-9]{8}_{1}[0-9]{2}_{1}\w{2}$',
                            Landsat5TM, 'lt05_l1tp_042034_20011103_20160706_01_a1'),
 
-        'etm7': (r'^le7\d{3}\d{3}\d{4}\d{3}\w{3}.{2}$', Landsat7ETM, 'LE72181092013069PFS00'),
-
         'etm7_collection': (r'^le07_{1}\w{4}_{1}[0-9]{6}_{1}[0-9]{8}_{1}[0-9]{8}_{1}[0-9]{2}_{1}\w{2}$',
                             Landsat7ETM, 'le07_l1tp_042034_20011103_20160706_01_a1'),
 
-        'olitirs8': (r'^lc8\d{3}\d{3}\d{4}\d{3}\w{3}.{2}$', Landsat8OLITIRS, 'LC82181092013069PFS00'),
-
         'olitirs8_collection': (r'^lc08_{1}\w{4}_{1}[0-9]{6}_{1}[0-9]{8}_{1}[0-9]{8}_{1}[0-9]{2}_{1}\w{2}$',
                                 Landsat8OLITIRS, 'lc08_l1tp_042034_20011103_20160706_01_a1'),
-
-        'oli8': (r'^lo8\d{3}\d{3}\d{4}\d{3}\w{3}.{2}$', Landsat8OLI, 'LO82181092013069PFS00'),
 
         'oli8_collection': (r'^lo08_{1}\w{4}_{1}[0-9]{6}_{1}[0-9]{8}_{1}[0-9]{8}_{1}[0-9]{2}_{1}\w{2}$',
                             Landsat8OLI, 'lo08_l1tp_042034_20011103_20160706_01_a1'),
@@ -593,9 +572,9 @@ def instance(product_id):
     MODIS FORMAT:   MOD09GQ.A2000072.h02v09.005.2008237032813
 
     Supported LANDSAT products
-    LT4 LT5 LE7 LC8 LO8
+    LT04 LT05 LE07 LC08 LO08
 
-    LANDSAT FORMAT: LE72181092013069PFS00
+    LANDSAT FORMAT: LE07_L1TP_026027_20170912_20171008_01_T1
     """
 
     # remove known file extensions before comparison
