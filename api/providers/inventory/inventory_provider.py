@@ -2,7 +2,7 @@ import os
 
 from api.providers.inventory import InventoryInterfaceV0
 
-from api.external import lta, inventory, lpdaac, nlaps
+from api.external import lta, inventory, lpdaac
 from api import InventoryException, InventoryConnectionException
 from api.domain import sensor
 from api.system.logger import ilogger as logger
@@ -62,18 +62,11 @@ class InventoryProviderV0(InventoryInterfaceV0):
 
     @staticmethod
     def check_dmid(prod_ls, contactid=None):
-        # find all the submitted products that are nlaps and reject them
-        not_avail = nlaps.products_are_nlaps(prod_ls)
-        if not_avail:
-            raise InventoryException(not_avail)
         token = inventory.get_cached_session()
         return inventory.get_cached_verify_scenes(token, prod_ls)
 
     @staticmethod
     def check_LTA(prod_ls):
-        not_avail = nlaps.products_are_nlaps(prod_ls)
-        if not_avail:
-            raise InventoryException(not_avail)
         return lta.verify_scenes(prod_ls)
 
     @staticmethod

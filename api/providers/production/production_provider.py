@@ -5,7 +5,7 @@ from api.providers.configuration.configuration_provider import ConfigurationProv
 from api.util.dbconnect import DBConnectException, db_instance
 from api.providers.production import ProductionProviderInterfaceV0
 from api.providers.caching.caching_provider import CachingProvider
-from api.external import lpdaac, lta, inventory, onlinecache, nlaps, hadoop
+from api.external import lpdaac, lta, inventory, onlinecache, hadoop
 from api.system import errors
 from api.notification import emails
 from api.domain.user import User
@@ -1008,29 +1008,6 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         return True
 
-    def mark_nlaps_unavailable(self, landsat_products):
-        """
-        Inner function to support marking nlaps products unavailable
-        :return: True
-        """
-        logger.info("Looking for submitted landsat products, In mark_nlaps_unavailable")
-
-        # First things first... filter out all the nlaps scenes
-        landsat_submitted = [l.name for l in landsat_products]
-        logger.info("Found {0} submitted landsat products".format(len(landsat_submitted)))
-
-        # find all the submitted products that are nlaps and reject them
-        logger.info("Checking for TMA data in submitted landsat products")
-        landsat_nlaps = nlaps.products_are_nlaps(landsat_submitted)
-        logger.info("Found {0} landsat TMA products".format(len(landsat_nlaps)))
-
-        # bulk update the nlaps scenes
-        if len(landsat_nlaps) > 0:
-            _nlaps = [p for p in landsat_products if p.name in landsat_nlaps]
-            self.set_products_unavailable(_nlaps, 'TMA data cannot be processed')
-
-        return True
-
     @staticmethod
     def check_dependencies_for_products(scene_list):
         """
@@ -1381,9 +1358,6 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 search.update(user_id=user.id)
         orders = Order.where(search)
         self.handle_cancelled_orders(orders)
-
-        scenes = Scene.where({'status': 'submitted', 'sensor_type': 'landsat', 'order_id': pending_orders})[:500]
-        self.mark_nlaps_unavailable(scenes)
 
         scenes = Scene.where({'status': 'submitted', 'sensor_type': 'landsat', 'order_id': pending_orders})[:500]
         self.handle_submitted_landsat_products(scenes)

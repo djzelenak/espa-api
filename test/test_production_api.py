@@ -8,7 +8,7 @@ from api.domain.mocks.user import MockUser
 from api.domain.order import Order, OptionsConversion
 from api.domain.scene import Scene
 from api.domain.user import User
-from api.external.mocks import lta, inventory, lpdaac, onlinecache, nlaps, hadoop
+from api.external.mocks import lta, inventory, lpdaac, onlinecache, hadoop
 from api.interfaces.production.version1 import API
 from api.notification import emails
 from api.providers.configuration.configuration_provider import ConfigurationProvider
@@ -410,8 +410,6 @@ class TestProductionAPI(unittest.TestCase):
         scenes = Scene.where({'failed_lta_status_update IS NOT': None})
         self.assertTrue(len(scenes) == 0)
 
-    @patch('api.providers.production.production_provider.ProductionProvider.mark_nlaps_unavailable',
-           mock_production_provider.respond_true)
     @patch('api.providers.production.production_provider.ProductionProvider.update_landsat_product_status',
            mock_production_provider.respond_true)
     @patch('api.providers.production.production_provider.ProductionProvider.get_contactids_for_submitted_landsat_products',
@@ -421,19 +419,6 @@ class TestProductionAPI(unittest.TestCase):
         orders = Order.find(self.mock_order.generate_testing_order(self.user_id))
         scenes = orders.scenes({'sensor_type': 'landsat'})
         self.assertTrue(production_provider.handle_submitted_landsat_products(scenes))
-
-    # !!! need to write test for nlaps.products_are_nlaps !!!
-    @patch('api.external.nlaps.products_are_nlaps', nlaps.products_are_nlaps)
-    @patch('api.providers.production.production_provider.ProductionProvider.set_products_unavailable',
-           mock_production_provider.respond_true)
-    def test_production_mark_nlaps_unavailable(self):
-        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
-        for scene in order.scenes({'name !=': 'plot'}):
-            scene.status = 'submitted'
-            scene.sensor_type = 'landsat'
-            scene.save()
-        scenes = order.scenes()
-        self.assertTrue(production_provider.mark_nlaps_unavailable(scenes))
 
     @patch('api.external.lta.update_order_status', lta.update_order_status)
     def test_production_set_products_unavailable(self):
