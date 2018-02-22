@@ -88,13 +88,6 @@ class TestAPI(unittest.TestCase):
         for item in self.restricted['all']['role']:
             self.assertFalse(item in return_dict[self.staff_sensor]['products'])
 
-    def test_get_available_products_global_restriction(self):
-        # testing of landsat pre-collection restricted
-        self.user.update('is_staff', False)
-        return_dict = api.available_products(self.global_product_id, self.user.username)
-        self.assertIn('ordering_restricted', return_dict)
-        self.assertEqual(return_dict['ordering_restricted']['etm7'], [self.global_product_id])
-
     def test_fetch_user_orders_by_email_val(self):
         orders = api.fetch_user_orders(email=self.user.email)
         self.assertTrue(len(orders) > 1)
