@@ -315,12 +315,12 @@ class TestInventory(unittest.TestCase):
         logger.warning('Testing Inventory started...')
         os.environ['espa_api_testing'] = 'True'
         self.lta_prod_good = u'LE07_L1TP_026027_20170912_20171008_01_T1'
-        self.lta_prod_bad = u'LE70290302001200EDC01'
+        self.lta_prod_bad = u'LE07_L1TP_000000_00000000_20171008_01_T1'
         self.lpdaac_prod_good = u'MOD09A1.A2016305.h11v04.006.2016314200836'
         self.lpdaac_prod_bad = u'MOD09A1.A2016305.h11v04.006.9999999999999'
 
         self.lta_order_good = {'etm7_collection': {'inputs': [self.lta_prod_good]}}
-        self.lta_order_bad = {'olitirs8_collection': {'inputs': [self.lta_prod_bad]}}
+        self.lta_order_bad = {'etm7_collection': {'inputs': [self.lta_prod_bad]}}
 
         self.lpdaac_order_good = {'mod09a1': {'inputs': [self.lpdaac_prod_good]}}
         self.lpdaac_order_bad = {'mod09a1': {'inputs': [self.lpdaac_prod_bad]}}
