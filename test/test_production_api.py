@@ -600,7 +600,7 @@ class TestProductionAPI(unittest.TestCase):
                   'LT40480271983028PAC00', 'LT50490262009162PAC03']
 
         includes = ['include_sr', 'include_sr_toa',
-                    'include_cfmask', 'include_sr_thermal']
+                    'include_sr_thermal']
 
         new_format = {u'etm7': {u'inputs': [u'LE70480272012076EDC00'],
                                 u'products': [u'sr']},
@@ -633,7 +633,6 @@ class TestProductionAPI(unittest.TestCase):
                    'false_northing': 0,
                    'image_extents': True,
                    'image_extents_units': u'meters',
-                   'include_cfmask': False,
                    'include_customized_source_data': False,
                    'include_dswe': False,
                    'include_st': False,

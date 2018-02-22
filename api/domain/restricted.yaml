@@ -3,7 +3,6 @@ all:
     role:
         - st
         - swe
-        - cloud
         - restricted_prod
     ordering:
         - olitirs8

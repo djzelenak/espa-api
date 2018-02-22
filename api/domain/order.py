@@ -310,7 +310,6 @@ class Order(object):
              'include_sr_evi': False,  # enhanced vegetation
              'include_st': False,  # surface temperature
              'include_solr_index': False,  # solr search index record
-             'include_cfmask': False,  # (deprecated) not
              'include_statistics': False}  # should we do stats & plots?
 
         return o
@@ -674,7 +673,6 @@ class OptionsConversion(object):
                 ('include_sr_msavi', 'sr_msavi', True),
                 ('include_sr_evi', 'sr_evi', True),
                 ('include_st', 'st', True),
-                ('include_cfmask', 'cloud', True),
                 ('include_pixel_qa', 'pixel_qa', True)]
 
     resample_map = [('cubic', 'cc', None),

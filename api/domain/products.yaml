@@ -1,29 +1,25 @@
-products: 
-  source_metadata: 
+products:
+  source_metadata:
     category: source
     title: "Input Product Metadata"
     display_rank: 1
-  l1: 
+  l1:
     category: source
     title: "Input Products"
     display_rank: 0
-  pixel_qa: 
+  pixel_qa:
     category: l2p
     title: "Pixel QA"
     display_rank: 4
-  toa: 
+  toa:
     category: l2p
     title: "Top of Atmosphere Reflectance"
     display_rank: 2
-  bt: 
+  bt:
     category: l2p
     title: "Brightness Temperature"
     display_rank: 3
-  cloud: 
-    category: l2p
-    title: "Cloud Mask"
-    display_rank: -1
-  sr: 
+  sr:
     category: l2p
     title: "Surface Reflectance"
     display_rank: 0
@@ -31,44 +27,44 @@ products:
     category: l2p
     title: "Surface Temperature"
     display_rank: 1
-  swe: 
+  swe:
     category: l3p
     title: "Dynamic Surface Water Extent"
     display_rank: 0
-  sr_ndvi: 
+  sr_ndvi:
     category: indices
     title: "NDVI"
     display_rank: 0
-  sr_evi: 
+  sr_evi:
     category: indices
     title: "EVI"
     display_rank: 1
-  sr_savi: 
+  sr_savi:
     category: indices
     title: "SAVI"
     display_rank: 2
-  sr_msavi: 
+  sr_msavi:
     category: indices
     title: "MSAVI"
     display_rank: 3
-  sr_ndmi: 
+  sr_ndmi:
     category: indices
     title: "NDMI"
     display_rank: 4
-  sr_nbr: 
+  sr_nbr:
     category: indices
     title: "NBR"
     display_rank: 5
-  sr_nbr2: 
+  sr_nbr2:
     category: indices
     title: "NBR2"
     display_rank: 6
-  stats: 
+  stats:
     category: stats
     title: "Summary Statistics"
     display_rank: 0
 
-categories: 
+categories:
   source:
     title: "Source Products"
     display_rank: 0
