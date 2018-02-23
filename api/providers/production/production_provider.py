@@ -583,6 +583,61 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         return results
 
 
+    def query_pending_products(self, record_limit=500, for_user=None,
+                               priority=None, product_types=['landsat', 'modis']):
+        sql = [
+            'WITH order_queue AS',
+                '(SELECT u.email "email", count(name) "running"',
+                'FROM ordering_scene s',
+                'JOIN ordering_order o ON o.id = s.order_id',
+                'JOIN auth_user u ON u.id = o.user_id',
+                'WHERE s.status in %(running_s_status)s',
+                'GROUP BY u.email)',
+            'SELECT u.contactid, s.name, s.sensor_type,',
+                'o.orderid, o.product_opts, o.priority,',
+                'o.order_date, q.running',
+            'FROM ordering_scene s',
+            'JOIN ordering_order o ON o.id = s.order_id',
+            'JOIN auth_user u ON u.id = o.user_id',
+            'LEFT JOIN order_queue q ON q.email = u.email',
+            'WHERE',
+                'o.status = %(order_status)s',
+                'AND s.status = %(s_status)s',
+        ]
+        params = {
+            'running_s_status': ("queued", "processing"),
+            'order_status': 'ordered',
+            's_status': 'oncache',
+        }
+
+        if isinstance(product_types, list) and len(product_types) > 0:
+            sql += ['AND s.sensor_type IN %(product_types)s']
+            params['product_types'] = tuple(product_types)
+
+        if for_user is not None:
+            sql += ['AND u.username = %(for_user)s']
+            params['for_user'] = for_user
+
+        if priority is not None:
+            sql += ['AND o.priority = %(priority)s']
+            params['priority'] = priority
+
+        sql += ['ORDER BY q.running ASC NULLS FIRST,']
+        sql += ['o.order_date ASC LIMIT %(record_limit)s']
+        params['record_limit'] = record_limit
+
+        query = ' '.join(sql)
+
+        with db_instance() as db:
+            log_sql = db.cursor.mogrify(query, params)
+            logger.warn("QUERY:{0}".format(log_sql))
+            db.select(query, params)
+
+        # Columns: ['contactid', 'name', 'sensor_type', 'orderid',
+        #           'product_opts', 'priority', 'order_date', 'running']
+        return db.fetcharr
+
+
     def get_products_to_process(self, record_limit=500,
                                 for_user=None,
                                 priority=None,
@@ -605,62 +660,9 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         logger.warn('Product types:{0}'.format(product_types))
         logger.warn('Encode urls:{0}'.format(encode_urls))
 
-        buff = StringIO()
-        buff.write('WITH order_queue AS ')
-        buff.write('(SELECT u.email "email", count(name) "running" ')
-        buff.write('FROM ordering_scene s ')
-        buff.write('JOIN ordering_order o ON o.id = s.order_id ')
-        buff.write('JOIN auth_user u ON u.id = o.user_id ')
-        buff.write('WHERE ')
-        buff.write('s.status in (\'queued\', \'processing\') ')
-        buff.write('GROUP BY u.email) ')
-        buff.write('SELECT ')
-        buff.write('u.contactid, ')
-        buff.write('s.name, ')
-        buff.write('s.sensor_type, ')
-        buff.write('o.orderid, ')
-        buff.write('o.product_opts, ')
-        buff.write('o.priority, ')
-        buff.write('o.order_date, ')
-        buff.write('q.running ')
-        buff.write('FROM ordering_scene s ')
-        buff.write('JOIN ordering_order o ON o.id = s.order_id ')
-        buff.write('JOIN auth_user u ON u.id = o.user_id ')
-        buff.write('LEFT JOIN order_queue q ON q.email = u.email ')
-        buff.write('WHERE ')
-        buff.write('o.status = \'ordered\' ')
-        buff.write('AND s.status = \'oncache\' ')
-
-        if product_types and len(product_types) > 0:
-            ptypes = copy.deepcopy(product_types)
-
-            # product_types comes in as a list from the transport layer
-            if isinstance(ptypes, basestring):
-                # ptypes is unicode values of either: u"['plot']" or u"['landsat', 'modis']"
-                ptypes = eval(ptypes)
-
-            type_str = ','.join('\'{0}\''.format(x) for x in ptypes)
-            buff.write('AND s.sensor_type IN ({0}) '.format(type_str))
-
-        if for_user is not None:
-            buff.write('AND u.username = \'{0}\' '.format(for_user))
-
-        if priority is not None:
-            buff.write('AND o.priority = \'{0}\' '.format(priority))
-
-        buff.write('ORDER BY q.running ASC NULLS FIRST, ')
-        buff.write('o.order_date ASC LIMIT {0}'.format(record_limit))
-
-        query = buff.getvalue()
-        buff.close()
-        logger.warn("QUERY:{0}".format(query))
-
-        with db_instance() as db:
-            db.select(query)
-
-        # Columns: ['contactid', 'name', 'sensor_type', 'orderid',
-        #           'product_opts', 'priority', 'order_date', 'running']
-        query_results = db.fetcharr
+        query_results = self.query_pending_products(
+            record_limit=record_limit, for_user=for_user, priority=priority,
+            product_types=product_types)
 
         if config.is_m2m_url_enabled and inventory.available():
             return self.parse_urls_m2m(query_results)
