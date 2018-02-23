@@ -168,6 +168,12 @@ class LTAService(object):
         else:
             logger.error('{} logout failed'.format(self.current_user))
 
+    def easy_id_lookup(self, product_ids):
+        retdata = dict()
+        for sensor_name, id_list in split_by_dataset(product_ids).items():
+             retdata.update(self.id_lookup(id_list, sensor_name))
+        return retdata
+
     def id_lookup(self, product_ids, dataset):
         """
         Convert Collection IDs (LC08_...) into M2M entity IDs
@@ -267,6 +273,82 @@ class LTAService(object):
         return True
 
 
+class LTACachedService(LTAService):
+    """
+    Wrapper on top of the cache, with helper functions which balance requests
+     to the external service when needed.
+    """
+    def __init__(self, *args, **kwargs):
+        super(LTACachedService, self).__init__(*args, **kwargs)
+        # TODO: need to profile how much data we are caching
+        one_hour = 3600  # seconds
+        self.MC_KEY_FMT = '({resource})'
+        self.MD_KEY_FMT = '({resource},{id})'
+        self.cache = CachingProvider(timeout=one_hour)
+
+    # -----------------------------------------------------------------------+
+    # Handlers to format cache keys and perform bulk value fetching/setting  |
+    def get_login(self):
+        cache_key = self.MC_KEY_FMT.format(resource='login')
+        token = self.cache.get(cache_key)
+        return token
+
+    def set_login(self, token):
+        cache_key = self.MC_KEY_FMT.format(resource='login')
+        success = self.cache.set(cache_key, token)
+        if not success:
+            logger.error('LTACachedService: Token not cached')
+
+    def get_lookup(self, id_list):
+        cache_keys = [self.MD_KEY_FMT.format(resource='idLookup', id=i)
+                      for i in id_list]
+        entries = self.cache.get_multi(cache_keys)
+        entries = {k.split(',')[1][:-1]: v for k, v in entries.items()}
+        return entries
+
+    def set_lookup(self, id_pairs):
+        cache_entries = {self.MD_KEY_FMT.format(resource='idLookup', id=i): e
+                         for i, e in id_pairs.items()}
+        success = self.cache.set_multi(cache_entries)
+        if not success:
+            logger.error('LTACachedService: ID conversion not cached')
+
+    # ---------------------------------------------------------------+
+    # Handlers to balance fetching cached/external values as needed  |
+    def cached_login(self):
+        token = self.get_login()
+        if token is None:
+            token = self.login()
+            self.set_login(token)
+        return token
+
+    def cached_id_lookup(self, id_list):
+        entities = self.get_lookup(id_list)
+        if len(entities) > 0:
+            diff = set(id_list) - set(entities)
+            if diff:
+                fetched = self.easy_id_lookup(list(diff))
+                self.set_lookup(entities)
+                entities.update(fetched)
+        else:
+            entities = self.easy_id_lookup(id_list)
+            self.set_lookup(entities)
+        return entities
+
+    def cached_verify_scenes(self, id_list):
+        entities = self.get_lookup(id_list)
+        if len(entities) > 0:
+            diff = set(id_list) - set(entities)
+            if diff:
+                fetched = self.easy_id_lookup(list(diff))
+                self.set_lookup(entities)
+                entities.update(fetched)
+        else:
+            entities = self.easy_id_lookup(id_list)
+            self.set_lookup(entities)
+        results = {k: entities.get(k) for k in id_list}
+        return results
+
 
 ''' This is the public interface that calling code should use to interact
     with this module'''
@@ -308,3 +390,15 @@ def download_urls(token, product_ids, dataset, usage='[espa]'):
     entities = convert(token, product_ids, dataset)
     urls = get_download_urls(token, entities.values(), dataset, usage=usage)
     return {p: urls.get(e) for p, e in entities.items() if e in urls}
+
+
+def get_cached_session():
+    return LTACachedService().cached_login()
+
+
+def get_cached_convert(token, product_ids):
+    return LTACachedService(token).cached_id_lookup(product_ids)
+
+
+def get_cached_verify_scenes(token, product_ids):
+    return LTACachedService(token).cached_verify_scenes(product_ids)
