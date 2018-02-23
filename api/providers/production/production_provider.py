@@ -544,6 +544,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
             results = [dict(r, download_url=urls.get(r['scene']))
                             if r['scene'] in non_plot_ids else r for r in results]
+            results = [r for r in results if 'download_url' in r and r.get('download_url')]
 
         return results
 
