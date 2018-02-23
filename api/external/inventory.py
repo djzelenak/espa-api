@@ -21,11 +21,6 @@ from api.system.logger import ilogger as logger
 config = ConfigurationProvider()
 
 
-class LTAError(Exception):
-    def __init__(self, message):
-        logger.error('ERR %s', message)
-        super(LTAError, self).__init__(message)
-
 
 # -----------------------------------------------------------------------------+
 # Find Documentation here:                                                     |
@@ -49,6 +44,14 @@ class LTAService(object):
         if self.current_user and self.token:
             self.set_user_context(self.current_user, ipaddress=self.ipaddr)
 
+    def network_urls(self, urls, sensor='landsat'):
+        """ Convert External URLs to 'Internal' (on our 10GbE network) """
+        match = {'landsat': self.landsat_datapool,
+                 'modis': self.modis_datapool}[sensor]
+        sub = {'landsat': self.external_landsat_regex.sub,
+               'modis': self.external_modis_regex.sub}[sensor]
+        return {k: sub(match, v) for k,v in urls.items()}
+
     @property
     def base_url(self):
         return self._base_url
@@ -68,22 +71,23 @@ class LTAService(object):
         :param response: requests.models.Response
         :return: dict
         """
+        data = None
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:
-            raise LTAError('server reported bad status code: {}'
+            logger.error('server reported bad status code: {}'
                            .format(e))
         try:
             data = response.json()
         except ValueError as e:
             msg = ('unable to parse JSON response. {}\n'
                    'traceback:\n{}'.format(e, traceback.format_exc()))
-            raise LTAError(msg)
+            logger.error(msg)
 
         if data.get('error'):
-            raise LTAError('{errorCode}: {error}'.format(**data))
+            logger.error('{errorCode}: {error}'.format(**data))
         if 'data' not in data:
-            raise LTAError('no data found:\n{}'.format(data))
+            logger.error('no data found:\n{}'.format(data))
 
         return data
 
@@ -149,7 +153,7 @@ class LTAService(object):
         if resp.get('data'):
             return True
         else:
-            raise LTAError('{} logout failed'.format(self.current_user))
+            logger.error('{} logout failed'.format(self.current_user))
 
     @staticmethod
     def split_by_dataset(product_ids):
@@ -168,7 +172,7 @@ class LTAService(object):
                                if s.lta_json_name == s_name]
         return retdata
 
-    def id_lookup(self, product_ids):
+    def id_lookup(self, product_ids, dataset):
         """
         Convert Collection IDs (LC08_...) into M2M entity IDs
 
@@ -176,37 +180,26 @@ class LTAService(object):
         :type product_ids: list
         :return: dict
         """
-        dataset_groups = self.split_by_dataset(product_ids)
         endpoint = 'idLookup'
-        retdata = dict()
-        for sensor_name in dataset_groups:
-            id_list = dataset_groups[sensor_name]
-            if sensor_name.startswith('MODIS'):
-                # WARNING: MODIS dataset does not have processed date
-                #           in M2M entity lookup!
-                id_list = [i.rsplit('.',1)[0] for i in id_list]
-            payload = dict(apiKey=self.token,
-                           idList=id_list,
-                           inputField='displayId', datasetName=sensor_name)
-            resp = self._post(endpoint, payload)
-            results = resp.get('data')
-            if not isinstance(results, dict):
-                raise LTAError('{} ID Lookup failed: {}'
-                               .format(sensor_name, product_ids))
-            id_list = dataset_groups[sensor_name]
-            if sensor_name.startswith('MODIS'):
-                # WARNING: See above. Need to "undo" the MODIS mapping problem.
-                results = {[i for i in id_list if k in i
-                           ].pop(): v for k,v in results.items()}
-            diff = set(id_list) - set(results.keys())
-            if diff:
-                raise LTAError('ID Lookup failed for: {}'.format(diff))
-            else:
-                entity_ids = {k: results.get(k) for k in id_list}
-                retdata.update(entity_ids)
-        return retdata
+        id_list = [i for i in product_ids]
+        if dataset.startswith('MODIS'):
+            # WARNING: MODIS dataset does not have processed date
+            #           in M2M entity lookup!
+            id_list = [i.rsplit('.',1)[0] for i in id_list]
+        payload = dict(apiKey=self.token,
+                        idList=id_list,
+                        inputField='displayId', datasetName=dataset)
+        resp = self._post(endpoint, payload)
+        results = resp.get('data')
 
-    def verify_scenes(self, product_ids):
+        id_list = [i for i in product_ids]
+        if dataset.startswith('MODIS'):
+            # WARNING: See above. Need to "undo" the MODIS mapping problem.
+            results = {[i for i in id_list if k in i
+                        ].pop(): v for k,v in results.items()}
+        return {k: results.get(k) for k in id_list}
+
+    def verify_scenes(self, product_ids, dataset):
         """
         Check if supplied IDs successfully mapped to M2M entity IDs
 
@@ -214,16 +207,11 @@ class LTAService(object):
         :type product_ids: list
         :return: dict
         """
-        entity_ids = self.id_lookup(product_ids)
-        diff = set(product_ids) - set(entity_ids)
-        if diff:
-            raise LTAError('Verify scenes failed for: {}'.format(diff))
+        entity_ids = self.id_lookup(product_ids, dataset)
+        return {k: k in entity_ids for k in product_ids}
 
-        results = {k: k in entity_ids.keys() for k in product_ids}
-        return results
-
-    def get_download_urls(self, product_ids, products='STANDARD', stage=True,
-                          usage='[espa]:sr'):
+    def get_download_urls(self, entity_ids, dataset, products='STANDARD',
+                          stage=True, usage='[espa]:sr'):
         """
         Fetch the download location for supplied IDs, replacing the public host
             with an internal network host (to bypass public firewall routing)
@@ -238,34 +226,15 @@ class LTAService(object):
         :type usage: str
         :return: dict
         """
-        dataset_groups = self.split_by_dataset(product_ids)
-        entity_ids = self.id_lookup(product_ids)
-        endpoint = 'download'
-
-        retdata = dict()
-        for sensor_name in dataset_groups:
-            id_list = dataset_groups[sensor_name]
-            ents = [entity_ids.get(i) for i in id_list]
-            payload = dict(apiKey=self.token, datasetName=sensor_name,
-                           products=products, entityIds=ents, stage=stage,
-                           dataUse=usage)
-            resp = self._post(endpoint, payload)
-            results = resp.get('data')
-            if not isinstance(results, list):
-                raise LTAError('{} failed fetch download urls: {}'
-                               .format(sensor_name, product_ids))
-            urls = {i['entityId']: i['url'] for i in results}
-            urls = {k: self.external_landsat_regex.sub(self.landsat_datapool, v)
-                    for k,v in urls.items()}
-            urls = {k: self.external_modis_regex.sub(self.modis_datapool, v)
-                    for k,v in urls.items()}
-
-            diff = set(ents) - set(urls)
-            if diff:
-                raise LTAError('No download urls found for: {}'.format(diff))
-            else:
-                retdata.update(urls)
-        return retdata
+        payload = dict(apiKey=self.token, datasetName=dataset,
+                        products=products, entityIds=entity_ids,
+                        stage=stage, dataUse=usage)
+        resp = self._post('download', payload)
+        results = resp.get('data')
+        return self.network_urls(
+                   self.network_urls(
+                       {i['entityId']: i['url'] for i in results},
+                    'landsat'), 'modis')
 
     def set_user_context(self, contactid, ipaddress=None, context='ESPA'):
         """
@@ -315,16 +284,16 @@ def logout(token):
     return LTAService(token).logout()
 
 
-def convert(token, contactid, product_ids):
-    return LTAService(token, contactid).id_lookup(product_ids)
+def convert(token, product_ids, dataset):
+    return LTAService(token).id_lookup(product_ids, dataset)
 
 
-def verify_scenes(token, contactid, product_ids):
-    return LTAService(token, contactid).verify_scenes(product_ids)
+def verify_scenes(token, product_ids, dataset):
+    return LTAService(token).verify_scenes(product_ids, dataset)
 
 
-def get_download_urls(token, contactid, product_ids, usage):
-    return LTAService(token, contactid).get_download_urls(product_ids, usage=usage)
+def get_download_urls(token, entity_ids, dataset, usage='[espa]'):
+    return LTAService(token).get_download_urls(entity_ids, dataset, usage=usage)
 
 
 def set_user_context(token, contactid, ipaddress=None):
@@ -337,3 +306,9 @@ def clear_user_context(token):
 
 def available():
     return LTAService().available()
+
+
+def download_urls(token, product_ids, dataset, usage='[espa]'):
+    entities = convert(token, product_ids, dataset)
+    urls = get_download_urls(token, entities.values(), dataset, usage=usage)
+    return {p: urls.get(e) for p, e in entities.items() if e in urls}
