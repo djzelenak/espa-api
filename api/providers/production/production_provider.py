@@ -509,77 +509,42 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                                 .format(item['orderid'], item['name']))
         return results
 
+
+    def converted_opts(self, scene_id, product_opts):
+        if scene_id == 'plot':
+            options = {}
+        elif config.get('convertprodopts') == 'True':
+            options = OptionsConversion.convert(new=product_opts, scenes=[scene_id])
+        else:
+            # Need to strip out everything not directly related to the scene
+            options = self.strip_unrelated(scene_id, product_opts)
+        return options
+
     def parse_urls_m2m(self, query_results, encode_urls=False):
-        # TODO: clean up this mess
-        # Usage codes must be grouped by both ContactID and OrderID
-        names_by_cid = {}
-        usage_by_cid = {}
-        for result in query_results:
-            cid, orderid = result['contactid'], result['orderid']
-            if result['sensor_type'] in ('landsat', 'modis'):
-                stype, sname = (result['sensor_type'],
-                                sensor.instance(result['name']).shortname)
-            else:
-                stype = sname = 'plot'
-            usage = orderid
-            usage_by_cid[(cid, orderid, stype)] = (usage, result)
-            names_by_cid.setdefault((cid, orderid, stype), []).append(result['name'])
 
-        #this will be returned to the caller
-        results = []
-        for (cid, orderid, stype), name_list in names_by_cid.items():
-            logger.warn('Retrieving %s %s download urls for cid:%s orderid:%s',
-                        len(name_list), stype, cid, orderid)
-            (usage, item) = usage_by_cid[(cid, orderid, stype)]
+        results = [{'orderid': r['orderid'],
+                    'product_type': r['sensor_type'],
+                    'scene': r['name'],
+                    'priority': r['priority'],
+                    'options': self.converted_opts(r['name'], r['product_opts'])
+                    } for r in query_results]
 
-            input_urls = dict()
-            if stype in ('landsat', 'modis'):
-                start = datetime.datetime.now()
-                auth_token = inventory.get_cached_session()
-                entity_map = inventory.get_cached_convert(auth_token, name_list)
-                input_urls = inventory.get_download_urls(auth_token, cid, name_list, usage)
-                input_urls = {i: input_urls.get(entity_map.get(i)) for i in name_list}
-                stop = datetime.datetime.now()
-                interval = stop - start
-                logger.warn('Retrieving download urls took {0} seconds'
-                             .format(interval.seconds))
-                logger.warn('Retrieved {0} urls for cid:{1}'.format(len(input_urls), cid))
+        non_plot_ids = [r['name'] for r in query_results if r['sensor_type'] != 'plot']
 
-            for scene_id in name_list:
-                dload_url = None
-                if stype in ('landsat', 'modis'):
+        if non_plot_ids:
+            urls = dict()
+            token = inventory.get_session()
+            for dataset, ids in inventory.split_by_dataset(non_plot_ids).items():
+                try:
+                    urls.update(inventory.download_urls(token, ids, dataset))
+                except Exception as e:
+                    logger.error('Problem getting URLs: {}'.format(e), exc_info=True)
+            if encode_urls:
+                urls = {k: urllib.quote(u, '') for k, u in urls.items()}
 
-                    dload_url = input_urls.get(scene_id)
-                    if dload_url:
-                        if encode_urls:
-                            dload_url = urllib.quote(dload_url, '')
+            results = [dict(r, download_url=urls.get(r['scene']))
+                            if r['scene'] in non_plot_ids else r for r in results]
 
-                if scene_id == 'plot':
-                    options = {}
-                elif config.get('convertprodopts') == 'True':
-                    options = OptionsConversion.convert(new=item['product_opts'],
-                                                        scenes=[item['name']])
-                else:
-                    # Need to strip out everything not directly related to the scene
-                    options = self.strip_unrelated(scene_id, item['product_opts'])
-
-                result = {
-                    'orderid': orderid,
-                    'product_type': stype,
-                    'scene': scene_id,
-                    'priority': item['priority'],
-                    'options': options
-                }
-
-                if stype == 'plot':
-                    # no dload url for plot items, just append it
-                    results.append(result)
-                elif dload_url is not None:
-                    result['download_url'] = dload_url
-                    results.append(result)
-                else:
-                    logger.error('dload_url for %s in order %s was None, '
-                                 'skipping...', scene_id, orderid)
         return results
 
 
