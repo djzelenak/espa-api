@@ -509,78 +509,99 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                                 .format(item['orderid'], item['name']))
         return results
 
+
+    def converted_opts(self, scene_id, product_opts):
+        if scene_id == 'plot':
+            options = {}
+        elif config.get('convertprodopts') == 'True':
+            options = OptionsConversion.convert(new=product_opts, scenes=[scene_id])
+        else:
+            # Need to strip out everything not directly related to the scene
+            options = self.strip_unrelated(scene_id, product_opts)
+        return options
+
     def parse_urls_m2m(self, query_results, encode_urls=False):
-        # TODO: clean up this mess
-        # Usage codes must be grouped by both ContactID and OrderID
-        names_by_cid = {}
-        usage_by_cid = {}
-        for result in query_results:
-            cid, orderid = result['contactid'], result['orderid']
-            if result['sensor_type'] in ('landsat', 'modis'):
-                stype, sname = (result['sensor_type'],
-                                sensor.instance(result['name']).shortname)
-            else:
-                stype = sname = 'plot'
-            usage = orderid
-            usage_by_cid[(cid, orderid, stype)] = (usage, result)
-            names_by_cid.setdefault((cid, orderid, stype), []).append(result['name'])
 
-        #this will be returned to the caller
-        results = []
-        for (cid, orderid, stype), name_list in names_by_cid.items():
-            logger.warn('Retrieving %s %s download urls for cid:%s orderid:%s',
-                        len(name_list), stype, cid, orderid)
-            (usage, item) = usage_by_cid[(cid, orderid, stype)]
+        results = [{'orderid': r['orderid'],
+                    'product_type': r['sensor_type'],
+                    'scene': r['name'],
+                    'priority': r['priority'],
+                    'options': self.converted_opts(r['name'], r['product_opts'])
+                    } for r in query_results]
 
-            input_urls = dict()
-            if stype in ('landsat', 'modis'):
-                start = datetime.datetime.now()
-                auth_token = inventory.get_cached_session()
-                entity_map = inventory.get_cached_convert(auth_token, name_list)
-                input_urls = inventory.get_download_urls(auth_token, cid, name_list, usage)
-                input_urls = {i: input_urls.get(entity_map.get(i)) for i in name_list}
-                stop = datetime.datetime.now()
-                interval = stop - start
-                logger.warn('Retrieving download urls took {0} seconds'
-                             .format(interval.seconds))
-                logger.warn('Retrieved {0} urls for cid:{1}'.format(len(input_urls), cid))
+        non_plot_ids = [r['name'] for r in query_results if r['sensor_type'] != 'plot']
 
-            for scene_id in name_list:
-                dload_url = None
-                if stype in ('landsat', 'modis'):
+        if non_plot_ids:
+            urls = dict()
+            token = inventory.get_session()
+            for dataset, ids in inventory.split_by_dataset(non_plot_ids).items():
+                try:
+                    urls.update(inventory.download_urls(token, ids, dataset))
+                except Exception as e:
+                    logger.error('Problem getting URLs: {}'.format(e), exc_info=True)
+            if encode_urls:
+                urls = {k: urllib.quote(u, '') for k, u in urls.items()}
 
-                    dload_url = input_urls.get(scene_id)
-                    if dload_url:
-                        if encode_urls:
-                            dload_url = urllib.quote(dload_url, '')
+            results = [dict(r, download_url=urls.get(r['scene']))
+                            if r['scene'] in non_plot_ids else r for r in results]
+            results = [r for r in results if 'download_url' in r and r.get('download_url')]
 
-                if scene_id == 'plot':
-                    options = {}
-                elif config.get('convertprodopts') == 'True':
-                    options = OptionsConversion.convert(new=item['product_opts'],
-                                                        scenes=[item['name']])
-                else:
-                    # Need to strip out everything not directly related to the scene
-                    options = self.strip_unrelated(scene_id, item['product_opts'])
-
-                result = {
-                    'orderid': orderid,
-                    'product_type': stype,
-                    'scene': scene_id,
-                    'priority': item['priority'],
-                    'options': options
-                }
-
-                if stype == 'plot':
-                    # no dload url for plot items, just append it
-                    results.append(result)
-                elif dload_url is not None:
-                    result['download_url'] = dload_url
-                    results.append(result)
-                else:
-                    logger.error('dload_url for %s in order %s was None, '
-                                 'skipping...', scene_id, orderid)
         return results
+
+
+    def query_pending_products(self, record_limit=500, for_user=None,
+                               priority=None, product_types=['landsat', 'modis']):
+        sql = [
+            'WITH order_queue AS',
+                '(SELECT u.email "email", count(name) "running"',
+                'FROM ordering_scene s',
+                'JOIN ordering_order o ON o.id = s.order_id',
+                'JOIN auth_user u ON u.id = o.user_id',
+                'WHERE s.status in %(running_s_status)s',
+                'GROUP BY u.email)',
+            'SELECT u.contactid, s.name, s.sensor_type,',
+                'o.orderid, o.product_opts, o.priority,',
+                'o.order_date, q.running',
+            'FROM ordering_scene s',
+            'JOIN ordering_order o ON o.id = s.order_id',
+            'JOIN auth_user u ON u.id = o.user_id',
+            'LEFT JOIN order_queue q ON q.email = u.email',
+            'WHERE',
+                'o.status = %(order_status)s',
+                'AND s.status = %(s_status)s',
+        ]
+        params = {
+            'running_s_status': ("queued", "processing"),
+            'order_status': 'ordered',
+            's_status': 'oncache',
+        }
+
+        if isinstance(product_types, list) and len(product_types) > 0:
+            sql += ['AND s.sensor_type IN %(product_types)s']
+            params['product_types'] = tuple(product_types)
+
+        if for_user is not None:
+            sql += ['AND u.username = %(for_user)s']
+            params['for_user'] = for_user
+
+        if priority is not None:
+            sql += ['AND o.priority = %(priority)s']
+            params['priority'] = priority
+
+        sql += ['ORDER BY q.running ASC NULLS FIRST,']
+        sql += ['o.order_date ASC LIMIT %(record_limit)s']
+        params['record_limit'] = record_limit
+
+        query = ' '.join(sql)
+
+        with db_instance() as db:
+            log_sql = db.cursor.mogrify(query, params)
+            logger.warn("QUERY:{0}".format(log_sql))
+            db.select(query, params)
+
+        # Columns: ['contactid', 'name', 'sensor_type', 'orderid',
+        #           'product_opts', 'priority', 'order_date', 'running']
+        return db.fetcharr
 
 
     def get_products_to_process(self, record_limit=500,
@@ -605,62 +626,9 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         logger.warn('Product types:{0}'.format(product_types))
         logger.warn('Encode urls:{0}'.format(encode_urls))
 
-        buff = StringIO()
-        buff.write('WITH order_queue AS ')
-        buff.write('(SELECT u.email "email", count(name) "running" ')
-        buff.write('FROM ordering_scene s ')
-        buff.write('JOIN ordering_order o ON o.id = s.order_id ')
-        buff.write('JOIN auth_user u ON u.id = o.user_id ')
-        buff.write('WHERE ')
-        buff.write('s.status in (\'queued\', \'processing\') ')
-        buff.write('GROUP BY u.email) ')
-        buff.write('SELECT ')
-        buff.write('u.contactid, ')
-        buff.write('s.name, ')
-        buff.write('s.sensor_type, ')
-        buff.write('o.orderid, ')
-        buff.write('o.product_opts, ')
-        buff.write('o.priority, ')
-        buff.write('o.order_date, ')
-        buff.write('q.running ')
-        buff.write('FROM ordering_scene s ')
-        buff.write('JOIN ordering_order o ON o.id = s.order_id ')
-        buff.write('JOIN auth_user u ON u.id = o.user_id ')
-        buff.write('LEFT JOIN order_queue q ON q.email = u.email ')
-        buff.write('WHERE ')
-        buff.write('o.status = \'ordered\' ')
-        buff.write('AND s.status = \'oncache\' ')
-
-        if product_types and len(product_types) > 0:
-            ptypes = copy.deepcopy(product_types)
-
-            # product_types comes in as a list from the transport layer
-            if isinstance(ptypes, basestring):
-                # ptypes is unicode values of either: u"['plot']" or u"['landsat', 'modis']"
-                ptypes = eval(ptypes)
-
-            type_str = ','.join('\'{0}\''.format(x) for x in ptypes)
-            buff.write('AND s.sensor_type IN ({0}) '.format(type_str))
-
-        if for_user is not None:
-            buff.write('AND u.username = \'{0}\' '.format(for_user))
-
-        if priority is not None:
-            buff.write('AND o.priority = \'{0}\' '.format(priority))
-
-        buff.write('ORDER BY q.running ASC NULLS FIRST, ')
-        buff.write('o.order_date ASC LIMIT {0}'.format(record_limit))
-
-        query = buff.getvalue()
-        buff.close()
-        logger.warn("QUERY:{0}".format(query))
-
-        with db_instance() as db:
-            db.select(query)
-
-        # Columns: ['contactid', 'name', 'sensor_type', 'orderid',
-        #           'product_opts', 'priority', 'order_date', 'running']
-        query_results = db.fetcharr
+        query_results = self.query_pending_products(
+            record_limit=record_limit, for_user=for_user, priority=priority,
+            product_types=product_types)
 
         if config.is_m2m_url_enabled and inventory.available():
             return self.parse_urls_m2m(query_results)
