@@ -7,6 +7,7 @@ import traceback
 import datetime
 import socket
 import re
+from itertools import groupby
 
 import requests
 import memcache
@@ -25,6 +26,18 @@ config = ConfigurationProvider()
 # -----------------------------------------------------------------------------+
 # Find Documentation here:                                                     |
 #      https://earthexplorer.usgs.gov/inventory/documentation/json-api         |
+def split_by_dataset(product_ids):
+    """
+    Subset list of Collection IDs (LC08_...) by the LTA JSON data set name
+
+    :param product_ids: Landsat Collection IDs ['LC08_..', ...]
+    :type product_ids: list
+    :return: dict
+    """
+    return {k: list(g) for k, g in groupby(product_ids,
+                lambda x: sensor.instance(x).lta_json_name)}
+
+
 class LTAService(object):
     def __init__(self, token=None, current_user=None, ipaddr=None):
         mode = config.mode
@@ -154,23 +167,6 @@ class LTAService(object):
             return True
         else:
             logger.error('{} logout failed'.format(self.current_user))
-
-    @staticmethod
-    def split_by_dataset(product_ids):
-        """
-        Subset list of Collection IDs (LC08_...) by the LTA JSON data set name
-
-        :param product_ids: Landsat Collection IDs ['LC08_..', ...]
-        :type product_ids: list
-        :return: dict
-        """
-        retdata = dict()
-        instances = [sensor.instance(p) for p in product_ids]
-        sensors = set([s.lta_json_name for s in instances])
-        for s_name in sensors:
-            retdata[s_name] = [s.product_id for s in instances
-                               if s.lta_json_name == s_name]
-        return retdata
 
     def id_lookup(self, product_ids, dataset):
         """
