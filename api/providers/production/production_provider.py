@@ -1003,7 +1003,6 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     order.save()
                 except Exception, e:
                     logger.critical('Error calling send_completion_email\nexception: {}'.format(e))
-                    raise e
             else:
                 order.save()
         return True
