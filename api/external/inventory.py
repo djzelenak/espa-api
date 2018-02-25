@@ -34,7 +34,7 @@ def split_by_dataset(product_ids):
     :type product_ids: list
     :return: dict
     """
-    return {k: list(g) for k, g in groupby(product_ids,
+    return {k: list(g) for k, g in groupby(sorted(product_ids),
                 lambda x: sensor.instance(x).lta_json_name)}
 
 
