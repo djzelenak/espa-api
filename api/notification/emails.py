@@ -37,7 +37,7 @@ class Emails(object):
         _base_url = _base_url.replace("status", "order-status")
         return ''.join([_base_url, '/', orderid])
 
-    def send_email(self, recipient, subject, body, tries=10):
+    def send_email(self, recipient, subject, body):
         '''Sends an email to a receipient on the behalf of espa'''
 
         def _validate(email):
@@ -61,22 +61,9 @@ class Emails(object):
         msg['Subject'] = subject
         msg['To'] = to_header
         msg['From'] = config.get('email.espa_address')
-        for retry in range(1, tries+1):
-            try:
-                s = SMTP(host=config.get('email.espa_server'), timeout=1)
-                s.sendmail(msg['From'], recipient, msg.as_string())
-                s.quit()
-            except SMTPServerDisconnected:
-                logger.warning('Attempt {} failed to send email, will retry'
-                               .format(retry))
-            else:
-                break
-        if retry >= tries:
-            msg = ('Sending email failed {} times! {} {} ({})'
-                   .format(retry, recipient, subject,
-                           config.get('email.espa_server')))
-            logger.critical(msg)
-            raise RuntimeError(msg)
+        s = SMTP(host=config.get('email.espa_server'), timeout=3)
+        s.sendmail(msg['From'], recipient, msg.as_string())
+        s.quit()
 
         return True
 
@@ -107,8 +94,12 @@ class Emails(object):
         sends them'''
         for o in orders:
             if not o.initial_email_sent:
-                self.send_initial(o.orderid)
-                o.update('initial_email_sent', datetime.datetime.now())
+                try:
+                    self.send_initial(o.orderid)
+                    o.update('initial_email_sent', datetime.datetime.now())
+                except SMTPServerDisconnected::
+                    logger.error('Unable to send initial email: {}'
+                                 .format(o.orderid))
         return True
 
     def send_initial(self, order_id):

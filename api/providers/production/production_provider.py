@@ -995,22 +995,17 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             logger.info('Completing order: {0}'.format(order.orderid))
             order.status = 'complete'
             order.completion_date = datetime.datetime.now()
-            order.save()
             #only send the email if this was an espa order.
             if order.order_source == 'espa' and not order.completion_email_sent:
                 try:
-                    sent = None
                     sent = self.send_completion_email(order)
-                    if sent is None:
-                        logger.critical('Completion email not sent for {0}'.format(order.orderid))
-                        raise ProductionProviderException("Completion email not sent from "
-                                                          "update_order_if_complete\nfor order {}".format(order.orderid))
-                    else:
-                        order.completion_email_sent = datetime.datetime.now()
-                        order.save()
+                    order.completion_email_sent = datetime.datetime.now()
+                    order.save()
                 except Exception, e:
                     logger.critical('Error calling send_completion_email\nexception: {}'.format(e))
                     raise e
+            else:
+                order.save()
         return True
 
     def calc_scene_download_sizes(self, scenes):
