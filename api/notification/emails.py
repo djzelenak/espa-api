@@ -97,7 +97,7 @@ class Emails(object):
                 try:
                     self.send_initial(o.orderid)
                     o.update('initial_email_sent', datetime.datetime.now())
-                except SMTPServerDisconnected::
+                except SMTPServerDisconnected:
                     logger.error('Unable to send initial email: {}'
                                  .format(o.orderid))
         return True
