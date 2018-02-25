@@ -67,7 +67,7 @@ class InventoryProviderV0(InventoryInterfaceV0):
         if not_avail:
             raise InventoryException(not_avail)
         token = inventory.get_cached_session()
-        return inventory.get_cached_verify_scenes(token, prod_ls)
+        return inventory.check_valid(token, prod_ls)
 
     @staticmethod
     def check_LTA(prod_ls):
