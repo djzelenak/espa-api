@@ -462,6 +462,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             's_status': 'oncache',
         }
 
+        if not isinstance(product_types, list):
+            # unicode values of either: u"['plot']" or u"['landsat', 'modis']"
+            product_types = json.loads(str(product_types).replace("'", '"'))
+
         if isinstance(product_types, list) and len(product_types) > 0:
             sql += ['AND s.sensor_type IN %(product_types)s']
             params['product_types'] = tuple(product_types)
