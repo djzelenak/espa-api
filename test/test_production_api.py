@@ -8,7 +8,7 @@ from api.domain.mocks.user import MockUser
 from api.domain.order import Order, OptionsConversion
 from api.domain.scene import Scene
 from api.domain.user import User
-from api.external.mocks import lta, inventory, lpdaac, onlinecache, nlaps, hadoop
+from api.external.mocks import lta, inventory, lpdaac, onlinecache, hadoop
 from api.interfaces.production.version1 import API
 from api.notification import emails
 from api.providers.configuration.configuration_provider import ConfigurationProvider
@@ -385,17 +385,17 @@ class TestProductionAPI(unittest.TestCase):
     @patch('api.external.lta.get_user_name', lta.get_user_name)
     def test_production_load_ee_orders_partial(self):
         order = Order.find(self.mock_order.generate_ee_testing_order(self.user_id, partial=True))
-        self.assertTrue(order.product_opts == {'format': 'gtiff',
-                                               'etm7': {'inputs': ['LE70900652008327EDC00'],
+        self.assertEqual(order.product_opts, {'format': 'gtiff',
+                                               'etm7_collection': {'inputs': ['LE07_L1TP_026027_20170912_20171008_01_T1'],
                                                         'products': ['sr']}})
         key = 'system.load_ee_orders_enabled'
         self.assertEqual(api.get_production_key(key)[key], 'True')
         production_provider.load_ee_orders()
         reorder = Order.find(order.id)
-        self.assertTrue(reorder.product_opts == {'format': 'gtiff',
-                                               'etm7': {'inputs': ['LE70900652008327EDC00'],
+        self.assertEqual(reorder.product_opts, {'format': 'gtiff',
+                                               'etm7_collection': {'inputs': ['LE07_L1TP_026027_20170912_20171008_01_T1'],
                                                         'products': ['sr']},
-                                               'tm5': {'inputs': ['LT50900652008327EDC00'],
+                                               'tm5_collection': {'inputs': ['LT05_L1TP_025027_20110913_20160830_01_T1'],
                                                         'products': ['sr']}})
 
     @patch('api.external.lta.update_order_status', lta.update_order_status)
@@ -410,8 +410,6 @@ class TestProductionAPI(unittest.TestCase):
         scenes = Scene.where({'failed_lta_status_update IS NOT': None})
         self.assertTrue(len(scenes) == 0)
 
-    @patch('api.providers.production.production_provider.ProductionProvider.mark_nlaps_unavailable',
-           mock_production_provider.respond_true)
     @patch('api.providers.production.production_provider.ProductionProvider.update_landsat_product_status',
            mock_production_provider.respond_true)
     @patch('api.providers.production.production_provider.ProductionProvider.get_contactids_for_submitted_landsat_products',
@@ -421,19 +419,6 @@ class TestProductionAPI(unittest.TestCase):
         orders = Order.find(self.mock_order.generate_testing_order(self.user_id))
         scenes = orders.scenes({'sensor_type': 'landsat'})
         self.assertTrue(production_provider.handle_submitted_landsat_products(scenes))
-
-    # !!! need to write test for nlaps.products_are_nlaps !!!
-    @patch('api.external.nlaps.products_are_nlaps', nlaps.products_are_nlaps)
-    @patch('api.providers.production.production_provider.ProductionProvider.set_products_unavailable',
-           mock_production_provider.respond_true)
-    def test_production_mark_nlaps_unavailable(self):
-        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
-        for scene in order.scenes({'name !=': 'plot'}):
-            scene.status = 'submitted'
-            scene.sensor_type = 'landsat'
-            scene.save()
-        scenes = order.scenes()
-        self.assertTrue(production_provider.mark_nlaps_unavailable(scenes))
 
     @patch('api.external.lta.update_order_status', lta.update_order_status)
     def test_production_set_products_unavailable(self):
@@ -611,19 +596,17 @@ class TestProductionAPI(unittest.TestCase):
         Test the conversion procedure to make sure that the new format for orders converts
         to the old format
         """
-        scenes = ['LE70480272012076EDC00', 'LC80500272013196LGN00',
-                  'LT40480271983028PAC00', 'LT50490262009162PAC03']
+        scenes = ['LE07_L1TP_026027_20170912_20171008_01_T1', 'LC08_L1TP_025027_20160521_20170223_01_T1',
+                  'LT05_L1TP_025027_20110913_20160830_01_T1']
 
         includes = ['include_sr', 'include_sr_toa',
-                    'include_cfmask', 'include_sr_thermal']
+                    'include_sr_thermal']
 
-        new_format = {u'etm7': {u'inputs': [u'LE70480272012076EDC00'],
+        new_format = {u'etm7_collection': {u'inputs': [u'LE07_L1TP_026027_20170912_20171008_01_T1'],
                                 u'products': [u'sr']},
-                      u'olitirs8': {u'inputs': [u'LC80500272013196LGN00'],
+                      u'olitirs8_collection': {u'inputs': [u'LC08_L1TP_025027_20160521_20170223_01_T1'],
                                     u'products': [u'toa']},
-                      u'tm4': {u'inputs': [u'LT40480271983028PAC00'],
-                               u'products': [u'cloud']},
-                      u'tm5': {u'inputs': [u'LT50490262009162PAC03'],
+                      u'tm5_collection': {u'inputs': [u'LT05_L1TP_025027_20110913_20160830_01_T1'],
                                u'products': [u'bt']},
                       u'format': u'gtiff',
                       u'image_extents': {u'east': -2265585.0,
@@ -648,7 +631,6 @@ class TestProductionAPI(unittest.TestCase):
                    'false_northing': 0,
                    'image_extents': True,
                    'image_extents_units': u'meters',
-                   'include_cfmask': False,
                    'include_customized_source_data': False,
                    'include_dswe': False,
                    'include_st': False,

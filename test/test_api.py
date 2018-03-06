@@ -44,7 +44,7 @@ class TestAPI(unittest.TestCase):
         self.sensor_id = 'tm5_collection'
         self.staff_product_id = 'LE07_L1TP_010028_20050420_20160925_01_T1'
         self.staff_sensor = 'etm7_collection'
-        self.global_product_id = 'LE70450302003206EDC01'
+        self.global_product_id = 'LE07_L1TP_026027_20170912_20171008_01_T1'
 
         staff_user_id = self.mock_user.add_testing_user()
         self.staff_user = User.find(staff_user_id)
@@ -87,13 +87,6 @@ class TestAPI(unittest.TestCase):
         return_dict = api.available_products(self.staff_product_id, self.user.username)
         for item in self.restricted['all']['role']:
             self.assertFalse(item in return_dict[self.staff_sensor]['products'])
-
-    def test_get_available_products_global_restriction(self):
-        # testing of landsat pre-collection restricted
-        self.user.update('is_staff', False)
-        return_dict = api.available_products(self.global_product_id, self.user.username)
-        self.assertIn('ordering_restricted', return_dict)
-        self.assertEqual(return_dict['ordering_restricted']['etm7'], [self.global_product_id])
 
     def test_fetch_user_orders_by_email_val(self):
         orders = api.fetch_user_orders(email=self.user.email)
@@ -321,13 +314,13 @@ class TestInventory(unittest.TestCase):
     def setUp(self):
         logger.warning('Testing Inventory started...')
         os.environ['espa_api_testing'] = 'True'
-        self.lta_prod_good = u'LT50300372011275PAC01'
-        self.lta_prod_bad = u'LE70290302001200EDC01'
+        self.lta_prod_good = u'LE07_L1TP_026027_20170912_20171008_01_T1'
+        self.lta_prod_bad = u'LE07_L1TP_026027_20170912_20171008_01_T1'
         self.lpdaac_prod_good = u'MOD09A1.A2016305.h11v04.006.2016314200836'
         self.lpdaac_prod_bad = u'MOD09A1.A2016305.h11v04.006.9999999999999'
 
-        self.lta_order_good = {'olitirs8': {'inputs': [self.lta_prod_good]}}
-        self.lta_order_bad = {'olitirs8': {'inputs': [self.lta_prod_bad]}}
+        self.lta_order_good = {'etm7_collection': {'inputs': [self.lta_prod_good]}}
+        self.lta_order_bad = {'olitirs8_collection': {'inputs': [self.lta_prod_bad]}}
 
         self.lpdaac_order_good = {'mod09a1': {'inputs': [self.lpdaac_prod_good]}}
         self.lpdaac_order_bad = {'mod09a1': {'inputs': [self.lpdaac_prod_bad]}}

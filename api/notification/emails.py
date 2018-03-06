@@ -11,13 +11,15 @@ from api.notification import contact_footer
 from cStringIO import StringIO
 
 from email.mime.text import MIMEText
-from smtplib import SMTP
+from smtplib import SMTP, SMTPServerDisconnected
 
 from validate_email import validate_email
 
 from api.domain.order import Order
 from api.domain.scene import Scene
 from api.providers.configuration.configuration_provider import ConfigurationProvider
+
+from api.system.logger import ilogger as logger
 
 config = ConfigurationProvider()
 
@@ -54,11 +56,12 @@ class Emails(object):
             raise ValueError("Unsupported datatype for recipient:%s"
                              % type(recipient))
 
+        logger.debug('Sending email: {} {}'.format(recipient, subject))
         msg = MIMEText(body)
         msg['Subject'] = subject
         msg['To'] = to_header
         msg['From'] = config.get('email.espa_address')
-        s = SMTP(host=config.get('email.espa_server'))
+        s = SMTP(host=config.get('email.espa_server'), timeout=3)
         s.sendmail(msg['From'], recipient, msg.as_string())
         s.quit()
 
@@ -91,8 +94,12 @@ class Emails(object):
         sends them'''
         for o in orders:
             if not o.initial_email_sent:
-                self.send_initial(o.orderid)
-                o.update('initial_email_sent', datetime.datetime.now())
+                try:
+                    self.send_initial(o.orderid)
+                    o.update('initial_email_sent', datetime.datetime.now())
+                except SMTPServerDisconnected:
+                    logger.error('Unable to send initial email: {}'
+                                 .format(o.orderid))
         return True
 
     def send_initial(self, order_id):

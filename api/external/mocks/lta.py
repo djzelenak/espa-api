@@ -55,13 +55,13 @@ def get_available_orders():
         ]
     """
     ret = {}
-    ret[('123', 'klsmith@usgs.gov', 418781)] = [{'sceneid': 'LE70900652008327EDC00',
+    ret[('123', 'klsmith@usgs.gov', 418781)] = [{'sceneid': 'LE07_L1TP_026027_20170912_20171008_01_T1',
                                                'unit_num': 789},
-                                              {'sceneid': 'LE70900652008327EDC00',
+                                              {'sceneid': 'LE07_L1TP_026027_20170912_20171008_01_T1',
                                                'unit_num': 780}]
-    ret[('124', 'klsmith@usgs.gov', 418781)] = [{'sceneid': 'LE70900652008327EDC00',
+    ret[('124', 'klsmith@usgs.gov', 418781)] = [{'sceneid': 'LE07_L1TP_026027_20170912_20171008_01_T1',
                                                'unit_num': 780},
-                                              {'sceneid': 'LE70900652008327EDC00',
+                                              {'sceneid': 'LE07_L1TP_026027_20170912_20171008_01_T1',
                                                'unit_num': 799}]
     return ret
 
@@ -69,12 +69,12 @@ def get_available_orders():
 def get_available_orders_partial(partial=False):
     ret = {}
     if partial:
-        ret[('125', 'klsmith@usgs.gov', 418781)] = [{'sceneid': 'LE70900652008327EDC00',
+        ret[('125', 'klsmith@usgs.gov', 418781)] = [{'sceneid': 'LE07_L1TP_026027_20170912_20171008_01_T1',
                                                    'unit_num': 789}]
     else:
-        ret[('125', 'klsmith@usgs.gov', 418781)] = [{'sceneid': 'LE70900652008327EDC00',
+        ret[('125', 'klsmith@usgs.gov', 418781)] = [{'sceneid': 'LE07_L1TP_026027_20170912_20171008_01_T1',
                                                    'unit_num': 789},
-                                                  {'sceneid': 'LT50900652008327EDC00',
+                                                  {'sceneid': 'LT05_L1TP_025027_20110913_20160830_01_T1',
                                                    'unit_num': 780}]
 
     return ret

@@ -5,7 +5,7 @@ from api.providers.configuration.configuration_provider import ConfigurationProv
 from api.util.dbconnect import DBConnectException, db_instance
 from api.providers.production import ProductionProviderInterfaceV0
 from api.providers.caching.caching_provider import CachingProvider
-from api.external import lpdaac, lta, inventory, onlinecache, nlaps, hadoop
+from api.external import lpdaac, lta, inventory, onlinecache, hadoop
 from api.system import errors
 from api.notification import emails
 from api.domain.user import User
@@ -396,191 +396,102 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         return True
 
-    def parse_urls_owrapper(self, query_results, encode_urls=False):
-        # TODO: fall back to this (while it exists)
-        # Need the results reorganized by contact id so we can get dload urls from
-        # ee in bulk by id.
-        by_cid = {}
-        for result in query_results:
-            cid = result['contactid']
-            # ['orderid', 'sensor_type', 'contactid', 'name', 'product_options']
-            by_cid.setdefault(cid, []).append(result)
-
-        #this will be returned to the caller
-        results = []
-        for cid in by_cid.keys():
-            cid_items = by_cid[cid]
-
-            landsat = [item['name'] for item in cid_items if item['sensor_type'] == 'landsat']
-            logger.warn('Retrieving {0} landsat download urls for cid:{1}'
-                         .format(len(landsat), cid))
-
-            landsat_urls = dict()
-            if len(landsat):
-                start = datetime.datetime.now()
-                landsat_urls = lta.get_download_urls(landsat, cid)
-                stop = datetime.datetime.now()
-                interval = stop - start
-                logger.warn('Retrieving download urls took {0} seconds'
-                             .format(interval.seconds))
-                logger.warn('Retrieved {0} landsat urls for cid:{1}'.format(len(landsat_urls), cid))
-
-            modis = [item['name'] for item in cid_items if item['sensor_type'] == 'modis']
-            modis_urls = dict()
-            if len(modis):
-                modis_urls = lpdaac.get_download_urls(modis)
-
-            logger.warn('Retrieved {0} modis urls for cid:{1}'.format(len(modis_urls), cid))
-            for item in cid_items:
-                dload_url = None
-                if item['sensor_type'] == 'landsat':
-                     # check to see if the product is still available
-
-                    if ('status' in landsat_urls[item['name']] and
-                            landsat_urls[item['name']]['status'] != 'available'):
-                        try:
-                            limit = config.get('retry.retry_missing_l1.retries')
-                            timeout = int(config.get('retry.retry_missing_l1.timeout'))
-                            ts = datetime.datetime.now()
-                            after = ts + datetime.timedelta(seconds=timeout)
-                            after = after.strftime('%Y-%m-%d %H:%M:%S.%f')
-
-                            logger.info('{0} for order {1} was oncache '
-                                        'but now unavailable, reordering'
-                                        .format(item['name'], item['orderid']))
-
-                            self.set_product_retry(item['name'],
-                                              item['orderid'],
-                                              'get_products_to_process',
-                                              'product was not available',
-                                              'reorder missing level1 product',
-                                              after, limit)
-                        except Exception:
-
-                            logger.info('Retry limit exceeded for {0} in '
-                                        'order {1}... moving to error status.'
-                                        .format(item['name'], item['orderid']))
-
-                            self.set_product_error(item['name'], item['orderid'],
-                                              'get_products_to_process',
-                                              ('level1 product data '
-                                               'not available after EE call '
-                                               'marked product as available'))
-                            continue
-
-                    if 'download_url' in landsat_urls[item['name']]:
-                        logger.info('download_url was in landsat_urls for {0}'.format(item['name']))
-                        dload_url = landsat_urls[item['name']]['download_url']
-                        if encode_urls:
-                            dload_url = urllib.quote(dload_url, '')
-
-                elif item['sensor_type'] == 'modis':
-                    if 'download_url' in modis_urls[item['name']]:
-                        dload_url = modis_urls[item['name']]['download_url']
-                        if encode_urls:
-                            dload_url = urllib.quote(dload_url, '')
-
-                if item['name'] == 'plot':
-                    options = {}
-                elif config.get('convertprodopts') == 'True':
-                    options = OptionsConversion.convert(new=item['product_opts'],
-                                                        scenes=[item['name']])
-                else:
-                    # Need to strip out everything not directly related to the scene
-                    options = self.strip_unrelated(item['name'], item['product_opts'])
-
-                result = {
-                    'orderid': item['orderid'],
-                    'product_type': item['sensor_type'],
-                    'scene': item['name'],
-                    'priority': item['priority'],
-                    'options': options
-                }
-
-                if item['sensor_type'] == 'plot':
-                    # no dload url for plot items, just append it
-                    results.append(result)
-                elif dload_url is not None:
-                    result['download_url'] = dload_url
-                    results.append(result)
-                else:
-                    logger.info('dload_url for {0} in order {0} '
-                                'was None, skipping...'
-                                .format(item['orderid'], item['name']))
-        return results
+    def converted_opts(self, scene_id, product_opts):
+        if scene_id == 'plot':
+            options = {}
+        elif config.get('convertprodopts') == 'True':
+            options = OptionsConversion.convert(new=product_opts, scenes=[scene_id])
+        else:
+            # Need to strip out everything not directly related to the scene
+            options = self.strip_unrelated(scene_id, product_opts)
+        return options
 
     def parse_urls_m2m(self, query_results, encode_urls=False):
-        # TODO: clean up this mess
-        # Usage codes must be grouped by both ContactID and OrderID
-        names_by_cid = {}
-        usage_by_cid = {}
-        for result in query_results:
-            cid, orderid = result['contactid'], result['orderid']
-            if result['sensor_type'] in ('landsat', 'modis'):
-                stype, sname = (result['sensor_type'],
-                                sensor.instance(result['name']).shortname)
-            else:
-                stype = sname = 'plot'
-            usage = orderid
-            usage_by_cid[(cid, orderid, stype)] = (usage, result)
-            names_by_cid.setdefault((cid, orderid, stype), []).append(result['name'])
 
-        #this will be returned to the caller
-        results = []
-        for (cid, orderid, stype), name_list in names_by_cid.items():
-            logger.warn('Retrieving %s %s download urls for cid:%s orderid:%s',
-                        len(name_list), stype, cid, orderid)
-            (usage, item) = usage_by_cid[(cid, orderid, stype)]
+        results = [{'orderid': r['orderid'],
+                    'product_type': r['sensor_type'],
+                    'scene': r['name'],
+                    'priority': r['priority'],
+                    'options': self.converted_opts(r['name'], r['product_opts'])
+                    } for r in query_results]
 
-            input_urls = dict()
-            if stype in ('landsat', 'modis'):
-                start = datetime.datetime.now()
-                auth_token = inventory.get_cached_session()
-                entity_map = inventory.get_cached_convert(auth_token, name_list)
-                input_urls = inventory.get_download_urls(auth_token, cid, name_list, usage)
-                input_urls = {i: input_urls.get(entity_map.get(i)) for i in name_list}
-                stop = datetime.datetime.now()
-                interval = stop - start
-                logger.warn('Retrieving download urls took {0} seconds'
-                             .format(interval.seconds))
-                logger.warn('Retrieved {0} urls for cid:{1}'.format(len(input_urls), cid))
+        non_plot_ids = [r['name'] for r in query_results if r['sensor_type'] != 'plot']
 
-            for scene_id in name_list:
-                dload_url = None
-                if stype in ('landsat', 'modis'):
+        if non_plot_ids:
+            urls = dict()
+            token = inventory.get_session()
+            for dataset, ids in inventory.split_by_dataset(non_plot_ids).items():
+                try:
+                    urls.update(inventory.download_urls(token, ids, dataset))
+                except Exception as e:
+                    logger.error('Problem getting URLs: {}'.format(e), exc_info=True)
+            if encode_urls:
+                urls = {k: urllib.quote(u, '') for k, u in urls.items()}
 
-                    dload_url = input_urls.get(scene_id)
-                    if dload_url:
-                        if encode_urls:
-                            dload_url = urllib.quote(dload_url, '')
+            results = [dict(r, download_url=urls.get(r['scene']))
+                            if r['scene'] in non_plot_ids else r for r in results]
+            results = [r for r in results if 'download_url' in r and r.get('download_url')]
 
-                if scene_id == 'plot':
-                    options = {}
-                elif config.get('convertprodopts') == 'True':
-                    options = OptionsConversion.convert(new=item['product_opts'],
-                                                        scenes=[item['name']])
-                else:
-                    # Need to strip out everything not directly related to the scene
-                    options = self.strip_unrelated(scene_id, item['product_opts'])
-
-                result = {
-                    'orderid': orderid,
-                    'product_type': stype,
-                    'scene': scene_id,
-                    'priority': item['priority'],
-                    'options': options
-                }
-
-                if stype == 'plot':
-                    # no dload url for plot items, just append it
-                    results.append(result)
-                elif dload_url is not None:
-                    result['download_url'] = dload_url
-                    results.append(result)
-                else:
-                    logger.error('dload_url for %s in order %s was None, '
-                                 'skipping...', scene_id, orderid)
         return results
+
+
+    def query_pending_products(self, record_limit=500, for_user=None,
+                               priority=None, product_types=['landsat', 'modis']):
+        sql = [
+            'WITH order_queue AS',
+                '(SELECT u.email "email", count(name) "running"',
+                'FROM ordering_scene s',
+                'JOIN ordering_order o ON o.id = s.order_id',
+                'JOIN auth_user u ON u.id = o.user_id',
+                'WHERE s.status in %(running_s_status)s',
+                'GROUP BY u.email)',
+            'SELECT u.contactid, s.name, s.sensor_type,',
+                'o.orderid, o.product_opts, o.priority,',
+                'o.order_date, q.running',
+            'FROM ordering_scene s',
+            'JOIN ordering_order o ON o.id = s.order_id',
+            'JOIN auth_user u ON u.id = o.user_id',
+            'LEFT JOIN order_queue q ON q.email = u.email',
+            'WHERE',
+                'o.status = %(order_status)s',
+                'AND s.status = %(s_status)s',
+        ]
+        params = {
+            'running_s_status': ("queued", "processing"),
+            'order_status': 'ordered',
+            's_status': 'oncache',
+        }
+
+        if not isinstance(product_types, list):
+            # unicode values of either: u"['plot']" or u"['landsat', 'modis']"
+            product_types = json.loads(str(product_types).replace("'", '"'))
+
+        if isinstance(product_types, list) and len(product_types) > 0:
+            sql += ['AND s.sensor_type IN %(product_types)s']
+            params['product_types'] = tuple(product_types)
+
+        if for_user is not None:
+            sql += ['AND u.username = %(for_user)s']
+            params['for_user'] = for_user
+
+        if priority is not None:
+            sql += ['AND o.priority = %(priority)s']
+            params['priority'] = priority
+
+        sql += ['ORDER BY q.running ASC NULLS FIRST,']
+        sql += ['o.order_date ASC LIMIT %(record_limit)s']
+        params['record_limit'] = record_limit
+
+        query = ' '.join(sql)
+
+        with db_instance() as db:
+            log_sql = db.cursor.mogrify(query, params)
+            logger.warn("QUERY:{0}".format(log_sql))
+            db.select(query, params)
+
+        # Columns: ['contactid', 'name', 'sensor_type', 'orderid',
+        #           'product_opts', 'priority', 'order_date', 'running']
+        return db.fetcharr
 
 
     def get_products_to_process(self, record_limit=500,
@@ -605,67 +516,14 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         logger.warn('Product types:{0}'.format(product_types))
         logger.warn('Encode urls:{0}'.format(encode_urls))
 
-        buff = StringIO()
-        buff.write('WITH order_queue AS ')
-        buff.write('(SELECT u.email "email", count(name) "running" ')
-        buff.write('FROM ordering_scene s ')
-        buff.write('JOIN ordering_order o ON o.id = s.order_id ')
-        buff.write('JOIN auth_user u ON u.id = o.user_id ')
-        buff.write('WHERE ')
-        buff.write('s.status in (\'queued\', \'processing\') ')
-        buff.write('GROUP BY u.email) ')
-        buff.write('SELECT ')
-        buff.write('u.contactid, ')
-        buff.write('s.name, ')
-        buff.write('s.sensor_type, ')
-        buff.write('o.orderid, ')
-        buff.write('o.product_opts, ')
-        buff.write('o.priority, ')
-        buff.write('o.order_date, ')
-        buff.write('q.running ')
-        buff.write('FROM ordering_scene s ')
-        buff.write('JOIN ordering_order o ON o.id = s.order_id ')
-        buff.write('JOIN auth_user u ON u.id = o.user_id ')
-        buff.write('LEFT JOIN order_queue q ON q.email = u.email ')
-        buff.write('WHERE ')
-        buff.write('o.status = \'ordered\' ')
-        buff.write('AND s.status = \'oncache\' ')
+        query_results = self.query_pending_products(
+            record_limit=record_limit, for_user=for_user, priority=priority,
+            product_types=product_types)
 
-        if product_types and len(product_types) > 0:
-            ptypes = copy.deepcopy(product_types)
-
-            # product_types comes in as a list from the transport layer
-            if isinstance(ptypes, basestring):
-                # ptypes is unicode values of either: u"['plot']" or u"['landsat', 'modis']"
-                ptypes = eval(ptypes)
-
-            type_str = ','.join('\'{0}\''.format(x) for x in ptypes)
-            buff.write('AND s.sensor_type IN ({0}) '.format(type_str))
-
-        if for_user is not None:
-            buff.write('AND u.username = \'{0}\' '.format(for_user))
-
-        if priority is not None:
-            buff.write('AND o.priority = \'{0}\' '.format(priority))
-
-        buff.write('ORDER BY q.running ASC NULLS FIRST, ')
-        buff.write('o.order_date ASC LIMIT {0}'.format(record_limit))
-
-        query = buff.getvalue()
-        buff.close()
-        logger.warn("QUERY:{0}".format(query))
-
-        with db_instance() as db:
-            db.select(query)
-
-        # Columns: ['contactid', 'name', 'sensor_type', 'orderid',
-        #           'product_opts', 'priority', 'order_date', 'running']
-        query_results = db.fetcharr
-
-        if config.is_m2m_url_enabled and inventory.available():
-            return self.parse_urls_m2m(query_results)
+        if not inventory.available():
+            logger.error('M2M down. Unable to get download URLs')
         else:
-            return self.parse_urls_owrapper(query_results)
+            return self.parse_urls_m2m(query_results)
 
     def load_ee_orders(self, contact_id=None):
         """
@@ -973,62 +831,18 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         product_list = self.check_dependencies_for_products(product_list)
 
         prod_name_list = [p.name for p in product_list]
-        if config.is_m2m_url_enabled:
-            token = inventory.get_cached_session()
-            results = inventory.get_cached_verify_scenes(token, prod_name_list)
-            valid = list(set(r for r,v in results.items() if v))
-            invalid = list(set(prod_name_list)-set(valid))
 
-            available_ids = [p.id for p in product_list if p.name in valid]
-            if len(available_ids):
-                Scene.bulk_update(available_ids, {'status': 'oncache', 'note': "''"})
+        token = inventory.get_cached_session()
+        valid = list(set(r for r, v in inventory.check_valid(token, prod_name_list).items() if v))
+        invalid = list(set(prod_name_list)-set(valid))
 
-            invalids = [p for p in product_list if p.name in invalid]
-            if len(invalids):
-                self.set_products_unavailable(invalids, 'No longer found in the archive, please search again')
+        available_ids = [p.id for p in product_list if p.name in valid]
+        if len(available_ids):
+            Scene.bulk_update(available_ids, {'status': 'oncache', 'note': "''"})
 
-        else:
-            results = lta.order_scenes(prod_name_list, contact_id)
-
-            logger.info("Checking ordering results for contact:{0}".format(contact_id))
-
-            if 'available' in results and len(results['available']) > 0:
-                available_product_ids = [product.id for product in product_list if product.name in results['available']]
-                Scene.bulk_update(available_product_ids, {"status":"oncache", "note":"''"})
-
-            if 'ordered' in results and len(results['ordered']) > 0:
-                ordered_product_ids = [product.id for product in product_list if product.name in results['ordered']]
-                Scene.bulk_update(ordered_product_ids, {"status":"onorder", "tram_order_id":results['lta_order_id'], "note":"''"})
-
-            if 'invalid' in results and len(results['invalid']) > 0:
-                #look to see if they are ee orders.  If true then update the
-                #unit status
-                invalid = [p for p in product_list if p.name in results['invalid']]
-                self.set_products_unavailable(invalid, 'No longer found in the archive, please search again')
-
-        return True
-
-    def mark_nlaps_unavailable(self, landsat_products):
-        """
-        Inner function to support marking nlaps products unavailable
-        :return: True
-        """
-        logger.info("Looking for submitted landsat products, In mark_nlaps_unavailable")
-
-        # First things first... filter out all the nlaps scenes
-        landsat_submitted = [l.name for l in landsat_products]
-        logger.info("Found {0} submitted landsat products".format(len(landsat_submitted)))
-
-        # find all the submitted products that are nlaps and reject them
-        logger.info("Checking for TMA data in submitted landsat products")
-        landsat_nlaps = nlaps.products_are_nlaps(landsat_submitted)
-        logger.info("Found {0} landsat TMA products".format(len(landsat_nlaps)))
-
-        # bulk update the nlaps scenes
-        if len(landsat_nlaps) > 0:
-            _nlaps = [p for p in landsat_products if p.name in landsat_nlaps]
-            self.set_products_unavailable(_nlaps, 'TMA data cannot be processed')
-
+        invalids = [p for p in product_list if p.name in invalid]
+        if len(invalids):
+            self.set_products_unavailable(invalids, 'No longer found in the archive, please search again')
         return True
 
     @staticmethod
@@ -1062,11 +876,8 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         Handles all submitted landsat products
         :return: True
         """
-        if config.is_m2m_url_enabled and not inventory.available():
+        if not inventory.available():
             logger.warning('M2M down. Skip handle_submitted_landsat_products...')
-            return False
-        elif not lta.check_lta_available():
-            logger.warning('LTA down. Skip handle_submitted_landsat_products...')
             return False
         logger.info('Handling submitted landsat products...')
         # Here's the real logic for this handling submitted landsat products
@@ -1092,11 +903,8 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         Moves all submitted modis products to oncache if true
         :return: True
         """
-        if config.is_m2m_url_enabled and not inventory.available():
+        if not inventory.available():
             logger.warning('M2M down. Skip handle_submitted_modis_products...')
-            return False
-        elif not lpdaac.check_lpdaac_available():
-            logger.warning('DAAC down. Skip handle_submitted_modis_products...')
             return False
         logger.info("Handling submitted modis products...")
 
@@ -1106,35 +914,19 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             lpdaac_ids = []
             nonlp_ids = []
 
-            if config.is_m2m_url_enabled:
-                # TODO: This shouldn't be necessary if everything uses m2m...
-                prod_name_list = [p.name for p in modis_products]
-                token = inventory.get_cached_session()
-                results = inventory.get_cached_verify_scenes(token, prod_name_list)
-                valid = list(set(r for r,v in results.items() if v))
-                invalid = list(set(prod_name_list)-set(valid))
+            prod_name_list = [p.name for p in modis_products]
+            token = inventory.get_cached_session()
+            results = inventory.check_valid(token, prod_name_list)
+            valid = list(set(r for r,v in results.items() if v))
+            invalid = list(set(prod_name_list)-set(valid))
 
-                available_ids = [p.id for p in modis_products if p.name in valid]
-                if len(available_ids):
-                    Scene.bulk_update(available_ids, {'status': 'oncache', 'note': "''"})
+            available_ids = [p.id for p in modis_products if p.name in valid]
+            if len(available_ids):
+                Scene.bulk_update(available_ids, {'status': 'oncache', 'note': "''"})
 
-                invalids = [p for p in modis_products if p.name in invalid]
-                if len(invalids):
-                    self.set_products_unavailable(invalids, 'No longer found in the archive, please search again')
-
-            else:
-                for product in modis_products:
-                    if lpdaac.input_exists(product.name) is True:
-                        lpdaac_ids.append(product.id)
-                        logger.warn('{0} is on cache'.format(product.name))
-                    else:
-                        nonlp_ids.append(product.id)
-                        logger.warn('{0} was not found in the modis data pool'.format(product.name))
-
-                if lpdaac_ids:
-                    Scene.bulk_update(lpdaac_ids, {"status": "oncache"})
-                if nonlp_ids:
-                    Scene.bulk_update(nonlp_ids, {"status":"unavailable", "note":"not found in modis data pool"})
+            invalids = [p for p in modis_products if p.name in invalid]
+            if len(invalids):
+                self.set_products_unavailable(invalids, 'No longer found in the archive, please search again')
 
         return True
 
@@ -1207,22 +999,16 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             logger.info('Completing order: {0}'.format(order.orderid))
             order.status = 'complete'
             order.completion_date = datetime.datetime.now()
-            order.save()
             #only send the email if this was an espa order.
             if order.order_source == 'espa' and not order.completion_email_sent:
                 try:
-                    sent = None
                     sent = self.send_completion_email(order)
-                    if sent is None:
-                        logger.critical('Completion email not sent for {0}'.format(order.orderid))
-                        raise ProductionProviderException("Completion email not sent from "
-                                                          "update_order_if_complete\nfor order {}".format(order.orderid))
-                    else:
-                        order.completion_email_sent = datetime.datetime.now()
-                        order.save()
+                    order.completion_email_sent = datetime.datetime.now()
+                    order.save()
                 except Exception, e:
                     logger.critical('Error calling send_completion_email\nexception: {}'.format(e))
-                    raise e
+            else:
+                order.save()
         return True
 
     def calc_scene_download_sizes(self, scenes):
@@ -1381,9 +1167,6 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 search.update(user_id=user.id)
         orders = Order.where(search)
         self.handle_cancelled_orders(orders)
-
-        scenes = Scene.where({'status': 'submitted', 'sensor_type': 'landsat', 'order_id': pending_orders})[:500]
-        self.mark_nlaps_unavailable(scenes)
 
         scenes = Scene.where({'status': 'submitted', 'sensor_type': 'landsat', 'order_id': pending_orders})[:500]
         self.handle_submitted_landsat_products(scenes)

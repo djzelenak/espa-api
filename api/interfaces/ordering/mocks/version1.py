@@ -5,7 +5,7 @@ class MockAPI(object):
 
     def available_products(self, product_id, username):
         response = {"etm":
-                        {"inputs": ["LE70290302003123EDC00"],
+                        {"inputs": ["LE07_L1TP_026027_20170912_20171008_01_T1"],
                          "outputs": ["etm_sr", "etm_toa",
                                      "etm_l1", "source",
                                      "source_metadata"]}

@@ -1,8 +1,7 @@
 import os
 
 from api.providers.inventory import InventoryInterfaceV0
-
-from api.external import lta, inventory, lpdaac, nlaps
+from api.external import inventory, lpdaac
 from api import InventoryException, InventoryConnectionException
 from api.domain import sensor
 from api.system.logger import ilogger as logger
@@ -36,15 +35,13 @@ class InventoryProviderV0(InventoryInterfaceV0):
                 lpdaac_ls.extend(order[key]['inputs'])
 
         if lta_ls:
-            if config.is_m2m_val_enabled and inventory.available():
+            if inventory.available():
                 results.update(self.check_dmid(lta_ls, contactid))
-            elif lta.check_lta_available():
-                results.update(self.check_LTA(lta_ls))
             else:
                 msg = 'Could not connect to Landsat data source'
                 raise InventoryConnectionException(msg)
         if lpdaac_ls:
-            if config.is_m2m_val_enabled and inventory.available():
+            if inventory.available():
                 results.update(self.check_dmid(lpdaac_ls, contactid))
             elif lpdaac.check_lpdaac_available():
                 results.update(self.check_LPDAAC(lpdaac_ls))
@@ -62,19 +59,8 @@ class InventoryProviderV0(InventoryInterfaceV0):
 
     @staticmethod
     def check_dmid(prod_ls, contactid=None):
-        # find all the submitted products that are nlaps and reject them
-        not_avail = nlaps.products_are_nlaps(prod_ls)
-        if not_avail:
-            raise InventoryException(not_avail)
         token = inventory.get_cached_session()
-        return inventory.get_cached_verify_scenes(token, prod_ls)
-
-    @staticmethod
-    def check_LTA(prod_ls):
-        not_avail = nlaps.products_are_nlaps(prod_ls)
-        if not_avail:
-            raise InventoryException(not_avail)
-        return lta.verify_scenes(prod_ls)
+        return inventory.check_valid(token, prod_ls)
 
     @staticmethod
     def check_LPDAAC(prod_ls):

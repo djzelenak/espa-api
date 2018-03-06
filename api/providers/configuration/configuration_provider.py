@@ -34,15 +34,6 @@ class ConfigurationProvider(ConfigurationProviderInterfaceV0):
     def configuration_keys(self):
         return self._retrieve_config()
 
-
-    @property
-    def is_m2m_val_enabled(self):
-        return (self.get('system.m2m_val_enabled') or 'False').lower() == 'true'
-
-    @property
-    def is_m2m_url_enabled(self):
-        return (self.get('system.m2m_url_enabled') or 'False').lower() == 'true'
-
     def url_for(self, service_name):
         key = "url.{0}.{1}".format(self.mode, service_name)
         current = self._retrieve_config()

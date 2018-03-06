@@ -251,6 +251,7 @@ class Errors(object):
 
     def warp_errors(self, error_message):
         keys = ['GDAL Warp failed to transform',
+                'projection_minbox     raise TransformPointError',
                 'ERROR 1: Too many points',
                 'unable to compute output bounds']
         status = 'unavailable'
