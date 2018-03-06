@@ -176,30 +176,36 @@ class OrderValidatorV0(validictory.SchemaValidator):
                     return
                 if self.data_source['image_extents']['units'] != 'dd':
                     return
-                if max(map(abs, [self.data_source['image_extents']['north'],
-                                 self.data_source['image_extents']['south']])) < 80:
-                    cdict = dict(inzone=self.data_source['projection']['utm']['zone'],
-                                east=self.data_source['image_extents']['east'],
-                                west=self.data_source['image_extents']['west'],
-                                zbuffer=3)
-                    if not self.is_utm_zone_nearby(**cdict):
-                        msg = ('image_extents ({east}E,{west}W) are not near the'
-                               ' requested UTM zone ({inzone})'
-                               .format(**cdict))
-                        self._errors.append(msg)
-                north = max([self.data_source['image_extents']['north'],
-                             self.data_source['image_extents']['south']])
-                if self.data_source['projection']['utm']['zone'] == 'south':
-                    north *= -1
-                nsbuffer = -5 # degrees
-                if north < nsbuffer:
-                    projection = self.data_source['projection']['utm'].copy()
-                    projection.update(self.data_source['image_extents'].copy())
-                    msg = ('image_extents ({north}N,{south}S) are not near the'
-                           ' requested UTM Zone Hemisphere ({zone_ns})'
-                           .format(**projection))
-                    self._errors.append(msg)
+                utm_extents_errors = self.verify_extents_dd_and_utm(self.data_source)
+                if utm_extents_errors:
+                    self._errors.extend(utm_extents_errors)
 
+    def verify_extents_dd_and_utm(self, order):
+        errors = []
+        if max(map(abs, [order['image_extents']['north'],
+                            order['image_extents']['south']])) < 80:
+            cdict = dict(inzone=order['projection']['utm']['zone'],
+                        east=order['image_extents']['east'],
+                        west=order['image_extents']['west'],
+                        zbuffer=3)
+            if not self.is_utm_zone_nearby(**cdict):
+                msg = ('image_extents ({east}E,{west}W) are not near the'
+                        ' requested UTM zone ({inzone})'
+                        .format(**cdict))
+                errors.append(msg)
+        north = max([order['image_extents']['north'],
+                        order['image_extents']['south']])
+        if order['projection']['utm']['zone'] == 'south':
+            north *= -1
+        nsbuffer = -5 # degrees
+        if north < nsbuffer:
+            projection = order['projection']['utm'].copy()
+            projection.update(order['image_extents'].copy())
+            msg = ('image_extents ({north}N,{south}S) are not near the'
+                    ' requested UTM Zone Hemisphere ({zone_ns})'
+                    .format(**projection))
+            errors.append(msg)
+        return errors
 
     @staticmethod
     def is_utm_zone_nearby(inzone, east, west, zbuffer=3):
