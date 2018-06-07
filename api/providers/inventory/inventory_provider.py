@@ -59,8 +59,13 @@ class InventoryProviderV0(InventoryInterfaceV0):
 
     @staticmethod
     def check_dmid(prod_ls, contactid=None):
-        token = inventory.get_cached_session()
-        return inventory.check_valid(token, prod_ls)
+        try:
+            token = inventory.get_cached_session()
+            return inventory.check_valid(token, prod_ls)
+        except Exception as e:
+            msg = 'Could not connect to EarthExplorer source'
+            logger.critical(msg + str(e))
+            raise InventoryConnectionException(msg)
 
     @staticmethod
     def check_LPDAAC(prod_ls):

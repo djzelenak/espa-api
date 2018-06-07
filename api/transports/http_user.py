@@ -99,8 +99,7 @@ def unauthorized():
     reasons = ['unknown', 'auth', 'conn', 'db']
     reason = flask.g.get('error_reason', '')
     if reason not in reasons or reason == 'unknown':
-        if reason not in reasons:
-            logger.critical('ERR uncaught exception in user authentication')
+        logger.critical('ERR uncaught exception in user authentication')
         msg = SystemErrorResponse
     elif reason == 'auth':
         msg = AuthFailedResponse
@@ -115,6 +114,10 @@ def unauthorized():
 
 @auth.verify_password
 def verify_user(username, password):
+    if (username is None) or (not (str(username).strip())):
+        logger.warning('Invalid username supplied: %s', username)
+        flask.g.error_reason = 'auth'
+        return False
     try:
         # usernames with spaces are valid in EE, though they can't be used for cache keys
         cache_key = '{}-credentials'.format(username.replace(' ', '_espa_cred_insert_'))

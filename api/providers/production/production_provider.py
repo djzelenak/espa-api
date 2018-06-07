@@ -732,7 +732,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         :return: True
         """
         for order in orders:
-            if len(order.scenes({'status': 'cancelled'})) != len(order.scenes()):
+            if len(order.scenes({'status': ('cancelled', 'unavailable')})) != len(order.scenes()):
                 logger.warning('Cancelled order %s has outstanding scenes', order.orderid)
                 continue
             if not order.completion_email_sent:
