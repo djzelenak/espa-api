@@ -107,7 +107,7 @@ REPORTS = {
         'display_name': 'Orders - Expiration',
         'description': 'Expiring orders by date',
         'query': r'''SELECT
-                     (o.completion_date + interval '10 days') "Expires",
+                     (o.completion_date + interval '7 days') "Expires",
                      o.orderid "Order",
                      count(s.name) "Product Count"
                      FROM ordering_order o
@@ -167,7 +167,7 @@ REPORTS = {
         'display_name': 'Products - Expiration Counts',
         'description': 'Quantities of expiring products by date',
         'query': r'''SELECT
-                     (o.completion_date::date + interval '10 days') "Expiration",
+                     (o.completion_date::date + interval '7 days') "Expiration",
                      count(s.name) "Quantity"
                      FROM ordering_order o
                      JOIN ordering_scene s on o.id = s.order_id

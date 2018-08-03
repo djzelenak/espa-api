@@ -147,14 +147,14 @@ class Emails(object):
 
         messages = {'complete': ['{orderid} is now complete and can be downloaded from {url}', '', '',
                                  'For large orders, the ESPA Bulk Downloader is available {bdurl}', '', '',
-                                 'This order will remain available for 10 days. Any data not downloaded '
+                                 'This order will remain available for 7 days. Any data not downloaded '
                                  'will need to be reordered after this time.', '', '',
                                  'Please contact Customer Services at 1-800-252-4547 or '
                                  'email custserv@usgs.gov with any questions.', '', '',
                                  'Requested products', '-------------------------------------------'
                                  ],
                     'unsuccessful': ['{orderid} was unsuccessful, and the reason can be found at {url}', '', '',
-                                     'This order will remain available for 10 days.', '', '',
+                                     'This order will remain available for 7 days.', '', '',
                                      'Please contact Customer Services at 1-800-252-4547 or '
                                      'email custserv@usgs.gov with any questions.', '', '',
                                      'Requested products', '-------------------------------------------'
