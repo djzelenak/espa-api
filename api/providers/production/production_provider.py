@@ -422,7 +422,13 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             token = inventory.get_session()
             for dataset, ids in inventory.split_by_dataset(non_plot_ids).items():
                 try:
-                    urls.update(inventory.download_urls(token, ids, dataset))
+                    verified    = inventory.verify_scenes(token, ids, dataset)
+                    unavailable = [k for k, v in verified.item() if not v]
+                    available   = [k for k, v in verified.items() if v]
+                    if unavailable:
+                        unavailable_scenes = Scene.find(unavailable)
+                        self.set_products_unavailable(unavailable_scenes, "Scene no longer available")
+                    urls.update(inventory.download_urls(token, available, dataset))
                 except Exception as e:
                     logger.error('Problem getting URLs: {}'.format(e), exc_info=True)
             if encode_urls:
@@ -430,6 +436,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
             results = [dict(r, download_url=urls.get(r['scene']))
                             if r['scene'] in non_plot_ids else r for r in results]
+
             results = [r for r in results if 'download_url' in r and r.get('download_url')]
 
         return results
