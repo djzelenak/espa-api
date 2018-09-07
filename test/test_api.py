@@ -325,35 +325,36 @@ class TestInventory(unittest.TestCase):
         self.lpdaac_order_good = {'mod09a1': {'inputs': [self.lpdaac_prod_good]}}
         self.lpdaac_order_bad = {'mod09a1': {'inputs': [self.lpdaac_prod_bad]}}
 
-    @patch('api.external.lta.requests.post', mocklta.get_verify_scenes_response)
-    @patch('api.external.lta.check_lta_available', lambda: True)
-    def test_lta_good(self):
-        """
-        Check LTA support from the inventory provider
-        """
-        self.assertIsNone(api.inventory.check(self.lta_order_good))
 
-    @patch('api.external.inventory.requests.post', mockinventory.CachedRequestPreventionSpoof)
-    @patch('api.external.inventory.available', lambda: True)
-    @patch('api.external.inventory.get_cached_session', mockinventory.get_cached_session)
-    @patch('api.external.inventory.LTACachedService.get_lookup', mockinventory.get_cache_values)
-    def test_lta_good(self):
-        """
-        Check LTA support from the inventory provider
-        """
-        cfg.put('system.m2m_val_enabled', 'True')
-        self.assertIsNone(api.inventory.check(self.lta_order_good))
-        cfg.put('system.m2m_val_enabled', 'False')
+    # @patch('api.external.lta.requests.post', mocklta.get_verify_scenes_response)
+    # @patch('api.external.lta.check_lta_available', lambda: True)
+    # def test_lta_good(self):
+    #     """
+    #     Check LTA support from the inventory provider
+    #     """
+    #     self.assertIsNone(api.inventory.check(self.lta_order_good))
 
-    @patch('api.external.lta.requests.post', mocklta.get_verify_scenes_response_invalid)
-    @patch('api.external.lta.check_lta_available', lambda: True)
-    def test_lta_bad(self):
-        """
-        Check LTA support from the inventory provider
-        """
-        with self.assertRaises(InventoryException):
-            api.inventory.check(self.lta_order_bad)
-
+#    @patch('api.external.inventory.requests.post', mockinventory.CachedRequestPreventionSpoof)
+#    @patch('api.external.inventory.available', lambda: True)
+#    @patch('api.external.inventory.get_cached_session', mockinventory.get_cached_session)
+#    @patch('api.external.inventory.LTACachedService.get_lookup', mockinventory.get_cache_values)
+#    def test_lta_good(self):
+#        """
+#        Check LTA support from the inventory provider
+#        """
+#        cfg.put('system.m2m_val_enabled', 'True')
+#        self.assertIsNone(api.inventory.check(self.lta_order_good))
+#        cfg.put('system.m2m_val_enabled', 'False')
+#
+#    @patch('api.external.lta.requests.post', mocklta.get_verify_scenes_response_invalid)
+#    @patch('api.external.lta.check_lta_available', lambda: True)
+#    def test_lta_bad(self):
+#        """
+#        Check LTA support from the inventory provider
+#        """
+#        with self.assertRaises(InventoryException):
+#            api.inventory.check(self.lta_order_bad)
+#
     @patch('api.external.lpdaac.LPDAACService.input_exists', lambda x, y: True)
     @patch('api.external.lpdaac.LPDAACService.check_lpdaac_available', lambda y: True)
     def test_lpdaac_good(self):
