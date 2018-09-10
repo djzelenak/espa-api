@@ -125,29 +125,13 @@ class TestInventory(unittest.TestCase):
         success = inventory.clear_user_context(self.token)
         self.assertTrue(success)
 
-#    def test_id_sensor_limits(self):
-#        with self.assertRaisesRegexp(ProductNotImplemented, 'is not a supported sensor product'):
-#            _ = inventory.convert(self.token, self.contact_id, ['bad_id_yo'])
-#
-#    @patch('api.external.inventory.requests.get', mockinventory.RequestsSpoof)
-#    @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
-#    def test_bad_id_lookup(self):
-#        with self.assertRaisesRegexp(inventory.LTAError, 'ID Lookup failed'):
-#            _ = inventory.convert(self.token, self.contact_id, ['LC08_L1TP_000000_19000101_00000000_00_T1'])
-#
-#    @patch('api.external.inventory.requests.post', mockinventory.BadRequestSpoofError)
-#    def test_error_code_halt(self):
-#        expected = 'UNKNOWN: A fake server error occurred'
-#        with self.assertRaisesRegexp(inventory.LTAError, expected):
-#            _ = inventory.get_session()
-#
-#    @patch('api.external.inventory.requests.get', mockinventory.BadRequestSpoofNegative)
-#    @patch('api.external.inventory.requests.post', mockinventory.BadRequestSpoofNegative)
-#    def test_false_data_response(self):
-#        expected = 'Set user context ESPA failed for user {}'.format(self.contact_id)
-#        with self.assertRaisesRegexp(inventory.LTAError, expected):
-#            _ = inventory.set_user_context(self.token, self.contact_id)
-#
+    @patch('api.external.inventory.requests.get', mockinventory.BadRequestSpoofNegative)
+    @patch('api.external.inventory.requests.post', mockinventory.BadRequestSpoofNegative)
+    def test_false_data_response(self):
+        expected = 'Set user context ESPA failed for user {}'.format(self.contact_id)
+        with self.assertRaisesRegexp(inventory.LTAError, expected):
+            _ = inventory.set_user_context(self.token, self.contact_id)
+
 
 class TestCachedInventory(unittest.TestCase):
     """
@@ -172,19 +156,6 @@ class TestCachedInventory(unittest.TestCase):
     def test_cached_login(self):
         token = inventory.get_cached_session()
         self.assertIsInstance(token, basestring)
-
-    #@patch('api.external.inventory.requests.get', mockinventory.CachedRequestPreventionSpoof)
-    #@patch('api.external.inventory.requests.post', mockinventory.CachedRequestPreventionSpoof)
-    #def test_cached_lookup(self):
-    #    entity_ids = inventory.get_cached_convert(self.token, self.collection_ids)
-    #    self.assertEqual(set(self.collection_ids), set(entity_ids))
-
-    #@patch('api.external.inventory.requests.get', mockinventory.CachedRequestPreventionSpoof)
-    #@patch('api.external.inventory.requests.post', mockinventory.CachedRequestPreventionSpoof)
-    #def test_cached_verify_scenes(self):
-    #    expected = {k: True for k in self.collection_ids}
-    #    results = inventory.get_cached_verify_scenes(self.token, self.collection_ids)
-    #    self.assertItemsEqual(expected, results)
 
 
 class TestOnlineCache(unittest.TestCase):

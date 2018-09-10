@@ -37,6 +37,8 @@ def split_by_dataset(product_ids):
     return {k: list(g) for k, g in groupby(sorted(product_ids),
                 lambda x: sensor.instance(x).lta_json_name)}
 
+class LTAError(Exception):
+    pass
 
 class LTAService(object):
     def __init__(self, token=None, current_user=None, ipaddr=None):
