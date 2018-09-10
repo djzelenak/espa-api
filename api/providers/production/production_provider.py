@@ -428,7 +428,8 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     for _id, _availability in verified.items():
                         available.append(_id) if _availability else unavailable.append(_id)
                     if unavailable:
-                        unavailable_scenes = Scene.find(unavailable)
+                        logger.warn('Unavailable Scenes found in request for download urls. Marking unavailable ids: {0}\n'.format(unavailable))
+                        unavailable_scenes = Scene.where({'name': unavailable})
                         self.set_products_unavailable(unavailable_scenes, "Scene no longer available")
                     urls.update(inventory.download_urls(token, available, dataset))
                 except Exception as e:
