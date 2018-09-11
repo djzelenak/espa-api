@@ -1,4 +1,5 @@
 import copy
+from api.domain.scene import Scene
 
 RESOURCE_DEF = {
     'login': {
@@ -121,3 +122,13 @@ def get_cached_convert(token, product_list):
 
 def get_cached_session():
     return '2fd976601eef1ebd632b545a8fef11a3'
+
+def check_valid_landsat(token, prod_name_list):
+    _scenes = Scene.where({"status":"submitted", "sensor_type":"landsat"})
+    _names = [s.name for s in _scenes]
+    return {_names[0]: True}
+
+def check_valid_modis(token, prod_name_list):
+    _scenes = Scene.where({"status":"submitted", "sensor_type":"modis"})
+    _names = [s.name for s in _scenes]
+    return {_names[0]: True}

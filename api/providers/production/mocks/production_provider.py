@@ -64,4 +64,5 @@ class MockProductionProvider(object):
         return {'order_name_tuple_list': order_name_tuple_list,'processing_location': processing_location,
                 'job_name': job_name}
 
-
+    def check_dependencies_for_products(self, scene_list):
+        return Scene.where({'status': 'submitted', 'sensor_type': 'landsat'})
