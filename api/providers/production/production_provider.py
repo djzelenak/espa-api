@@ -419,10 +419,19 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         if non_plot_ids:
             urls = dict()
+            unavailable, available = list(), list()
             token = inventory.get_session()
             for dataset, ids in inventory.split_by_dataset(non_plot_ids).items():
                 try:
-                    urls.update(inventory.download_urls(token, ids, dataset))
+                    verified = inventory.verify_scenes(token, ids, dataset)
+                    # {'LT04_L1TP_007057_19871226_20170210_01_T1': True, 'LT04_L1TP_007057_19880111_20170210_01_T1': False, ...}
+                    for _id, _availability in verified.items():
+                        available.append(_id) if _availability else unavailable.append(_id)
+                    if unavailable:
+                        logger.warn('Unavailable Scenes found in request for download urls. Marking unavailable ids: {0}\n'.format(unavailable))
+                        unavailable_scenes = Scene.where({'name': unavailable})
+                        self.set_products_unavailable(unavailable_scenes, "Scene no longer available")
+                    urls.update(inventory.download_urls(token, available, dataset))
                 except Exception as e:
                     logger.error('Problem getting URLs: {}'.format(e), exc_info=True)
             if encode_urls:
@@ -430,6 +439,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
             results = [dict(r, download_url=urls.get(r['scene']))
                             if r['scene'] in non_plot_ids else r for r in results]
+
             results = [r for r in results if 'download_url' in r and r.get('download_url')]
 
         return results
