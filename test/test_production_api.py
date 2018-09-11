@@ -38,49 +38,30 @@ class TestProductionAPI(unittest.TestCase):
         self.mock_user.cleanup()
         os.environ['espa_api_testing'] = ''
 
-#    @patch('api.external.lpdaac.get_download_urls', lpdaac.get_download_urls)
-#    @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry',
-#           mock_production_provider.set_product_retry)
-#    def test_fetch_production_products_modis(self):
-#        order_id = self.mock_order.generate_testing_order(self.user_id)
-#        # need scenes with statuses of 'processing'
-#        self.mock_order.update_scenes(order_id, 'modis', 'status', ['processing', 'oncache'])
-#        user = User.find(self.user_id)
-#        params = {'for_user': user.username, 'product_types': ['modis']}
-#        response = api.fetch_production_products(params)
-#        self.assertTrue('bilbo' in response[0]['orderid'])
-#
-#    @patch('api.external.inventory.available', lambda : True)
-#    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
-#    #@patch('api.external.inventory.get_cached_convert', inventory.get_cached_convert)
-#    @patch('api.external.inventory.get_download_urls', inventory.get_download_urls)
-#    @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry',
-#           mock_production_provider.set_product_retry)
-#    def test_fetch_production_products_landsat(self):
-#        cfg.put('system.m2m_url_enabled', 'True')
-#        cfg.put('system.m2m_val_enabled', 'True')
-#        order_id = self.mock_order.generate_testing_order(self.user_id)
-#        # need scenes with statuses of 'processing'
-#        self.mock_order.update_scenes(order_id, 'landsat', 'status', ['processing', 'oncache'])
-#        user = User.find(self.user_id)
-#        params = {'for_user': user.username, 'product_types': ['landsat']}
-#        response = api.fetch_production_products(params)
-#        self.assertTrue('bilbo' in response[0]['orderid'])
-#        cfg.put('system.m2m_url_enabled', 'False')
-#        cfg.put('system.m2m_val_enabled', 'False')
-#
-#    @patch('api.external.lta.get_download_urls', lta.get_download_urls)
-#    @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry',
-#           mock_production_provider.set_product_retry)
-#    def test_fetch_production_products_landsat_LEGACY(self):
-#        order_id = self.mock_order.generate_testing_order(self.user_id)
-#        # need scenes with statuses of 'processing' and 'ordered'
-#        self.mock_order.update_scenes(order_id, 'landsat', 'status', ['processing', 'oncache'])
-#        user = User.find(self.user_id)
-#        params = {'for_user': user.username, 'product_types': ['landsat']}
-#        response = api.fetch_production_products(params)
-#        self.assertTrue('bilbo' in response[0]['orderid'])
-#
+    @patch('api.external.inventory.available', lambda: True)
+    @patch('api.providers.production.production_provider.ProductionProvider.parse_urls_m2m',
+            lambda x, y: y)
+    def test_fetch_production_products_modis(self):
+        order_id = self.mock_order.generate_testing_order(self.user_id)
+        # need scenes with statuses of 'processing'
+        self.mock_order.update_scenes(order_id, 'modis', 'status', ['processing', 'oncache'])
+        user = User.find(self.user_id)
+        params = {'product_types': ['modis']}
+        response = api.fetch_production_products(params)
+        self.assertTrue('bilbo' in response[0]['orderid'])
+
+    @patch('api.external.inventory.available', lambda: True)
+    @patch('api.providers.production.production_provider.ProductionProvider.parse_urls_m2m',
+            lambda x, y: y)
+    def test_fetch_production_products_landsat(self):
+        order_id = self.mock_order.generate_testing_order(self.user_id)
+        # need scenes with statuses of 'processing'
+        self.mock_order.update_scenes(order_id, 'landsat', 'status', ['processing', 'oncache'])
+        user = User.find(self.user_id)
+        params = {'for_user': user.username, 'product_types': ['landsat']}
+        response = api.fetch_production_products(params)
+        self.assertTrue('bilbo' in response[0]['orderid'])
+
     def test_fetch_production_products_plot(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
         self.mock_order.update_scenes(order_id, ('landsat', 'modis'), 'status', ['complete'])
@@ -373,13 +354,6 @@ class TestProductionAPI(unittest.TestCase):
         for s in Scene.where({'order_id': order_id, 'sensor_type': 'landsat'}):
             self.assertTrue(s.status == 'submitted')
 
-    #@patch('api.external.lta.get_available_orders', lta.get_available_orders)
-    #@patch('api.external.lta.update_order_status', lta.update_order_status)
-    #@patch('api.external.lta.get_user_name', lta.get_user_name)
-    #def test_production_load_ee_orders(self):
-    #    #production_provider.load_ee_orders()
-    #    pass
-
     @patch('api.external.lta.get_available_orders', lta.get_available_orders_partial)
     @patch('api.external.lta.update_order_status', lta.update_order_status)
     @patch('api.external.lta.get_user_name', lta.get_user_name)
@@ -410,32 +384,31 @@ class TestProductionAPI(unittest.TestCase):
         scenes = Scene.where({'failed_lta_status_update IS NOT': None})
         self.assertTrue(len(scenes) == 0)
 
-#    @patch('api.providers.production.production_provider.ProductionProvider.update_landsat_product_status',
-#           mock_production_provider.respond_true)
-#    @patch('api.providers.production.production_provider.ProductionProvider.get_contactids_for_submitted_landsat_products',
-#           mock_production_provider.contact_ids_list)
-#    @patch('api.external.lta.check_lta_available', mock_production_provider.respond_true)
-#    def test_production_handle_submitted_landsat_products(self):
-#        orders = Order.find(self.mock_order.generate_testing_order(self.user_id))
-#        scenes = orders.scenes({'sensor_type': 'landsat'})
-#        self.assertTrue(production_provider.handle_submitted_landsat_products(scenes))
-#
+    @patch('api.providers.production.production_provider.ProductionProvider.update_landsat_product_status', mock_production_provider.respond_true)
+    @patch('api.providers.production.production_provider.ProductionProvider.get_contactids_for_submitted_landsat_products', mock_production_provider.contact_ids_list)
+    @patch('api.external.inventory.available', lambda: True)
+    def test_production_handle_submitted_landsat_products(self):
+        orders = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        scenes = orders.scenes({'sensor_type': 'landsat'})
+        self.assertTrue(production_provider.handle_submitted_landsat_products(scenes))
+
     @patch('api.external.lta.update_order_status', lta.update_order_status)
     def test_production_set_products_unavailable(self):
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
         self.assertTrue(production_provider.set_products_unavailable(order.scenes(), "you want a reason?"))
 
-#    @patch('api.external.lta.order_scenes', lta.order_scenes)
-#    @patch('api.providers.production.production_provider.ProductionProvider.set_products_unavailable',
-#           mock_production_provider.respond_true)
-#    def test_production_update_landsat_product_status(self):
-#        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
-#        for scene in order.scenes({'name !=': 'plot'}):
-#            scene.status = 'submitted'
-#            scene.sensor_type = 'landsat'
-#            scene.save()
-#        self.assertTrue(production_provider.update_landsat_product_status(User.find(self.user_id).contactid))
-#
+    @patch('api.providers.production.production_provider.ProductionProvider.check_dependencies_for_products', mock_production_provider.check_dependencies_for_products)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.check_valid', inventory.check_valid_landsat)
+    def test_production_update_landsat_product_status(self):
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        for scene in order.scenes({'name !=': 'plot'}):
+            scene.status = 'submitted'
+            scene.sensor_type = 'landsat'
+            user = User.find(self.user_id)
+            scene.save()
+        self.assertTrue(production_provider.update_landsat_product_status(user.contactid))
+
     def test_production_get_contactids_for_submitted_landsat_products(self):
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
         for scene in order.scenes({'name !=': 'plot'}):
@@ -447,34 +420,36 @@ class TestProductionAPI(unittest.TestCase):
         self.assertIsInstance(response, set)
         self.assertTrue(len(response) > 0)
 
-#    @patch('api.external.lpdaac.input_exists', lpdaac.input_exists_true)
-#    @patch('api.external.lpdaac.LPDAACService.check_lpdaac_available', mock_production_provider.respond_true)
-#    def test_production_handle_submitted_modis_products_input_exists(self):
-#        # handle oncache scenario
-#        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
-#        for scene in order.scenes({'name !=': 'plot'}):
-#            scene.status = 'submitted'
-#            scene.sensor_type = 'modis'
-#            scene.save()
-#            sid = scene.id
-#        scenes = order.scenes({'sensor_type': 'modis'})
-#        self.assertTrue(production_provider.handle_submitted_modis_products(scenes))
-#        self.assertEquals(Scene.find(sid).status, "oncache")
-#
-#    @patch('api.external.lpdaac.check_lpdaac_available', lpdaac.check_lpdaac_available)
-#    @patch('api.external.lpdaac.input_exists', lpdaac.input_exists_false)
-#    def test_production_handle_submitted_modis_products_input_missing(self):
-#        # handle unavailable scenario
-#        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
-#        for scene in order.scenes({'name !=': 'plot'}):
-#            scene.status = 'submitted'
-#            scene.sensor_type = 'modis'
-#            scene.save()
-#            sid = scene.id
-#        scenes = order.scenes({'sensor_type': 'modis'})
-#        self.assertTrue(production_provider.handle_submitted_modis_products(scenes))
-#        self.assertEquals(Scene.find(sid).status, "unavailable")
-#
+    @patch('api.external.inventory.available', lambda: True)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session) 
+    @patch('api.external.inventory.check_valid', inventory.check_valid_modis)   
+    def test_production_handle_submitted_modis_products_input_exists(self):
+        # handle oncache scenario
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        for scene in order.scenes({'name !=': 'plot'}):
+            scene.status = 'submitted'
+            scene.sensor_type = 'modis'
+            scene.save()
+            sid = scene.id
+        scenes = order.scenes({'sensor_type': 'modis'})
+        self.assertTrue(production_provider.handle_submitted_modis_products(scenes))
+        #self.assertEquals(Scene.find(sid).status, "oncache")
+
+    @patch('api.external.inventory.available', lambda: True)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session) 
+    @patch('api.external.inventory.check_valid', inventory.check_valid_modis)   
+    def test_production_handle_submitted_modis_products_input_missing(self):
+        # handle unavailable scenario
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        for scene in order.scenes({'name !=': 'plot'}):
+            scene.status = 'submitted'
+            scene.sensor_type = 'modis'
+            scene.save()
+            sid = scene.id
+        scenes = order.scenes({'sensor_type': 'modis'})
+        self.assertTrue(production_provider.handle_submitted_modis_products(scenes))
+        self.assertEquals(Scene.find(sid).status, "unavailable")
+
     def test_production_handle_submitted_plot_products(self):
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
         order.status = 'ordered'
