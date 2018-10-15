@@ -207,7 +207,7 @@ class OrderDeliveryServiceClient(LTASoapService):
                 email = pp[pp.index("<email>") + 7:pp.index("</email>")]
             except:
                 logger.warn('Could not find an email address for '
-                            'unit {0} in order {1] : rejecting'
+                            'unit {0} in order {1} : rejecting'
                             .format(u.unitNbr,u.orderNbr))
 
                 # we didn't get an email... fail the order
