@@ -552,6 +552,9 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             orders = [(o, e, c) for (o, e, c) in orders if c == contact_id]
         logger.info('# Orders available from EE: {}'.format(len(orders)))
 
+        token = inventory.get_session()
+        ipaddr =  socket.gethostbyaddr(socket.gethostname())[2][0]
+
         # {(order_num, email, contactid): [{sceneid: ,
         #                                   unit_num:}]}
         for eeorder, email_addr, contactid in orders:
@@ -572,7 +575,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 user = cache.get(cache_key)
 
                 if user is None:
-                    username = str(lta.get_user_name(contactid))
+                    username = str(inventory.get_user_name(token, contactid, ipaddr))
                     # Find or create the user
                     user = User(username, email_addr, 'from', 'earthexplorer',
                                 contactid)
