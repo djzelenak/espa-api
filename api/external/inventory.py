@@ -240,9 +240,9 @@ class LTAService(object):
                        {i['entityId']: i['url'] for i in results},
                     'landsat'), 'modis')
 
-    def set_user_context(self, contactid, ipaddress=None, context='ESPA'):
+    def get_user_context(self, contactid, ipaddress=None, context='ESPA'):
         """
-        This method will set the end-user context for all subsequent requests.
+        This method will get the end-user details given a contactid.
 
         :param contactid: ERS identification key (number form
         :type contactid: int
@@ -255,10 +255,25 @@ class LTAService(object):
                        ipAddress=ipaddress, applicationContext=context)
         resp = self._post(endpoint, payload)
         if not bool(resp.get('data')):
-            raise LTAError('Set user context {} failed for user {} (ip: {})'
+            raise LTAError('Get user context {} failed for user {} (ip: {})'
                            .format(context, contactid, ipaddress))
-        self.current_user = contactid
-        return True
+        return resp.get('data')
+
+    def set_user_context(self, contactid, ipaddress=None, context='ESPA'):
+        """
+        This method will set the end-user context for all subsequent requests.
+
+        :param contactid: ERS identification key (number form
+        :type contactid: int
+        :param ipaddress: Originating IP Address
+        :param context: Usage statistics that are executed via 'M2M_APP' users
+        :return: bool
+        """
+        if self.get_user_context(contactid, ipaddress, context):
+            self.current_user = contactid
+            return True
+        else:
+            return False
 
     def clear_user_context(self):
         """
@@ -330,8 +345,17 @@ def get_download_urls(token, entity_ids, dataset, usage='[espa]'):
     return LTAService(token).get_download_urls(entity_ids, dataset, usage=usage)
 
 
+def get_user_context(token, contactid, ipaddress=None):
+    return LTAService(token).get_user_context(contactid, ipaddress)
+
+
 def set_user_context(token, contactid, ipaddress=None):
     return LTAService(token).set_user_context(contactid, ipaddress)
+
+
+def get_user_name(token, contactid, ipaddress=None):
+    context = get_user_context(token, contactid, ipaddress)
+    return str(context.get('username'))
 
 
 def clear_user_context(token):

@@ -132,3 +132,6 @@ def check_valid_modis(token, prod_name_list):
     _scenes = Scene.where({"status":"submitted", "sensor_type":"modis"})
     _names = [s.name for s in _scenes]
     return {_names[0]: True}
+
+def get_user_name(token, contactid, ipaddr):
+    return 'klmsith@usgs.gov'
