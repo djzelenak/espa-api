@@ -356,7 +356,8 @@ class TestProductionAPI(unittest.TestCase):
 
     @patch('api.external.lta.get_available_orders', lta.get_available_orders_partial)
     @patch('api.external.lta.update_order_status', lta.update_order_status)
-    @patch('api.external.lta.get_user_name', lta.get_user_name)
+    @patch('api.external.inventory.get_user_name', inventory.get_user_name)
+    @patch('api.external.inventory.get_session', lambda: True)
     def test_production_load_ee_orders_partial(self):
         order = Order.find(self.mock_order.generate_ee_testing_order(self.user_id, partial=True))
         self.assertEqual(order.product_opts, {'format': 'gtiff',

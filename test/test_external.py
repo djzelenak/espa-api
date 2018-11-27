@@ -128,7 +128,7 @@ class TestInventory(unittest.TestCase):
     @patch('api.external.inventory.requests.get', mockinventory.BadRequestSpoofNegative)
     @patch('api.external.inventory.requests.post', mockinventory.BadRequestSpoofNegative)
     def test_false_data_response(self):
-        expected = 'Set user context ESPA failed for user {}'.format(self.contact_id)
+        expected = 'Get user context ESPA failed for user {}'.format(self.contact_id)
         with self.assertRaisesRegexp(inventory.LTAError, expected):
             _ = inventory.set_user_context(self.token, self.contact_id)
 
