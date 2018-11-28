@@ -1154,7 +1154,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             filters.update(user_id=user.id)
 
         contactid = user.contactid if user else None
-        self.load_ee_orders(contactid)
+        try:
+            self.load_ee_orders(contactid)
+        except Exception as e:
+            logger.debug("Unable to load_ee_orders: {}".format(e))
 
         pending_orders = [o.id for o in Order.where(filters)]
         if len(pending_orders) < 1:
