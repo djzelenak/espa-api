@@ -575,32 +575,36 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 user = cache.get(cache_key)
 
                 if user is None:
-                    username = str(inventory.get_user_name(token, contactid, ipaddr))
-                    # Find or create the user
-                    user = User(username, email_addr, 'from', 'earthexplorer',
-                                contactid)
-                    cache.set(cache_key, user, 60)
+                    try:
+                        username = str(inventory.get_user_name(token, contactid, ipaddr))
+                        # Find or create the user
+                        user = User(username, email_addr, 'from', 'earthexplorer',
+                                    contactid)
+                        cache.set(cache_key, user, 60)
+                    except inventory.LTAError as e:
+                        logger.error("LTAError: Unable to retrieve user name for contactid {}. exception: {}".format(contactid, e))
 
-                # We have a user now.  Now build the new Order since it
-                # wasn't found
-                ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-                order_dict = {'orderid': order_id,
-                              'user_id': user.id,
-                              'order_type': 'level2_ondemand',
-                              'status': 'ordered',
-                              'note': 'EarthExplorer order id: {}'.format(eeorder),
-                              'ee_order_id': eeorder,
-                              'order_source': 'ee',
-                              'order_date': ts,
-                              'priority': 'normal',
-                              'email': user.email,
-                              'product_options': 'include_sr: true',
-                              'product_opts': Order.get_default_ee_options(scene_info)}
-
-                order = Order.create(order_dict)
-                self.load_ee_scenes(scene_info, order.id)
-                self.update_ee_orders(scene_info, eeorder, order.id)
-
+                if user:
+                    # We have a user now.  Now build the new Order since it wasn't found
+                    ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+                    order_dict = {'orderid': order_id,
+                                  'user_id': user.id,
+                                  'order_type': 'level2_ondemand',
+                                  'status': 'ordered',
+                                  'note': 'EarthExplorer order id: {}'.format(eeorder),
+                                  'ee_order_id': eeorder,
+                                  'order_source': 'ee',
+                                  'order_date': ts,
+                                  'priority': 'normal',
+                                  'email': user.email,
+                                  'product_options': 'include_sr: true',
+                                  'product_opts': Order.get_default_ee_options(scene_info)}
+                    order = Order.create(order_dict)
+                    self.load_ee_scenes(scene_info, order.id)
+                    self.update_ee_orders(scene_info, eeorder, order.id)
+                else:
+                    logger.debug("unable to import EE order: eeorder {} email {} contactid {}".format(eeorder, email_addr, contactid))
+	
     @staticmethod
     def gen_ee_scene_list(ee_scenes, order_id):
         """
