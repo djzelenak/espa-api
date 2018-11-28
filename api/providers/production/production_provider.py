@@ -1164,7 +1164,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         products = Scene.where({'status': 'onorder', 'tram_order_id IS NOT': None, 'order_id': pending_orders})
         self.handle_onorder_landsat_products(products)
 
-        time_jobs_stuck = datetime.datetime.now() - datetime.timedelta(hours=6) # not expected to change
+        time_jobs_stuck = datetime.datetime.now() - datetime.timedelta(hours=10) # not expected to change
         products = Scene.where({'status': ('queued', 'processing'), 'status_modified <': time_jobs_stuck})
         self.handle_stuck_jobs(products)
 
