@@ -168,7 +168,6 @@ class OrderValidatorV0(validictory.SchemaValidator):
         if 'image_extents' in self.data_source and 'projection' in self.data_source:
             # Validate UTM zone matches image_extents
             #   East/West: Zone Buffer 3 UTM zones (abs(Lat) < 80)
-            #   North/South: Equator buffer of 5 degrees
             if self.validate_type_object(self.data_source['projection'].get('utm')):
                 if not self.validate_type_integer(self.data_source['projection']['utm'].get('zone')):
                     return
@@ -189,22 +188,10 @@ class OrderValidatorV0(validictory.SchemaValidator):
                         west=order['image_extents']['west'],
                         zbuffer=3)
             if not self.is_utm_zone_nearby(**cdict):
-                msg = ('image_extents ({east}E,{west}W) are not near the'
+                msg = ('image_extents (East: {east}, West: {west}) are not near the'
                         ' requested UTM zone ({inzone})'
                         .format(**cdict))
                 errors.append(msg)
-        north = max([order['image_extents']['north'],
-                        order['image_extents']['south']])
-        if order['projection']['utm']['zone'] == 'south':
-            north *= -1
-        nsbuffer = -5 # degrees
-        if north < nsbuffer:
-            projection = order['projection']['utm'].copy()
-            projection.update(order['image_extents'].copy())
-            msg = ('image_extents ({north}N,{south}S) are not near the'
-                    ' requested UTM Zone Hemisphere ({zone_ns})'
-                    .format(**projection))
-            errors.append(msg)
         return errors
 
     @staticmethod
