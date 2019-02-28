@@ -20,7 +20,7 @@ with open(os.path.join(__location__, 'domain/restricted.yaml')) as f:
 
 # Grab human-readable product names/categories
 with open(os.path.join(__location__, 'domain/products.yaml')) as f:
-    prodcuts = yaml.safe_load(f.read())
+    products = yaml.safe_load(f.read())
 
 class ProductNames(object):
     def groups(self, staff_role=False):
