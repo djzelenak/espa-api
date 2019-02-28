@@ -57,7 +57,7 @@ class TestAPI(unittest.TestCase):
         user_scene.update('name', self.staff_product_id)
 
         with open(os.path.join(__location__, 'domain/restricted.yaml')) as f:
-            self.restricted = yaml.load(f.read())
+            self.restricted = yaml.safe_load(f.read())
             self.restricted['all']['role'].remove('restricted_prod')
 
     def tearDown(self):
