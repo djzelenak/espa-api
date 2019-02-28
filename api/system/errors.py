@@ -196,7 +196,7 @@ class Errors(object):
     def missing_aux_data(self, error_message):
         '''Could not run due to aux data no available yet'''
 
-        keys = ['Verify the missing auxillary data products',
+        keys = ['Verify the missing auxiliary data products',
                 'Warning: main : Could not find auxnm data file',
                 'Could not find TOMS aux']
         status = 'retry'
