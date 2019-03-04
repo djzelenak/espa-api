@@ -1,5 +1,5 @@
 from flask import request, make_response, jsonify
-from flask.ext.restful import Api, Resource, reqparse, fields, marshal
+from flask_restful import Api, Resource, reqparse, fields, marshal
 
 from api.interfaces.production.version1 import API as APIv1
 from api.domain import production_api_operations, default_error_message

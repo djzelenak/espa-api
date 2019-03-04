@@ -1,7 +1,7 @@
 from flask import Flask
 from flask import jsonify
 from flask import request
-from flask.ext.login import LoginManager, login_required, current_user
+from flask_login import LoginManager, login_required, current_user
 from api.interfaces.ordering.version0 import API
 from api.domain.user import User
 from api.util import lowercase_all
