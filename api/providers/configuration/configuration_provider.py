@@ -149,7 +149,7 @@ class ConfigurationProvider(ConfigurationProviderInterfaceV0):
 
         try:
             with open(self.explorer_yaml) as f:
-                _edict = yaml.load(f.read())
+                _edict = yaml.safe_load(f.read())
 
             for grp in _edict:
                 for key in _edict[grp]:

@@ -42,6 +42,7 @@ htmlcov/
 nosetests.xml
 coverage.xml
 *,cover
+.config_backup
 
 # Translations
 *.mo
@@ -69,8 +70,8 @@ local
 # Pycharm
 .idea
 
-# Visual Basic Code
-.vscode/
+# Visual Studio Code
+.vscode
 
 # random
 contest.py
