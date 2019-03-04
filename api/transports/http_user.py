@@ -23,8 +23,8 @@ from api.providers.caching.caching_provider import CachingProvider
 from flask import jsonify
 from flask import make_response
 from flask import request
-from flask.ext.httpauth import HTTPBasicAuth
-from flask.ext.restful import Resource
+from flask_httpauth import HTTPBasicAuth
+from flask_restful import Resource
 from werkzeug.exceptions import BadRequest
 
 

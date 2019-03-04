@@ -127,7 +127,7 @@ class TestProductionAPI(unittest.TestCase):
         scene = order.scenes()[2]
         production_provider.set_product_error(scene.name, order.orderid,
                                               'somewhere',
-                                              'Verify the missing auxillary data products')
+                                              'Verify the missing auxiliary data products')
         self.assertTrue('retry' == Scene.get('ordering_scene.status', scene.name, order.orderid))
 
     def test_production_set_product_error_retry_lasrc_segfault(self):

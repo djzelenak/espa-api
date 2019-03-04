@@ -25,7 +25,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
         self.base_schema = None
         self._itemcount = None
         with open(os.path.join(__location__, 'domain/restricted.yaml')) as f:
-            self.restricted = yaml.load(f.read())
+            self.restricted = yaml.safe_load(f.read())
 
     def validate(self, data, schema):
         self.data_source = data
