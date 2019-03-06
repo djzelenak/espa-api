@@ -51,7 +51,7 @@ class OrderingProvider(ProviderInterfaceV0):
         pub_prods = copy.deepcopy(OrderingProvider.sensor_products(product_id))
 
         with open(os.path.join(__location__, 'domain/restricted.yaml')) as f:
-                restricted = yaml.load(f.read())
+                restricted = yaml.safe_load(f.read())
 
         role = False if user.is_staff() else True
 

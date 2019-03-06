@@ -3,7 +3,7 @@
 import os
 
 from flask import Flask, request, make_response, jsonify
-from flask.ext.restful import Api, Resource, reqparse, fields, marshal
+from flask_restful import Api, Resource, reqparse, fields, marshal
 
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.util import api_cfg

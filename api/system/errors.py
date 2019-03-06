@@ -47,6 +47,7 @@ class Errors(object):
         self.conditions.append(self.node_space_errors)
         self.conditions.append(self.lasrc_mystery_segfaults)
         self.conditions.append(self.reproject_errors)
+        self.conditions.append(self.missing_ncep_data)
 
         #construct the named tuple for the return value of this module
         self.resolution = collections.namedtuple('ErrorResolution',
@@ -196,7 +197,7 @@ class Errors(object):
     def missing_aux_data(self, error_message):
         '''Could not run due to aux data no available yet'''
 
-        keys = ['Verify the missing auxillary data products',
+        keys = ['Verify the missing auxiliary data products',
                 'Warning: main : Could not find auxnm data file',
                 'Could not find TOMS aux']
         status = 'retry'
@@ -292,6 +293,13 @@ class Errors(object):
         keys = ['WarpVerificationError: Failed to compute statistics, no valid pixels found in sampling']
         status = 'unavailable'
         reason = 'No valid pixels found for reprojection'
+        return self.__find_error(error_message, keys, status, reason)
+
+    def missing_ncep_data(self, error_message):
+        keys = ['Could not find NCEP REANALYSIS auxiliary data',
+                'Verify the missing auxiliary data products, then try reprocessing']
+        status = 'unavailable'
+        reason = 'Missing NCEP aux reanalysis data'
         return self.__find_error(error_message, keys, status, reason)
 
 

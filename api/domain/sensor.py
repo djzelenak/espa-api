@@ -16,11 +16,11 @@ from api.util import julian_date_check, julian_from_date
 # Do it here, vs during object instantiation,
 # to avoid needless repetition
 with open(os.path.join(__location__, 'domain/restricted.yaml')) as f:
-    restricted = yaml.load(f.read())
+    restricted = yaml.safe_load(f.read())
 
 # Grab human-readable product names/categories
 with open(os.path.join(__location__, 'domain/products.yaml')) as f:
-    products = yaml.load(f.read())
+    products = yaml.safe_load(f.read())
 
 class ProductNames(object):
     def groups(self, staff_role=False):
