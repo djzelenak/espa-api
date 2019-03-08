@@ -383,7 +383,7 @@ class LandsatOLITIRS(Landsat):
     """Models Landsat OLI/TIRS only products"""
     products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr, AllProducts.st, AllProducts.swe,
                 AllProducts.sr_ndvi, AllProducts.sr_evi, AllProducts.sr_savi, AllProducts.sr_msavi, AllProducts.sr_ndmi,
-                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.pixel_qa]
+                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.pixel_qa, AllProducts.stalg_split_window]
     lta_name = 'LANDSAT_8'
     lta_json_name = 'LANDSAT_8_C{collection}'
     sensor_name = 'olitirs'

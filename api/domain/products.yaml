@@ -27,6 +27,10 @@ products:
     category: l2p
     title: "Surface Temperature"
     display_rank: 1
+  stalg_split_window:
+    category: l2p
+    title: "Split Window ST"
+    display_rank: 1
   swe:
     category: l3p
     title: "Dynamic Surface Water Extent"
