@@ -357,7 +357,7 @@ class LandsatTM(Landsat):
     """Models Landsat TM only products"""
     products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr, AllProducts.st, AllProducts.swe,
                 AllProducts.sr_ndvi, AllProducts.sr_evi, AllProducts.sr_savi, AllProducts.sr_msavi, AllProducts.sr_ndmi,
-                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.pixel_qa]
+                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.pixel_qa, AllProducts.stalg_single_channel]
     lta_name = 'LANDSAT_TM'
     lta_json_name = 'LANDSAT_TM_C{collection}'
     sensor_name = 'tm'
@@ -370,7 +370,7 @@ class LandsatETM(Landsat):
     """Models Landsat ETM only products"""
     products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr, AllProducts.st, AllProducts.swe,
                 AllProducts.sr_ndvi, AllProducts.sr_evi, AllProducts.sr_savi, AllProducts.sr_msavi, AllProducts.sr_ndmi,
-                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.pixel_qa]
+                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.pixel_qa, AllProducts.stalg_single_channel]
     lta_name = 'LANDSAT_ETM_PLUS'
     lta_json_name = 'LANDSAT_ETM_C{collection}'
     sensor_name = 'etm'

@@ -31,6 +31,10 @@ products:
     category: l2p
     title: "Split Window ST"
     display_rank: 1
+  stalg_single_channel:
+    category: l2p
+    title: "Single Channel ST"
+    display_rank: 2
   swe:
     category: l3p
     title: "Dynamic Surface Water Extent"
