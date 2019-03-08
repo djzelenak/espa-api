@@ -16,6 +16,7 @@ from api.providers.production.mocks.production_provider import MockProductionPro
 from api.providers.production.production_provider import ProductionProvider
 from api.system.mocks import errors
 from mock import patch
+from copy import deepcopy
 
 api = API()
 production_provider = ProductionProvider()
@@ -651,6 +652,48 @@ class TestProductionAPI(unittest.TestCase):
             self.assertDictEqual(ruberic, old_format)
 
             ruberic[include] = False
+
+    def test_options_conversion_st_algorithm(self):
+        opts = {'note': '', 
+                'etm7_collection': {'inputs': ['LE07_L1TP_029030_20171222_20180117_01_T2'], 'products': ['st']}, 
+                'resampling_method': 'nn', 
+                'format': 'gtiff'}
+        opts_split_window = deepcopy(opts)
+        opts_split_window['etm7_collection']['products'] = ['st', 'stalg_split_window']
+        opts_single_chan = deepcopy(opts)
+        opts_single_chan['etm7_collection']['products'] = ['st', 'stalg_single_channel']
+
+        self.assertDictEqual(OptionsConversion._flatten(opts_split_window, OptionsConversion.keywords_map), 
+                             {'include_st': True, 'output_format': 'gtiff', 'st_algorithm': 'split_window'})
+
+        self.assertDictEqual(OptionsConversion._flatten(opts_single_chan, OptionsConversion.keywords_map), 
+                             {'include_st': True, 'output_format': 'gtiff', 'st_algorithm': 'single_channel'})
+
+    def test_options_reanalysis_source(self):
+        opts = {'note': '', 
+                'etm7_collection': {'inputs': ['LE07_L1TP_029030_20171222_20180117_01_T2'], 'products': ['st']}, 
+                'resampling_method': 'nn', 
+                'format': 'gtiff'}
+
+        opts_narr = deepcopy(opts)
+        opts_narr['etm7_collection']['products'] = ['st', 'reanalsrc_narr']
+        self.assertDictEqual(OptionsConversion._flatten(opts_narr, OptionsConversion.keywords_map), 
+                             {'include_st': True, 'output_format': 'gtiff', 'reanalysis_source': 'narr'})
+
+        opts_merra2 = deepcopy(opts)
+        opts_merra2['etm7_collection']['products'] = ['st', 'reanalsrc_merra2']
+        self.assertDictEqual(OptionsConversion._flatten(opts_merra2, OptionsConversion.keywords_map), 
+                             {'include_st': True, 'output_format': 'gtiff', 'reanalysis_source': 'merra2'})
+
+        opts_fp = deepdopy(ops)
+        opts_fp['etm7_collection']['products'] = ['st', 'reanalsrc_fp']
+        self.assertDictEqual(OptionsConversion._flatten(opts_fp, OptionsConversion.keywords_map), 
+                             {'include_st': True, 'output_format': 'gtiff', 'reanalysis_source': 'fp'})
+
+        opts_fpit = deepcopy(ops)
+        opts_fpit['etm7_collection']['products'] = ['st', 'reanalsrc_fpit']
+        self.assertDictEqual(OptionsConversion._flatten(opts_fpit, OptionsConversion.keywords_map), 
+                             {'include_st': True, 'output_format': 'gtiff', 'reanalysis_source': 'fpit'})        
 
     def test_status_modified(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)

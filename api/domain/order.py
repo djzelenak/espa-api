@@ -673,6 +673,12 @@ class OptionsConversion(object):
                 ('include_sr_msavi', 'sr_msavi', True),
                 ('include_sr_evi', 'sr_evi', True),
                 ('include_st', 'st', True),
+                ('st_algorithm', 'stalg_split_window',   'split_window'),
+                ('st_algorithm', 'stalg_single_channel', 'single_channel'),
+                ('reanalysis_source', 'reanalsrc_narr',   'narr'),
+                ('reanalysis_source', 'reanalsrc_merra2', 'merra2'),
+                ('reanalysis_source', 'reanalsrc_fp',     'fp'),
+                ('reanalysis_source', 'reanalssrc_fpit',  'fpit'),
                 ('include_pixel_qa', 'pixel_qa', True)]
 
     resample_map = [('cubic', 'cc', None),
