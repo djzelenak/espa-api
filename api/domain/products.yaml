@@ -35,6 +35,22 @@ products:
     category: l2p
     title: "Single Channel ST"
     display_rank: 2
+  reanalsrc_narr:
+    category: l2p
+    title: "Reanalysis Source NARR"
+    display_rank: 1
+  reanalsrc_merra2:
+    category: l2p
+    title: "Reanalysis Source MERRA2"
+    display_rank: 2
+  reanalsrc_fp:
+    category: l2p
+    title: "Reanalysis Source FP"
+    display_rank: 3
+  reanalsrc_fpit:
+    category: l2p
+    title: "Reanalysis Source FPIT"
+    display_rank: 4
   swe:
     category: l3p
     title: "Dynamic Surface Water Extent"
