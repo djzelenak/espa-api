@@ -1297,10 +1297,12 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         :return: bool
         """
         updates = {'reported_orphan': None, 'orphaned': None}
-        scenes = Scene.where({'reported_orphan is not': None})
+        scenes = Scene.where({'reported_orphan is not': None,
+                              'status': ('processing', 'queued')})
         if len(scenes):
             Scene.bulk_update([s.id for s in scenes], updates)
-        scenes = Scene.where({'orphaned is not': None})
+        scenes = Scene.where({'orphaned is not': None,
+                              'status': ('processing', 'queued')})
         if len(scenes):
             Scene.bulk_update([s.id for s in scenes], updates)
 
