@@ -1138,7 +1138,12 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         orphaned_scenes = [s for s in scenes if s.orphaned]
         if len(orphaned_scenes):
             logger.warning('Found {N} orphaned products, retrying...'.format(N=len(orphaned_scenes)))
-            Scene.bulk_update([s.id for s in orphaned_scenes], {'status': 'submitted'})
+            Scene.bulk_update([s.id for s in orphaned_scenes], {'status': 'submitted',
+                                                                'orphaned': None,
+                                                                'reported_orphan': None,
+                                                                'log_file_contents': '',
+                                                                'note': '',
+                                                                'retry_count': 0})
         return True
 
     def handle_orders(self, username=None):
@@ -1292,10 +1297,12 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         :return: bool
         """
         updates = {'reported_orphan': None, 'orphaned': None}
-        scenes = Scene.where({'reported_orphan is not': None})
+        scenes = Scene.where({'reported_orphan is not': None,
+                              'status': ('processing', 'queued')})
         if len(scenes):
             Scene.bulk_update([s.id for s in scenes], updates)
-        scenes = Scene.where({'orphaned is not': None})
+        scenes = Scene.where({'orphaned is not': None,
+                              'status': ('processing', 'queued')})
         if len(scenes):
             Scene.bulk_update([s.id for s in scenes], updates)
 
