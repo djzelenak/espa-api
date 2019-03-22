@@ -155,6 +155,7 @@ class TestProductionAPI(unittest.TestCase):
         production_provider.set_product_error(scene.name, order.orderid,
                                               'somewhere',
                                               log_file_contents)
+        self.assertTrue('retry' == Scene.get('ordering_scene.status', scene.name, order.orderid))
 
     def test_production_set_product_error_unavail_reproject(self):
         """
