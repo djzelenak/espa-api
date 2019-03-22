@@ -309,7 +309,7 @@ class Errors(object):
     def unable_to_locate_mtl(self, error_message):
         ''' error resulting from processing attempting to build science products
             before the src archive has been extracted '''
-        keys = ['Unable to locate the missing MTL file']
+        keys = ['Unable to locate the MTL file']
         status = 'retry'
         reason = 'Tried processing without inputs'
         extras = self.__add_retry('missed_extraction')
