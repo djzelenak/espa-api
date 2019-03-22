@@ -102,6 +102,8 @@ INSERT INTO ordering_configuration (key, value) VALUES
     ('retry.node_space_errors.retries', '3'),
     ('retry.node_space_errors.timeout', '600'),
     ('retry.segfault_errors.retries', '5'),
-    ('retry.segfault_errors.timeout', '3600')
+    ('retry.segfault_errors.timeout', '3600'),
+    ('retry.missed_extraction.retries', '3'),
+    ('retry.missed_extraction.timeout', '300')
 
 ;
