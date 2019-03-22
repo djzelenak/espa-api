@@ -35,6 +35,7 @@ class Errors(object):
         self.conditions.append(self.gzip_errors)
         self.conditions.append(self.gzip_errors_online_cache)
         self.conditions.append(self.lta_soap_errors)
+        self.conditions.append(self.missing_ncep_data)
         self.conditions.append(self.missing_aux_data)
         self.conditions.append(self.network_errors)
         self.conditions.append(self.night_scene)
@@ -48,7 +49,6 @@ class Errors(object):
         self.conditions.append(self.node_space_errors)
         self.conditions.append(self.lasrc_mystery_segfaults)
         self.conditions.append(self.reproject_errors)
-        self.conditions.append(self.missing_ncep_data)
         self.conditions.append(self.unable_to_locate_mtl)
 
         # construct the named tuple for the return value of this module
@@ -300,8 +300,7 @@ class Errors(object):
         return self.__find_error(error_message, keys, status, reason)
 
     def missing_ncep_data(self, error_message):
-        keys = ['Could not find NCEP REANALYSIS auxiliary data',
-                'Verify the missing auxiliary data products']
+        keys = ['Could not find NCEP REANALYSIS auxiliary data']
         status = 'unavailable'
         reason = 'Missing NCEP aux reanalysis data'
         return self.__find_error(error_message, keys, status, reason)
