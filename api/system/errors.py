@@ -16,6 +16,7 @@ from api.notification import emails
 
 config = ConfigurationProvider()
 
+
 class Errors(object):
     '''Implementation for ESPA errors.resolve(error_message) interface'''
 
@@ -23,7 +24,7 @@ class Errors(object):
 
         self.product_name = name
 
-        #build list of known error conditions to be checked
+        # build list of known error conditions to be checked
         self.conditions = list()
 
         self.conditions.append(self.narr_data_bounds)
@@ -49,7 +50,7 @@ class Errors(object):
         self.conditions.append(self.reproject_errors)
         self.conditions.append(self.missing_ncep_data)
 
-        #construct the named tuple for the return value of this module
+        # construct the named tuple for the return value of this module
         self.resolution = collections.namedtuple('ErrorResolution',
                                                  ['status', 'reason', 'extra'])
 
@@ -97,7 +98,8 @@ class Errors(object):
         ts = datetime.datetime.now()
         ts = ts + datetime.timedelta(seconds=int(timeout))
         extras['retry_after'] = ts.strftime('%Y-%m-%d %H:%M:%S')
-        extras['retry_limit'] = config.get('retry.{0}.retries'.format(timeout_key))
+        extras['retry_limit'] = config.get(
+            'retry.{0}.retries'.format(timeout_key))
         return extras
 
     def ssh_errors(self, error_message):
@@ -156,11 +158,11 @@ class Errors(object):
                                        extras)
         is_landsat = False
         if self.product_name is not None:
-            is_landsat =  isinstance(sensor.instance(self.product_name),
-                                     sensor.Landsat)
+            is_landsat = isinstance(sensor.instance(self.product_name),
+                                    sensor.Landsat)
 
         if resolution is not None and is_landsat:
-            logger.critical("err api/errors.py gzip_errors_online_cache\n"\
+            logger.critical("err api/errors.py gzip_errors_online_cache\n"
                             "product_name: {0}\nerror_message: {1}".format(self.product_name, error_message))
             emails.Emails().send_gzip_error_email(self.product_name)
 
@@ -290,7 +292,8 @@ class Errors(object):
         return self.__find_error(error_message, keys, status, reason, extras)
 
     def reproject_errors(self, error_message):
-        keys = ['WarpVerificationError: Failed to compute statistics, no valid pixels found in sampling']
+        keys = [
+            'WarpVerificationError: Failed to compute statistics, no valid pixels found in sampling']
         status = 'unavailable'
         reason = 'No valid pixels found for reprojection'
         return self.__find_error(error_message, keys, status, reason)
@@ -301,6 +304,15 @@ class Errors(object):
         status = 'unavailable'
         reason = 'Missing NCEP aux reanalysis data'
         return self.__find_error(error_message, keys, status, reason)
+
+    def unable_to_locate_mtl(self, error_message):
+        ''' error resulting from processing attempting to build science products
+            before the src archive has been extracted '''
+        keys = ['Unable to locate the missing MTL file']
+        status = 'retry'
+        reason = 'Tried processing without inputs'
+        extras = self.__add_retry('missed_extraction')
+        return self.__find_error(error_message, keys, status, reason, extras)
 
 
 def resolve(error_message, name):
