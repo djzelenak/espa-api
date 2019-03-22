@@ -185,6 +185,7 @@ class TestProductionAPI(unittest.TestCase):
                              'then try reprocessing. BLAH BLAH BLAH')
         production_provider.set_product_error(scene.name, order.orderid,
                                               'somewhere', log_file_contents)
+        self.assertEqual('unavailable', Scene.get('ordering_scene.status', scene.name, order.orderid))
 
     @patch('api.external.lta.update_order_status', lta.update_order_status)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
