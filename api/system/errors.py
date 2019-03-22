@@ -301,7 +301,7 @@ class Errors(object):
 
     def missing_ncep_data(self, error_message):
         keys = ['Could not find NCEP REANALYSIS auxiliary data',
-                'Verify the missing auxiliary data products, then try reprocessing']
+                'Verify the missing auxiliary data products']
         status = 'unavailable'
         reason = 'Missing NCEP aux reanalysis data'
         return self.__find_error(error_message, keys, status, reason)
