@@ -49,6 +49,7 @@ class Errors(object):
         self.conditions.append(self.lasrc_mystery_segfaults)
         self.conditions.append(self.reproject_errors)
         self.conditions.append(self.missing_ncep_data)
+        self.conditions.append(self.unable_to_locate_mtl)
 
         # construct the named tuple for the return value of this module
         self.resolution = collections.namedtuple('ErrorResolution',
