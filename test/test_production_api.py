@@ -142,6 +142,20 @@ class TestProductionAPI(unittest.TestCase):
                                               'runSr  sh: line 1: 1010 Segmentation fault lasrc --xml=')
         self.assertTrue('retry' == Scene.get('ordering_scene.status', scene.name, order.orderid))
 
+    def test_production_set_product_error_retry_missing_mtl(self):
+        """
+        Move a scene status from error to retry based on the error
+        message
+        """
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        scene = order.scenes({'sensor_type': 'landsat'})[-1]
+        log_file_contents = ('BLAH BLAH BLAH ESPAException: Unable to '
+                             'locate the MTL file in '
+                             '[a path to a mtl file somewhere] BLAH BLAH BLAH')
+        production_provider.set_product_error(scene.name, order.orderid,
+                                              'somewhere',
+                                              log_file_contents)
+
     def test_production_set_product_error_unavail_reproject(self):
         """
         Move a scene status from error to retry based on the error
