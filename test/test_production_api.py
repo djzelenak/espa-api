@@ -171,6 +171,21 @@ class TestProductionAPI(unittest.TestCase):
                                               'somewhere', log_file_contents)
         self.assertEqual('unavailable', Scene.get('ordering_scene.status', scene.name, order.orderid))
 
+    def test_production_set_product_error_unavail_ncep(self):
+        """
+        Move a scene status from error to unavailable based on the
+        error message
+        """
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        scene = order.scenes({'sensor_type': 'landsat'})[-1]
+        log_file_contents = ('BLAH BLAH BLAH Warning: lndpm : Could not find '
+                             'NCEP REANALYSIS auxiliary data: a_file_.hdf '
+                             'Check LEDAPS_AUX_DIR environment variable. '
+                             'Error: lndpm : Verify the missing auxiliary data products, '
+                             'then try reprocessing. BLAH BLAH BLAH')
+        production_provider.set_product_error(scene.name, order.orderid,
+                                              'somewhere', log_file_contents)
+
     @patch('api.external.lta.update_order_status', lta.update_order_status)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
     def test_update_product_details_update_status(self):
