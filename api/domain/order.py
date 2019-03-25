@@ -678,7 +678,7 @@ class OptionsConversion(object):
                 ('reanalysis_source', 'reanalsrc_narr',   'narr'),
                 ('reanalysis_source', 'reanalsrc_merra2', 'merra2'),
                 ('reanalysis_source', 'reanalsrc_fp',     'fp'),
-                ('reanalysis_source', 'reanalssrc_fpit',  'fpit'),
+                ('reanalysis_source', 'reanalsrc_fpit',  'fpit'),
                 ('include_pixel_qa', 'pixel_qa', True)]
 
     resample_map = [('cubic', 'cc', None),
