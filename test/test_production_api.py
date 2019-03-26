@@ -685,12 +685,12 @@ class TestProductionAPI(unittest.TestCase):
         self.assertDictEqual(OptionsConversion._flatten(opts_merra2, OptionsConversion.keywords_map), 
                              {'include_st': True, 'output_format': 'gtiff', 'reanalysis_source': 'merra2'})
 
-        opts_fp = deepcopy(ops)
+        opts_fp = deepcopy(opts)
         opts_fp['etm7_collection']['products'] = ['st', 'reanalsrc_fp']
         self.assertDictEqual(OptionsConversion._flatten(opts_fp, OptionsConversion.keywords_map), 
                              {'include_st': True, 'output_format': 'gtiff', 'reanalysis_source': 'fp'})
 
-        opts_fpit = deepcopy(ops)
+        opts_fpit = deepcopy(opts)
         opts_fpit['etm7_collection']['products'] = ['st', 'reanalsrc_fpit']
         self.assertDictEqual(OptionsConversion._flatten(opts_fpit, OptionsConversion.keywords_map), 
                              {'include_st': True, 'output_format': 'gtiff', 'reanalysis_source': 'fpit'})        
