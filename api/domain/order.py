@@ -203,7 +203,7 @@ class Order(object):
     @classmethod
     def where(cls, params):
         """
-        Query for a particular row in the ordering_oder table
+        Query for a particular row in the ordering_order table
 
         :param params: dictionary of column: value parameter to select on
         :return: list of matching Order objects
