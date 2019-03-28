@@ -80,7 +80,7 @@ class TestProductionAPI(unittest.TestCase):
         self.assertTrue(response is True)
         self.assertEqual(len(pscene), 1)
 
-    @patch('api.domain.order.Order.get_user_scenes', lambda: 9990)
+    @patch('api.domain.order.Order.get_user_scenes', lambda: ['scene'] * 9990)
     def test_production_check_open_scenes(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
         order = Order.find(order_id)
