@@ -149,43 +149,25 @@ class OrderingProvider(ProviderInterfaceV0):
         resp = Order.where(params)
         return resp
 
-    def check_open_scenes(self, order = None, username='', email='', user_id='', filters=None):
-
+    def check_open_scenes(self, order, user_id='', filters=None):
+        """
+        Perform a check to determine if the new order plus current open scenes for the current user
+        is less than the maximum allowed open scene limit (currently 10,000).
+        """
         if filters and not isinstance(filters, dict):
             raise OrderingProviderException('filters must be dict')
 
-        ids = sensor.SensorCONST.instances.keys()
+        scenes = Order.get_user_scenes(user_id=user_id, params=filters)
 
+        ids = sensor.SensorCONST.instances.keys()
         # count number of scenes in the order
         order_scenes = 0
         for key in order:
             if key in ids:
                 order_scenes += len(order[key]['inputs'])
 
-        if username:
-            usearch = {'username': username}
-        elif email:
-            usearch = {'email': email}
-        elif user_id:
-            usearch = {'id': user_id}
-
-        user = User.where(usearch)
-        if len(user) != 1:
-            return list()
-        else:
-            user = user.pop()
-
-        if filters:
-            params = dict(filters)
-            params.update({'user_id': user.id})
-        else:
-            params = {'status': ('processing', 'submitted', 'oncache', 'onorder', 'queued')}
-            params.update = {'user_id': user.id}
-
-        resp = Scene.where(params)
-
-        if (len(resp) + order_scenes) > 10000:
-            diff = (len(resp) + order_scenes) - 10000
+        if (len(scenes) + order_scenes) > 10000:
+            diff = (len(scenes) + order_scenes) - 10000
             msg = "Order will exceed open scene limit of 10000, please reduce order by {diff} scenes"
             raise OrderingProviderException(msg.format(diff=diff))
 
