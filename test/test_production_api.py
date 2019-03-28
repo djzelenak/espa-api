@@ -14,11 +14,13 @@ from api.notification import emails
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.providers.production.mocks.production_provider import MockProductionProvider
 from api.providers.production.production_provider import ProductionProvider
+from api.providers.ordering.ordering_provider import OrderingProvider, OrderingProviderException
 from api.system.mocks import errors
 from mock import patch
 from copy import deepcopy
 
 api = API()
+ordering_provider = OrderingProvider()
 production_provider = ProductionProvider()
 mock_production_provider = MockProductionProvider()
 cfg = ConfigurationProvider()
@@ -78,16 +80,18 @@ class TestProductionAPI(unittest.TestCase):
         self.assertTrue(response is True)
         self.assertEqual(len(pscene), 1)
 
-    @patch('api.external.inventory.available', lambda: True)
-    @patch('api.providers.production.production_provider.ProductionProvider.parse_urls_m2m',
-           lambda x, y: y)
+    @patch('api.domain.order.Order.get_user_scenes', lambda: 9990)
     def test_production_check_open_scenes(self):
-        pass
-        # order_id_1 = self.mock_order.generate_testing_large_order(self.user_id)
-        # order_id_2 = self.mock_order.generate_testing_large_order(self.user_id)
-        # order_id_3 = self.mock_order.generate_testing_large_order(self.user_id)
-
-
+        order_id = self.mock_order.generate_testing_order(self.user_id)
+        order = Order.find(order_id)
+        ordering_provider.check_open_scenes(order=order,
+                                            user_id=self.user_id,
+                                            filters={'status': ('submitted',
+                                                                'oncache',
+                                                                'onorder',
+                                                                'queued',
+                                                                'processing')})
+        self.assertRaises(OrderingProviderException)
 
     def test_production_set_product_retry(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
