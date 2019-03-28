@@ -80,12 +80,22 @@ class TestProductionAPI(unittest.TestCase):
         self.assertTrue(response is True)
         self.assertEqual(len(pscene), 1)
 
-    @patch('api.domain.order.Order.get_user_scenes', lambda: ['scene'] * 9990)
+    @patch('api.external.inventory.available', lambda: True)
+    @patch('api.providers.production.production_provider.ProductionProvider.parse_urls_m2m',
+           lambda x, y: y)
     def test_production_check_open_scenes(self):
-        order_id = self.mock_order.generate_testing_order(self.user_id)
-        order = Order.find(order_id)
-        ordering_provider.check_open_scenes(order=order,
-                                            user_id=self.user_id,
+        mock = MockOrder()
+        # Make user have a lot of open scenes
+        l_order_id = self.mock_order.generate_large_testing_order(self.user_id)
+        l_order = Order.find(l_order_id)
+        user_id = l_order.user_id
+
+        # Add a smaller order
+        s_order_id = self.mock_order.generate_testing_order(self.user_id)
+        s_order = Order.find(s_order_id)
+
+        ordering_provider.check_open_scenes(order=mock.base_order,
+                                            user_id=user_id,
                                             filters={'status': ('submitted',
                                                                 'oncache',
                                                                 'onorder',
