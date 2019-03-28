@@ -143,7 +143,13 @@ class API(object):
             # perform validation, raises ValidationException
             order = self.validation.validate(order, user.username)
             # perform check on open scene limit
-            self.ordering.check_open_scenes(order, user.username)
+            self.ordering.check_open_scenes(order=order,
+                                            user_id=user.id,
+                                            filters={'status': ('submitted',
+                                                                'oncache',
+                                                                'onorder',
+                                                                'queued',
+                                                                'processing')})
             # performs inventory check, raises InventoryException
             self.inventory.check(order, user.contactid)
             # track metrics
