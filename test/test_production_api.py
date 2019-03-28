@@ -95,13 +95,13 @@ class TestProductionAPI(unittest.TestCase):
         s_order = Order.find(s_order_id)
 
         self.assertRaises(OrderingProviderException,
-                          ordering_provider.check_open_scenes(order=mock.base_order,
-                                                              user_id=user_id,
-                                                              filters={'status': ('submitted',
-                                                                                  'oncache',
-                                                                                  'onorder',
-                                                                                  'queued',
-                                                                                  'processing')}))
+                          lambda: ordering_provider.check_open_scenes(order=mock.base_order,
+                                                                      user_id=user_id,
+                                                                      filters={'status': ('submitted',
+                                                                                          'oncache',
+                                                                                          'onorder',
+                                                                                          'queued',
+                                                                                          'processing')}))
 
     def test_production_set_product_retry(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
