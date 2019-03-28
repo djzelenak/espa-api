@@ -77,6 +77,17 @@ class TestProductionAPI(unittest.TestCase):
         self.assertTrue(response is True)
         self.assertEqual(len(pscene), 1)
 
+    @patch('api.external.inventory.available', lambda: True)
+    @patch('api.providers.production.production_provider.ProductionProvider.parse_urls_m2m',
+           lambda x, y: y)
+    def test_production_check_open_scenes(self):
+        pass
+        # order_id_1 = self.mock_order.generate_testing_large_order(self.user_id)
+        # order_id_2 = self.mock_order.generate_testing_large_order(self.user_id)
+        # order_id_3 = self.mock_order.generate_testing_large_order(self.user_id)
+
+
+
     def test_production_set_product_retry(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
         order = Order.find(order_id)
