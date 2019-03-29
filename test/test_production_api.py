@@ -90,10 +90,8 @@ class TestProductionAPI(unittest.TestCase):
         l_order = Order.find(l_order_id)
         user_id = l_order.user_id
 
-        # Add a smaller order
-        s_order_id = self.mock_order.generate_testing_order(self.user_id)
-        s_order = Order.find(s_order_id)
-
+        # Add a smaller order that pushes scenes over the limit, make sure that this
+        # raises the appropriate exception
         self.assertRaises(OrderingProviderException,
                           lambda: ordering_provider.check_open_scenes(order=mock.base_order,
                                                                       user_id=user_id,
