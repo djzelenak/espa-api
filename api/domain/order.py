@@ -203,7 +203,7 @@ class Order(object):
     @classmethod
     def where(cls, params):
         """
-        Query for a particular row in the ordering_order table
+        Query for a particular row in the ordering_oder table
 
         :param params: dictionary of column: value parameter to select on
         :return: list of matching Order objects
@@ -244,7 +244,7 @@ class Order(object):
         """
         if isinstance(id, int):
             found = cls.where({'id': id})
-        elif isinstance(id, str):
+        elif isinstance(id, basestring):
             found = cls.where({'orderid': str(id)})
         else:
             raise OrderException(" cannot find order by %s " % id)
