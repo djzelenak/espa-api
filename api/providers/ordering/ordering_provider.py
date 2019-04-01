@@ -169,6 +169,7 @@ class OrderingProvider(ProviderInterfaceV0):
 
         if (len(scenes) + order_scenes) > 10000:
             diff = (len(scenes) + order_scenes) - 10000
+
             msg = "Order will exceed open scene limit of 10000, please reduce number of ordered scenes by {diff}"
             raise OpenSceneLimitException(msg.format(diff=diff))
 
