@@ -19,6 +19,11 @@ class ProviderInterfaceV0(object):
         return
 
     @abc.abstractmethod
+    def check_open_scenes(self, uid):
+        """Returns list of open scenes for a given user"""
+        return
+
+    @abc.abstractmethod
     def fetch_order(self, ordernum):
         """Returns details for a given order"""
         return
