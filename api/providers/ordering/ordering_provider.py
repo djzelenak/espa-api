@@ -155,6 +155,8 @@ class OrderingProvider(ProviderInterfaceV0):
         Perform a check to determine if the new order plus current open scenes for the current user
         is less than the maximum allowed open scene limit (currently 10,000).
         """
+        limit = [config.configuration_keys[key] for key in config.configuration_keys().keys() if 'open_scene_limit' in key][0]
+
         if filters and not isinstance(filters, dict):
             raise OrderingProviderException('filters must be dict')
 
@@ -167,11 +169,11 @@ class OrderingProvider(ProviderInterfaceV0):
             if key in ids:
                 order_scenes += len(order[key]['inputs'])
 
-        if (len(scenes) + order_scenes) > 10000:
-            diff = (len(scenes) + order_scenes) - 10000
+        if (len(scenes) + order_scenes) > int(limit):
+            diff = (len(scenes) + order_scenes) - int(limit)
 
-            msg = "Order will exceed open scene limit of 10000, please reduce number of ordered scenes by {diff}"
-            raise OpenSceneLimitException(msg.format(diff=diff))
+            msg = "Order will exceed open scene limit of {lim}, please reduce number of ordered scenes by {diff}"
+            raise OpenSceneLimitException(msg.format(lim=limit, diff=diff))
 
     def fetch_order(self, ordernum):
         orders = Order.where({'orderid': ordernum})
