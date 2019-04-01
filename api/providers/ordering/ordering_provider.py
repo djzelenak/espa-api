@@ -155,7 +155,7 @@ class OrderingProvider(ProviderInterfaceV0):
         Perform a check to determine if the new order plus current open scenes for the current user
         is less than the maximum allowed open scene limit (currently 10,000).
         """
-        limit = [config.configuration_keys[key] for key in config.configuration_keys().keys() if 'open_scene_limit' in key][0]
+        limit = config.configuration_keys['policy.open_scene_limit']
 
         if filters and not isinstance(filters, dict):
             raise OrderingProviderException('filters must be dict')
