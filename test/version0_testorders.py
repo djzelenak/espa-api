@@ -112,6 +112,30 @@ def build_base_order():
     return base
 
 
+def build_large_order():
+    """
+    Build a large order for testing open scene limit
+    """
+    base = {'projection': {'lonlat': None},
+            'image_extents': {'north': 0.002695,
+                              'south': 0,
+                              'east': 0.002695,
+                              'west': 0,
+                              'units': 'dd'},
+            'format': 'gtiff',
+            'resampling_method': 'cc',
+            'resize': {'pixel_size': 0.0002695,
+                       'pixel_size_units': 'dd'},
+            'plot_statistics': True}
+
+    names = ['LT04_L1TP_044030_{}1028_20161004_01_T1'.format(str(n).zfill(4)) for n in range(1, 9991)]
+
+    base['tm4_collection'] = {'inputs': names,
+                              'products': 'sr'}
+
+    return base
+
+
 class InvalidOrders(object):
     """
     Build a list of invalid orders and expected exception messages based on a

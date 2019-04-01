@@ -3,7 +3,7 @@ from api.domain.order import Order
 from api.domain.scene import Scene
 from api.domain.user import User
 from api.util import chunkify
-from test.version0_testorders import build_base_order
+from test.version0_testorders import build_base_order, build_large_order
 from api.providers.ordering.ordering_provider import OrderingProvider
 from api.providers.production.production_provider import ProductionProvider
 from api.external.mocks import lta as mock_lta
@@ -25,6 +25,7 @@ class MockOrder(object):
         except:
             raise MockOrderException("MockOrder objects only allowed while testing")
         self.base_order = build_base_order()
+        self.large_order = build_large_order()
         self.ordering_provider = OrderingProvider()
         self.production_provider = ProductionProvider()
 
@@ -52,6 +53,15 @@ class MockOrder(object):
         rand = str(random.randint(1, 99))
         user.email = rand + user.email
         order = self.ordering_provider.place_order(self.base_order, user)
+        return order.id
+
+    def generate_large_testing_order(self, user_id):
+        user = User.find(user_id)
+
+        rand = str(random.randint(1, 99))
+
+        user.email = rand + user.email
+        order = self.ordering_provider.place_order(self.large_order, user)
         return order.id
 
     def generate_ee_testing_order(self, user_id, partial=False):
