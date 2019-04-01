@@ -72,6 +72,7 @@ INSERT INTO ordering_configuration (key, value) VALUES
     ('policy.purge_orders_after', '10'),
     ('system.ondemand_enabled', 'False'),
     ('system.order_disposition_enabled', 'True'),
+    ('system.open_scene_limit', '10000')
 
     ('cache.key.handle_orders_lock_timeout', '1260'),
     ('cache.ttl', '604800'),
