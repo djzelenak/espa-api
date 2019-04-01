@@ -80,27 +80,6 @@ class TestProductionAPI(unittest.TestCase):
         self.assertTrue(response is True)
         self.assertEqual(len(pscene), 1)
 
-    @patch('api.external.inventory.available', lambda: True)
-    @patch('api.providers.production.production_provider.ProductionProvider.parse_urls_m2m',
-           lambda x, y: y)
-    def test_production_check_open_scenes(self):
-        mock = MockOrder()
-        # Make user have a lot of open scenes
-        l_order_id = self.mock_order.generate_large_testing_order(self.user_id)
-        l_order = Order.find(l_order_id)
-        user_id = l_order.user_id
-
-        # Add a smaller order that pushes scenes over the limit, make sure that this
-        # raises the appropriate exception
-        self.assertRaises(OrderingProviderException,
-                          lambda: ordering_provider.check_open_scenes(order=mock.base_order,
-                                                                      user_id=user_id,
-                                                                      filters={'status': ('submitted',
-                                                                                          'oncache',
-                                                                                          'onorder',
-                                                                                          'queued',
-                                                                                          'processing')}))
-
     def test_production_set_product_retry(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
         order = Order.find(order_id)
