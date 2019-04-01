@@ -12,7 +12,7 @@ from api.util import lowercase_all
 from api.domain.user import User, UserException
 from api.external.ers import (
     ERSApiErrorException, ERSApiConnectionException, ERSApiAuthFailedException)
-from api import ValidationException, InventoryException, InventoryConnectionException
+from api import ValidationException, InventoryException, InventoryConnectionException, OpenSceneLimitException
 from api.transports.http_json import (
     MessagesResponse, UserResponse, OrderResponse, OrdersResponse, ItemsResponse,
     BadRequestResponse, SystemErrorResponse, AccessDeniedResponse, AuthFailedResponse,
@@ -348,6 +348,9 @@ class Ordering(Resource):
                                            code=400)
             except InventoryConnectionException as e:
                 message = MessagesResponse(warnings=['Could not connect to data source'],
+                                           code=400)
+            except OpenSceneLimitException as e:
+                message = MessagesResponse(warnings=[e.response],
                                            code=400)
             else:
                 message = OrderResponse(**order.as_dict())

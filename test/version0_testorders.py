@@ -135,6 +135,7 @@ def build_large_order():
 
     return base
 
+
 class InvalidOrders(object):
     """
     Build a list of invalid orders and expected exception messages based on a

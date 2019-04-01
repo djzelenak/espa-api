@@ -8,7 +8,7 @@ from api.util import lowercase_all
 from api.util.dbconnect import db_instance
 import version0_testorders as testorders
 from api.providers.validation.validictory import BaseValidationSchema
-from api import ValidationException, InventoryException, __location__
+from api import ValidationException, InventoryException, OpenSceneLimitException, __location__
 
 import os
 from api.domain.mocks.order import MockOrder
@@ -18,6 +18,7 @@ from api.domain.user import User
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.providers.production.mocks.production_provider import MockProductionProvider
 from api.providers.production.production_provider import ProductionProvider
+from api.providers.ordering.ordering_provider import OrderingProviderException, OrderingProvider
 from api.external.mocks import lta as mocklta
 from api.external.mocks import inventory as mockinventory
 from api.system.logger import ilogger as logger
@@ -26,6 +27,7 @@ from mock import patch
 api = APIv1()
 production_provider = ProductionProvider()
 mock_production_provider = MockProductionProvider()
+ordering_provider = OrderingProvider()
 cfg = ConfigurationProvider()
 
 
@@ -217,6 +219,31 @@ class TestValidation(unittest.TestCase):
                 exc = str(exc).replace('[', '\[')
                 with self.assertRaisesRegexp(exc_type, exc):
                     api.validation(order, self.staffuser.username)
+
+    @patch('api.external.inventory.available', lambda: True)
+    @patch('api.providers.production.production_provider.ProductionProvider.parse_urls_m2m',
+           lambda x, y: y)
+    def test_order_exceeds_open_scene_limit(self):
+        """
+        Build a large order, then attempt to place an order that would exceed the user's open scene limit.
+        """
+        mock = MockOrder()
+        user = MockUser()
+        user_id = user.add_testing_user()
+
+        # Make user have a lot of open scenes
+        l_order_id = mock.generate_large_testing_order(user_id)
+
+        # Add a smaller order that pushes scenes over the limit, make sure that this
+        # raises the appropriate exception
+        self.assertRaises(OpenSceneLimitException,
+                          lambda: ordering_provider.check_open_scenes(order=mock.base_order,
+                                                                      user_id=user_id,
+                                                                      filters={'status': ('submitted',
+                                                                                          'oncache',
+                                                                                          'onorder',
+                                                                                          'queued',
+                                                                                          'processing')}))
 
     def test_validate_sr_restricted_human_readable(self):
         """

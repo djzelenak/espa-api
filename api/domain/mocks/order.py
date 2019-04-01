@@ -59,6 +59,7 @@ class MockOrder(object):
         user = User.find(user_id)
 
         rand = str(random.randint(1, 99))
+
         user.email = rand + user.email
         order = self.ordering_provider.place_order(self.large_order, user)
         return order.id
