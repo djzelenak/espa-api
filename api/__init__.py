@@ -1,9 +1,10 @@
+""" Holds all the custom exceptions raised by the api """
+
 import re
 import os
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
-""" Holds all the custom exceptions raised by the api """
 
 class OrderNotFound(StandardError):
 
@@ -48,6 +49,7 @@ class ProductNotImplemented(NotImplementedError):
 
         super(ProductNotImplemented, self).__init__(product_id)
 
+
 class ValidationException(Exception):
     """Exceptions when there is an error with validating an order
 
@@ -85,3 +87,14 @@ class InventoryConnectionException(Exception):
     """Exception handling if input data pool is down"""
     def __init__(self, msg):
         super(InventoryConnectionException, self).__init__(msg)
+
+
+class OpenSceneLimitException(Exception):
+    """
+    Exception handling if the ordered scenes for a given user
+    exceeds the limit on total open scenes
+    """
+    def __init__(self, msg):
+        super(OpenSceneLimitException, self).__init__(str(msg))
+
+        self.response = msg

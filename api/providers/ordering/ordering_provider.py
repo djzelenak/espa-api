@@ -8,6 +8,7 @@ from api.domain.user import User
 from api.util.dbconnect import db_instance
 from api.util import julian_date_check
 from api.providers.ordering import ProviderInterfaceV0
+from api import OpenSceneLimitException
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.providers.caching.caching_provider import CachingProvider
 # ----------------------------------------------------------------------------------
@@ -168,8 +169,8 @@ class OrderingProvider(ProviderInterfaceV0):
 
         if (len(scenes) + order_scenes) > 10000:
             diff = (len(scenes) + order_scenes) - 10000
-            msg = "Order will exceed open scene limit of 10000, please reduce order by {diff} scenes"
-            raise OrderingProviderException(msg.format(diff=diff))
+            msg = "Order will exceed open scene limit of 10000, please reduce number of ordered scenes by {diff}"
+            raise OpenSceneLimitException(msg.format(diff=diff))
 
     def fetch_order(self, ordernum):
         orders = Order.where({'orderid': ordernum})

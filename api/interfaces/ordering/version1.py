@@ -8,7 +8,7 @@
 import traceback
 from api.system.logger import ilogger as logger
 from api.domain import default_error_message, user_api_operations
-from api import ValidationException, InventoryException, InventoryConnectionException
+from api import ValidationException, InventoryException, InventoryConnectionException, OpenSceneLimitException
 
 
 class API(object):
@@ -156,7 +156,7 @@ class API(object):
             self.metrics.collect(order)
             # capture the order
             response = self.ordering.place_order(order, user)
-        except (InventoryException, ValidationException, InventoryConnectionException) as e:
+        except (InventoryException, ValidationException, InventoryConnectionException, OpenSceneLimitException) as e:
             logger.info('Bad order submission: User %s Order %s\nexception %s',
                         user.username, order, traceback.format_exc())
             raise
