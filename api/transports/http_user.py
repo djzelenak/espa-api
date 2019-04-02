@@ -350,7 +350,7 @@ class Ordering(Resource):
                 message = MessagesResponse(warnings=['Could not connect to data source'],
                                            code=400)
             except OpenSceneLimitException as e:
-                message = MessagesResponse(warnings=[e.response],
+                message = MessagesResponse(errors=[e.response],
                                            code=400)
             else:
                 message = OrderResponse(**order.as_dict())
