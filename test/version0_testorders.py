@@ -94,6 +94,7 @@ def build_base_order():
                        'pixel_size_units': 'dd'},
             'plot_statistics': True}
 
+    # This will give the base order 15 scenes
     sensor_acqids = {'.A2000072.h02v09.005.2008237032813': (['MOD09A1', 'MOD09Q1', 'MYD13A1', 'MYD13Q1'],
                                                             ['mod09a1', 'mod09q1', 'myd13a1', 'myd13q1']),
                      '.A2016305.h11v04.006.2016314200836': (['MOD09GA', 'MOD09GQ', 'MYD13A2', 'MYD13A3'],
@@ -108,30 +109,6 @@ def build_base_order():
         for prefix, label in zip(sensor_acqids[acq][0], sensor_acqids[acq][1]):
             base[label] = {'inputs': ['{}{}'.format(prefix, acq)],
                            'products': sn.instance('{}{}'.format(prefix, acq)).products}
-
-    return base
-
-
-def build_large_order():
-    """
-    Build a large order for testing open scene limit
-    """
-    base = {'projection': {'lonlat': None},
-            'image_extents': {'north': 0.002695,
-                              'south': 0,
-                              'east': 0.002695,
-                              'west': 0,
-                              'units': 'dd'},
-            'format': 'gtiff',
-            'resampling_method': 'cc',
-            'resize': {'pixel_size': 0.0002695,
-                       'pixel_size_units': 'dd'},
-            'plot_statistics': True}
-
-    names = ['LT04_L1TP_044030_{}1028_20161004_01_T1'.format(str(n).zfill(4)) for n in range(1, 9991)]
-
-    base['tm4_collection'] = {'inputs': names,
-                              'products': 'sr'}
 
     return base
 

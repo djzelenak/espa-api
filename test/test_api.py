@@ -231,10 +231,10 @@ class TestValidation(unittest.TestCase):
         user = MockUser()
         user_id = user.add_testing_user()
 
-        # Make user have a lot of open scenes
-        l_order_id = mock.generate_large_testing_order(user_id)
+        # base testing order will give a user 15 open scenes currently
+        order_id = mock.generate_testing_order(user_id)
 
-        # Add a smaller order that pushes scenes over the limit, make sure that this
+        # Add a second order that pushes scenes over the limit, make sure that this
         # raises the appropriate exception
         self.assertRaises(OpenSceneLimitException,
                           lambda: ordering_provider.check_open_scenes(order=mock.base_order,
