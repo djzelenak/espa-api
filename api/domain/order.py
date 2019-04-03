@@ -244,7 +244,7 @@ class Order(object):
         """
         if isinstance(id, int):
             found = cls.where({'id': id})
-        elif isinstance(id, str):
+        elif isinstance(id, basestring):
             found = cls.where({'orderid': str(id)})
         else:
             raise OrderException(" cannot find order by %s " % id)
