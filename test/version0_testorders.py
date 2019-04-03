@@ -94,6 +94,7 @@ def build_base_order():
                        'pixel_size_units': 'dd'},
             'plot_statistics': True}
 
+    # This will give the base order 15 scenes
     sensor_acqids = {'.A2000072.h02v09.005.2008237032813': (['MOD09A1', 'MOD09Q1', 'MYD13A1', 'MYD13Q1'],
                                                             ['mod09a1', 'mod09q1', 'myd13a1', 'myd13q1']),
                      '.A2016305.h11v04.006.2016314200836': (['MOD09GA', 'MOD09GQ', 'MYD13A2', 'MYD13A3'],

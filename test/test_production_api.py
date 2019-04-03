@@ -14,11 +14,13 @@ from api.notification import emails
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.providers.production.mocks.production_provider import MockProductionProvider
 from api.providers.production.production_provider import ProductionProvider
+from api.providers.ordering.ordering_provider import OrderingProvider, OrderingProviderException
 from api.system.mocks import errors
 from mock import patch
 from copy import deepcopy
 
 api = API()
+ordering_provider = OrderingProvider()
 production_provider = ProductionProvider()
 mock_production_provider = MockProductionProvider()
 cfg = ConfigurationProvider()

@@ -8,6 +8,7 @@ from api.domain.user import User
 from api.util.dbconnect import db_instance
 from api.util import julian_date_check
 from api.providers.ordering import ProviderInterfaceV0
+from api import OpenSceneLimitException
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.providers.caching.caching_provider import CachingProvider
 # ----------------------------------------------------------------------------------
@@ -148,6 +149,31 @@ class OrderingProvider(ProviderInterfaceV0):
 
         resp = Order.where(params)
         return resp
+
+    def check_open_scenes(self, order, user_id='', filters=None):
+        """
+        Perform a check to determine if the new order plus current open scenes for the current user
+        is less than the maximum allowed open scene limit (currently 10,000).
+        """
+        limit = config.configuration_keys['policy.open_scene_limit']
+
+        if filters and not isinstance(filters, dict):
+            raise OrderingProviderException('filters must be dict')
+
+        scenes = Order.get_user_scenes(user_id=user_id, params=filters)
+
+        ids = sensor.SensorCONST.instances.keys()
+        # count number of scenes in the order
+        order_scenes = 0
+        for key in order:
+            if key in ids:
+                order_scenes += len(order[key]['inputs'])
+
+        if (len(scenes) + order_scenes) > int(limit):
+            diff = (len(scenes) + order_scenes) - int(limit)
+
+            msg = "Order will exceed open scene limit of {lim}, please reduce number of ordered scenes by {diff}"
+            raise OpenSceneLimitException(msg.format(lim=limit, diff=diff))
 
     def fetch_order(self, ordernum):
         orders = Order.where({'orderid': ordernum})
