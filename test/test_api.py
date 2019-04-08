@@ -2,6 +2,7 @@
 import unittest
 import yaml
 import copy
+import random
 
 from api.interfaces.ordering.version1 import API as APIv1
 from api.util import lowercase_all
@@ -244,6 +245,27 @@ class TestValidation(unittest.TestCase):
                                                                                           'onorder',
                                                                                           'queued',
                                                                                           'processing')}))
+
+    def test_get_scenes_for_new_user(self):
+        mock = MockOrder()
+        user = MockUser()
+        user_id = user.add_testing_user()
+        user_id = user_id + random.randint(1, 200)
+
+        user_orders = Order.where({'user_id': user_id})
+        print('USER ORDERS: %s' % user_orders)
+        self.assertTrue(len(user_orders) == 0)
+
+        try:
+            ordering_provider.check_open_scenes(order=mock.base_order,
+                                                user_id=user_id,
+                                                filters={'status': ('submitted',
+                                                                    'oncache',
+                                                                    'onorder',
+                                                                    'queued',
+                                                                    'processing')})
+        except:
+            self.fail('ordering_provider.check_open_scenes() raised Exception for new user')
 
     def test_validate_sr_restricted_human_readable(self):
         """
