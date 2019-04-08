@@ -247,6 +247,10 @@ class TestValidation(unittest.TestCase):
                                                                                           'processing')}))
 
     def test_get_scenes_for_new_user(self):
+        """
+        Make sure that checking the number of open scenes for a new user
+        with no orders will not raise an exception
+        """
         mock = MockOrder()
         user = MockUser()
         user_id = user.add_testing_user()
