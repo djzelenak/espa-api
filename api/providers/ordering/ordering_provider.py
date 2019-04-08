@@ -160,20 +160,22 @@ class OrderingProvider(ProviderInterfaceV0):
         if filters and not isinstance(filters, dict):
             raise OrderingProviderException('filters must be dict')
 
-        scenes = Order.get_user_scenes(user_id=user_id, params=filters)
+        user_orders = Order.where({'user_id': user_id})
+        if len(user_orders) > 0:
+            scenes = Order.get_user_scenes(user_id=user_id, params=filters)
 
-        ids = sensor.SensorCONST.instances.keys()
-        # count number of scenes in the order
-        order_scenes = 0
-        for key in order:
-            if key in ids:
-                order_scenes += len(order[key]['inputs'])
+            ids = sensor.SensorCONST.instances.keys()
+            # count number of scenes in the order
+            order_scenes = 0
+            for key in order:
+                if key in ids:
+                    order_scenes += len(order[key]['inputs'])
 
-        if (len(scenes) + order_scenes) > int(limit):
-            diff = (len(scenes) + order_scenes) - int(limit)
+            if (len(scenes) + order_scenes) > int(limit):
+                diff = (len(scenes) + order_scenes) - int(limit)
 
-            msg = "Order will exceed open scene limit of {lim}, please reduce number of ordered scenes by {diff}"
-            raise OpenSceneLimitException(msg.format(lim=limit, diff=diff))
+                msg = "Order will exceed open scene limit of {lim}, please reduce number of ordered scenes by {diff}"
+                raise OpenSceneLimitException(msg.format(lim=limit, diff=diff))
 
     def fetch_order(self, ordernum):
         orders = Order.where({'orderid': ordernum})
