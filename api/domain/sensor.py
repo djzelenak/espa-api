@@ -231,6 +231,7 @@ class ModisTerra09A1(Terra, Modis09A1):
 class ModisTerra09GA(Terra, Modis09GA):
     """models modis 09GA from Terra"""
     lta_json_name = 'MODIS_MOD09GA_V{collection}'
+    products = [AllProducts.l1, AllProducts.stats, AllProducts.sr_ndvi]
 
 
 class ModisTerra09GQ(Terra, Modis09GQ):
@@ -276,6 +277,7 @@ class ModisAqua09A1(Aqua, Modis09A1):
 class ModisAqua09GA(Aqua, Modis09GA):
     """models modis 09GA from Aqua"""
     lta_json_name = 'MODIS_MYD09GA_V{collection}'
+    products = [AllProducts.l1, AllProducts.stats, AllProducts.sr_ndvi]
 
 
 class ModisAqua09GQ(Aqua, Modis09GQ):
