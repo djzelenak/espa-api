@@ -37,6 +37,8 @@ INSERT INTO ordering_configuration (key, value) VALUES
 -- api.external.lpdaac
     ('url.dev.modis.datapool', 'localhost'),
     ('url.dev.modis.external', 'localhost,localhost'),
+    ('url.dev.viirs.datapool', 'localhost'),
+    ('url.dev.viirs.external', 'localhost,localhost'),
     ('path.aqua_base_source', '/MOLA'),
     ('path.terra_base_source', '/MOLT'),
 

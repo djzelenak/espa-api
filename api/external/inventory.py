@@ -55,6 +55,8 @@ class LTAService(object):
         self.landsat_datapool = config.url_for('landsat.datapool')
         self.external_modis_regex = re.compile(config.url_for('modis.external'))
         self.modis_datapool = config.url_for('modis.datapool')
+        self.external_viirs_regex = re.compile(config.url_for('viirs.external'))
+        self.viirs_datapool = config.url_for('viirs.datapool')
 
         if self.current_user and self.token:
             self.set_user_context(self.current_user, ipaddress=self.ipaddr)
@@ -62,9 +64,11 @@ class LTAService(object):
     def network_urls(self, urls, sensor='landsat'):
         """ Convert External URLs to 'Internal' (on our 10GbE network) """
         match = {'landsat': self.landsat_datapool,
-                 'modis': self.modis_datapool}[sensor]
+                 'modis': self.modis_datapool,
+                 'viirs': self.viirs_datapool}[sensor]
         sub = {'landsat': self.external_landsat_regex.sub,
-               'modis': self.external_modis_regex.sub}[sensor]
+               'modis': self.external_modis_regex.sub,
+               'viirs': self.external_viirs_regex.sub}[sensor]
         return {k: sub(match, v) for k,v in urls.items()}
 
     @property
@@ -236,9 +240,10 @@ class LTAService(object):
         resp = self._post('download', payload)
         results = resp.get('data')
         return self.network_urls(
+            self.network_urls(
                    self.network_urls(
                        {i['entityId']: i['url'] for i in results},
-                    'landsat'), 'modis')
+                    'landsat'), 'modis'), 'viirs')
 
     def get_user_context(self, contactid, ipaddress=None, context='ESPA'):
         """
