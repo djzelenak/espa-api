@@ -40,13 +40,14 @@ class InventoryProviderV0(InventoryInterfaceV0):
             else:
                 msg = 'Could not connect to Landsat data source'
                 raise InventoryConnectionException(msg)
+
         if lpdaac_ls:
-            if inventory.available():
-                results.update(self.check_dmid(lpdaac_ls, contactid))
-            elif lpdaac.check_lpdaac_available():
+            if lpdaac.check_lpdaac_available():
                 results.update(self.check_LPDAAC(lpdaac_ls))
+            elif inventory.available():
+                results.update(self.check_dmid(lpdaac_ls, contactid))
             else:
-                msg = 'Could not connect to MODIS data source'
+                msg = 'Could not connect to MODIS/VIIRS data source'
                 raise InventoryConnectionException(msg)
 
         not_avail = []

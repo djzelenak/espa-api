@@ -41,6 +41,7 @@ INSERT INTO ordering_configuration (key, value) VALUES
     ('url.dev.viirs.external', 'localhost,localhost'),
     ('path.aqua_base_source', '/MOLA'),
     ('path.terra_base_source', '/MOLT'),
+    ('path.viirs_base_source', '/VIIRS'),
 
 -- api.external.onlinecache
     ('online_cache_orders_dir', '/path/2/output'),

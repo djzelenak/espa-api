@@ -165,6 +165,8 @@ class Order(object):
                     sensor_type = 'landsat'
                 elif isinstance(sensor.instance(item1), sensor.Modis):
                     sensor_type = 'modis'
+                elif isinstance(sensor.instance(item1), sensor.Viirs):
+                    sensor_type = 'viirs'
 
                 for s in opts[key]['inputs']:
                     scene_dict = {'name': s,

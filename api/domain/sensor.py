@@ -316,7 +316,7 @@ class ModisAqua11A1(Aqua, Modis11A1):
     lta_json_name = 'MODIS_MYD11A1_V{collection}'
 
 
-class VIIRS(SensorProduct):
+class Viirs(SensorProduct):
     """Superclass for all VIIRS products"""
     short_name = None
     horizontal = None
@@ -327,7 +327,7 @@ class VIIRS(SensorProduct):
     l1_provider = 'lpdaac'
 
     def __init__(self, product_id):
-        super(VIIRS, self).__init__(product_id)
+        super(Viirs, self).__init__(product_id)
 
         parts = product_id.strip().split('.')
 
@@ -347,12 +347,13 @@ class VIIRS(SensorProduct):
         return 'VIIRS: {}'.format(self.__dict__)
 
 
-class VIIRS09GA(VIIRS):
-    """models VIIRS 09GA"""
+class Viirs09GA(Viirs):
+    """models VIIRS VNP09GA"""
     default_resolution_m = 500
     default_resolution_dd = 0.00449155
     default_rows = 2400
     default_cols = 2400
+    sensor_name = 'viirs'
 
     lta_json_name = 'VIIRS_VNP09GA'
     products = [AllProducts.l1, AllProducts.stats, AllProducts.sr_ndvi]
@@ -611,7 +612,7 @@ class SensorCONST(object):
                     ModisAqua11A1, 'myd13q1.A2000072.h02v09.005.2008237032813'),
 
         'vnp09ga': (r'^vnp09ga\.a\d{7}\.h\d{2}v\d{2}\.001\.\d{13}$',
-                    VIIRS09GA, 'vnp09ga.A2019059.h18v06.001.2019061005706')
+                    Viirs09GA, 'vnp09ga.A2019059.h18v06.001.2019061005706')
     }
 
 
@@ -638,7 +639,7 @@ def instance(product_id):
     # do not alter the case of the actual product_id!
     _id = product_id.lower().strip()
     __modis_ext = Modis.input_filename_extension
-    __viirs_ext = VIIRS.input_filename_extension
+    __viirs_ext = Viirs.input_filename_extension
     __landsat_ext = Landsat.input_filename_extension
 
     if _id.endswith(__modis_ext):

@@ -60,6 +60,8 @@ def build_base_order():
                         'products': ['l1']},
             'MYD13Q1': {'inputs': 'MYD13Q1.A2000072.h02v09.005.2008237032813',
                         'products': ['l1']},
+            'VNP09GA': {'inputs': 'VNP09GA.A2014245.h10v04.001.2017043103958',
+                        'products': ['l1']},
             'tm4': {'inputs': 'LT42181092013069PFS00',
                     'products': ['l1']},
             'tm5': {'inputs': 'LT52181092013069PFS00',
@@ -101,6 +103,9 @@ def build_base_order():
                                                             ['mod09ga', 'mod09gq', 'myd13a2', 'myd13a3']),
                      '.A2000361.h24v03.006.2015111114747': (['MOD11A1', 'MYD11A1'],
                                                             ['mod11a1', 'myd11a1']),
+
+                     '.A2014245.h10v04.001.2017043103958': (['VNP09GA'],
+                                                            ['vnp09ga']),
                      # TODO: REMOVE _collection from IDs
                      'L1TP_044030_19851028_20161004_01_T1': (['LT04_', 'LT05_', 'LE07_', 'LO08_', 'LC08_'],
                                                              ['tm4_collection', 'tm5_collection', 'etm7_collection', 'oli8_collection', 'olitirs8_collection'])}
