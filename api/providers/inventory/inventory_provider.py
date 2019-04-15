@@ -47,7 +47,7 @@ class InventoryProviderV0(InventoryInterfaceV0):
             elif inventory.available():
                 results.update(self.check_dmid(lpdaac_ls, contactid))
             else:
-                msg = 'Could not connect to MODIS/VIIRS data source'
+                msg = 'Could not connect to LPDAAC data source'
                 raise InventoryConnectionException(msg)
 
         not_avail = []
@@ -60,6 +60,7 @@ class InventoryProviderV0(InventoryInterfaceV0):
 
     @staticmethod
     def check_dmid(prod_ls, contactid=None):
+        print(prod_ls)
         try:
             token = inventory.get_cached_session()
             return inventory.check_valid(token, prod_ls)

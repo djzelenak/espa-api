@@ -738,7 +738,7 @@ class ValidationProvider(ValidationInterfaceV0):
 
                 if isinstance(prod, sn.Landsat):
                     order[key]['inputs'] = [s.upper() for s in order[key]['inputs']]
-                elif isinstance(prod, sn.Modis):
+                elif isinstance(prod, sn.Modis) or isinstance(prod, sn.Viirs):
                     order[key]['inputs'] = ['.'.join([p[0].upper(),
                                                       p[1].upper(),
                                                       p[2].lower(),
