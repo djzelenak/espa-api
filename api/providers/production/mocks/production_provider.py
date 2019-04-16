@@ -29,7 +29,7 @@ class MockProductionProvider(object):
     def get_products_to_process_inputs(self, record_limit=500,
                                 for_user=None,
                                 priority=None,
-                                product_types=['landsat', 'modis'],
+                                product_types=['landsat', 'modis', 'viirs'],
                                 encode_urls=False):
         return {'record_limit': record_limit, 'for_user': for_user, 'priority': priority,
                 'product_types': product_types, 'encode_urls': encode_urls}

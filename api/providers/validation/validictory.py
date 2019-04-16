@@ -738,12 +738,20 @@ class ValidationProvider(ValidationInterfaceV0):
 
                 if isinstance(prod, sn.Landsat):
                     order[key]['inputs'] = [s.upper() for s in order[key]['inputs']]
-                elif isinstance(prod, sn.Modis) or isinstance(prod, sn.Viirs):
+                elif isinstance(prod, sn.Modis):
                     order[key]['inputs'] = ['.'.join([p[0].upper(),
                                                       p[1].upper(),
                                                       p[2].lower(),
                                                       p[3],
                                                       p[4]]) for p in [s.split('.') for s in order[key]['inputs']]]
+
+                elif isinstance(prod, sn.Viirs):
+                    order[key]['inputs'] = ['.'.join([p[0].upper(),
+                                                      p[1].upper(),
+                                                      p[2].lower(),
+                                                      p[3],
+                                                      p[4],
+                                                      p[5].lower()]) for p in [s.split('.') for s in order[key]['inputs']]]
 
                 if stats:
                     if 'stats' not in order[key]['products']:

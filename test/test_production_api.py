@@ -56,6 +56,18 @@ class TestProductionAPI(unittest.TestCase):
     @patch('api.external.inventory.available', lambda: True)
     @patch('api.providers.production.production_provider.ProductionProvider.parse_urls_m2m',
             lambda x, y: y)
+    def test_fetch_production_products_viirs(self):
+        order_id = self.mock_order.generate_testing_order(self.user_id)
+        # need scenes with statuses of 'processing'
+        self.mock_order.update_scenes(order_id, 'viirs', 'status', ['processing', 'oncache'])
+        user = User.find(self.user_id)
+        params = {'product_types': ['viirs']}
+        response = api.fetch_production_products(params)
+        self.assertTrue('bilbo' in response[0]['orderid'])
+
+    @patch('api.external.inventory.available', lambda: True)
+    @patch('api.providers.production.production_provider.ProductionProvider.parse_urls_m2m',
+            lambda x, y: y)
     def test_fetch_production_products_landsat(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
         # need scenes with statuses of 'processing'
@@ -471,6 +483,20 @@ class TestProductionAPI(unittest.TestCase):
         #self.assertEquals(Scene.find(sid).status, "oncache")
 
     @patch('api.external.inventory.available', lambda: True)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.check_valid', inventory.check_valid_viirs)
+    def test_production_handle_submitted_viirs_products_input_exists(self):
+        # handle oncache scenario
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        for scene in order.scenes({'name !=': 'plot'}):
+            scene.status = 'submitted'
+            scene.sensor_type = 'viirs'
+            scene.save()
+            sid = scene.id
+        scenes = order.scenes({'sensor_type': 'viirs'})
+        self.assertTrue(production_provider.handle_submitted_viirs_products(scenes))
+
+    @patch('api.external.inventory.available', lambda: True)
     @patch('api.external.inventory.get_cached_session', inventory.get_cached_session) 
     @patch('api.external.inventory.check_valid', inventory.check_valid_modis)   
     def test_production_handle_submitted_modis_products_input_missing(self):
@@ -673,6 +699,8 @@ class TestProductionAPI(unittest.TestCase):
                    'include_sr_savi': False,
                    'include_sr_thermal': False,
                    'include_sr_toa': False,
+                   'include_mod_ndvi': False,
+                   'include_vnp_ndvi': False,
                    'include_statistics': False,
                    'latitude_true_scale': None,
                    'longitude_pole': None,

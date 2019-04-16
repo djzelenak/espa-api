@@ -21,8 +21,6 @@ from api.system.logger import ilogger as logger
 
 config = ConfigurationProvider()
 
-
-
 # -----------------------------------------------------------------------------+
 # Find Documentation here:                                                     |
 #      https://earthexplorer.usgs.gov/inventory/documentation/json-api         |
@@ -66,17 +64,11 @@ class LTAService(object):
     def network_urls(self, urls, sensor='landsat'):
         """ Convert External URLs to 'Internal' (on our 10GbE network) """
         match = {'landsat': self.landsat_datapool,
-                 'modis': self.modis_datapool,
-                 'viirs': self.viirs_datapool}[sensor]
+                 'modis': self.modis_datapool}[sensor]
         sub = {'landsat': self.external_landsat_regex.sub,
-               'modis': self.external_modis_regex.sub,
-               'viirs': self.external_viirs_regex.sub}[sensor]
-        return {k: sub(match, v) for k, v in urls.items()}
+               'modis': self.external_modis_regex.sub}[sensor]
 
-        # return {
-        #     k: self.external_landsat_regex.sub(self.landsat_datapool, v)
-        #     for k, v in urls.items()
-        # }
+        return {k: sub(match, v) for k, v in urls.items()}
 
     @property
     def base_url(self):
@@ -195,13 +187,13 @@ class LTAService(object):
         :type product_ids: list
         :return: dict
         """
-        print('DATASET: %s' % dataset)
         endpoint = 'idLookup'
         id_list = [i for i in product_ids]
-        if dataset.startswith('MODIS') or dataset.startswith('VIIRS'):
+        if dataset.startswith('MODIS'):
             # WARNING: MODIS dataset does not have processed date
             #           in M2M entity lookup!
             id_list = [i.rsplit('.',1)[0] for i in id_list]
+
         payload = dict(apiKey=self.token,
                         idList=id_list,
                         inputField='displayId', datasetName=dataset)
@@ -209,7 +201,7 @@ class LTAService(object):
         results = resp.get('data')
 
         id_list = [i for i in product_ids]
-        if dataset.startswith('MODIS') or dataset.startswith('VIIRS'):
+        if dataset.startswith('MODIS'):
             # WARNING: See above. Need to "undo" the MODIS mapping problem.
             results = {[i for i in id_list if k in i
                         ].pop(): v for k,v in results.items()}
@@ -248,14 +240,14 @@ class LTAService(object):
         resp = self._post('download', payload)
         results = resp.get('data')
 
-        # return self.network_urls(
-        #     self.network_urls(
-        #         self.network_urls({i['entityId']: i['url'] for i in results},
-        #                           'landsat'), 'modis'), 'viirs')
-
-        return self.network_urls(
-            self.network_urls({i['entityId']: i['url'] for i in results},
-                              'landsat'), 'modis')
+        # Use the URL taken directly from the M2M JSON API if VIIRS
+        if 'VNP' in dataset:
+            return {i['entityId']: i['url'] for i in results}
+        # Otherwise use our internal network conversion
+        else:
+            return self.network_urls(
+                self.network_urls({i['entityId']: i['url'] for i in results},
+                                  'landsat'), 'modis')
 
     def get_user_context(self, contactid, ipaddress=None, context='ESPA'):
         """
@@ -386,7 +378,6 @@ def available():
 def check_valid(token, product_ids):
     return dict(z for d, l in split_by_dataset(product_ids).items()
                  for z in verify_scenes(token, l, d).items())
-
 
 def download_urls(token, product_ids, dataset, usage='[espa]'):
     entities = convert(token, product_ids, dataset)

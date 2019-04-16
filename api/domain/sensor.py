@@ -232,7 +232,7 @@ class ModisTerra09A1(Terra, Modis09A1):
 class ModisTerra09GA(Terra, Modis09GA):
     """models modis 09GA from Terra"""
     lta_json_name = 'MODIS_MOD09GA_V{collection}'
-    products = [AllProducts.l1, AllProducts.stats, AllProducts.sr_ndvi]
+    products = [AllProducts.l1, AllProducts.stats, AllProducts.mod_ndvi]
 
 
 class ModisTerra09GQ(Terra, Modis09GQ):
@@ -278,7 +278,7 @@ class ModisAqua09A1(Aqua, Modis09A1):
 class ModisAqua09GA(Aqua, Modis09GA):
     """models modis 09GA from Aqua"""
     lta_json_name = 'MODIS_MYD09GA_V{collection}'
-    products = [AllProducts.l1, AllProducts.stats, AllProducts.sr_ndvi]
+    products = [AllProducts.l1, AllProducts.stats, AllProducts.mod_ndvi]
 
 
 class ModisAqua09GQ(Aqua, Modis09GQ):
@@ -356,7 +356,7 @@ class Viirs09GA(Viirs):
     sensor_name = 'viirs'
 
     lta_json_name = 'VIIRS_VNP09GA'
-    products = [AllProducts.l1, AllProducts.stats, AllProducts.sr_ndvi]
+    products = [AllProducts.l1, AllProducts.stats, AllProducts.vnp_ndvi]
 
 
 class Landsat(SensorProduct):
@@ -611,8 +611,8 @@ class SensorCONST(object):
         'myd11a1': (r'^myd11a1\.a\d{7}\.h\d{2}v\d{2}\.00[5-6]\.\d{13}$',
                     ModisAqua11A1, 'myd13q1.A2000072.h02v09.005.2008237032813'),
 
-        'vnp09ga': (r'^vnp09ga\.a\d{7}\.h\d{2}v\d{2}\.001\.\d{13}$',
-                    Viirs09GA, 'vnp09ga.A2019059.h18v06.001.2019061005706')
+        'vnp09ga': (r'^vnp09ga\.a\d{7}\.h\d{2}v\d{2}\.001\.\d{13}.h5$',
+                    Viirs09GA, 'vnp09ga.A2019059.h18v06.001.2019061005706.h5')
     }
 
 
@@ -644,12 +644,6 @@ def instance(product_id):
 
     if _id.endswith(__modis_ext):
         index = _id.index(__modis_ext)
-        # leave original case intact
-        product_id = product_id[0:index]
-        _id = _id[0:index]
-
-    elif _id.endswith(__viirs_ext):
-        index = _id.index(__viirs_ext)
         # leave original case intact
         product_id = product_id[0:index]
         _id = _id[0:index]
