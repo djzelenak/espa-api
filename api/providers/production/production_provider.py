@@ -1027,8 +1027,9 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                         order.completion_email_sent = datetime.datetime.now()
                         order.save()
                     except Exception, e:
-                        logger.critical('Error calling send_completion_email\nexception: {}'.format(e))
-                        if tries >= 3: break
+                        if tries >= 3:
+                            logger.critical('Error calling send_completion_email\nexception: {}'.format(e))
+                            break
                         time.sleep(5)
             else:
                 order.save()
