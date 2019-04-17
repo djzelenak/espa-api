@@ -1019,13 +1019,17 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             order.completion_date = datetime.datetime.now()
             #only send the email if this was an espa order.
             if order.order_source == 'espa' and not order.completion_email_sent:
+                tries = 0
                 while not sent:
                     try:
+                        tries += 1
                         sent = self.send_completion_email(order)
                         order.completion_email_sent = datetime.datetime.now()
                         order.save()
                     except Exception, e:
                         logger.critical('Error calling send_completion_email\nexception: {}'.format(e))
+                        if tries >= 3: break
+                        time.sleep(5)
             else:
                 order.save()
         return True
