@@ -1013,17 +1013,19 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         # find all scenes that are not complete
         scenes = order.scenes({'status NOT ': ('complete', 'unavailable')})
         if len(scenes) == 0:
+            sent = False
             logger.info('Completing order: {0}'.format(order.orderid))
             order.status = 'complete'
             order.completion_date = datetime.datetime.now()
             #only send the email if this was an espa order.
             if order.order_source == 'espa' and not order.completion_email_sent:
-                try:
-                    sent = self.send_completion_email(order)
-                    order.completion_email_sent = datetime.datetime.now()
-                    order.save()
-                except Exception, e:
-                    logger.critical('Error calling send_completion_email\nexception: {}'.format(e))
+                while not sent:
+                    try:
+                        sent = self.send_completion_email(order)
+                        order.completion_email_sent = datetime.datetime.now()
+                        order.save()
+                    except Exception, e:
+                        logger.critical('Error calling send_completion_email\nexception: {}'.format(e))
             else:
                 order.save()
         return True
