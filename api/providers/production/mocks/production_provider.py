@@ -22,6 +22,9 @@ class MockProductionProvider(object):
     def respond_true(self, *args, **kwargs):
         return True
 
+    def respond_error(self, *args, **kwargs):
+        raise Exception()
+
     def contact_ids_list(self, scenes=None):
         users = User.where({'id >': 0})
         return [u.contactid for u in users]

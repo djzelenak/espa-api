@@ -579,6 +579,20 @@ class TestProductionAPI(unittest.TestCase):
         order.save()
         self.assertTrue(production_provider.update_order_if_complete(order))
 
+    @patch('api.providers.production.production_provider.ProductionProvider.send_completion_email',
+           mock_production_provider.respond_error)
+    def test_production_order_completion_email_error(self):
+        """
+        Make sure that order status is not set to complete if the completion email failed to send
+        """
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        Scene.bulk_update([s.id for s in order.scenes()], {'status': 'complete'})
+        order.order_source = 'espa'
+        order.completion_email_sent = None
+        order.save()
+        production_provider.update_order_if_complete(order)
+        self.assertEquals(order.status, 'ordered')
+
     def test_production_queue_products_success(self):
         names_tuple = self.mock_order.names_tuple(3, self.user_id)
         processing_loc = "get_products_to_process"
