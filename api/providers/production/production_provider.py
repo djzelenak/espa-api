@@ -1013,26 +1013,22 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         # find all scenes that are not complete
         scenes = order.scenes({'status NOT ': ('complete', 'unavailable')})
         if len(scenes) == 0:
-            sent = False
             logger.info('Completing order: {0}'.format(order.orderid))
-            order.status = 'complete'
-            order.completion_date = datetime.datetime.now()
             #only send the email if this was an espa order.
-            if order.order_source == 'espa' and not order.completion_email_sent:
-                tries = 0
-                while not sent:
+            if order.order_source == 'espa':
+                if not order.completion_email_sent:
                     try:
-                        tries += 1
-                        sent = self.send_completion_email(order)
-                        order.completion_email_sent = datetime.datetime.now()
-                        order.save()
+                        if self.send_completion_email(order):
+                            order.status = 'complete'
+                            order.completion_date = datetime.datetime.now()
+                            order.completion_email_sent = datetime.datetime.now()
+                            order.save()
                     except Exception, e:
-                        if tries >= 3:
-                            logger.critical('Error calling send_completion_email\nexception: {}'.format(e))
-                            break
-                        time.sleep(5)
+                        logger.critical('Error calling send_completion_email\nexception: {}'.format(e))
             else:
+                order.status = 'complete'
                 order.save()
+
         return True
 
     def calc_scene_download_sizes(self, scenes):
