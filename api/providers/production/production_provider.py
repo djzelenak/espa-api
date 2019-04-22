@@ -1025,6 +1025,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 except Exception, e:
                     logger.critical('Error calling send_completion_email\nexception: {}'.format(e))
             else:
+                order.completion_date = datetime.datetime.now()
                 order.status = 'complete'
                 order.save()
 
