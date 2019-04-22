@@ -257,7 +257,6 @@ class TestValidation(unittest.TestCase):
         user_id = user_id + random.randint(1, 200)
 
         user_orders = Order.where({'user_id': user_id})
-        print('USER ORDERS: %s' % user_orders)
         self.assertTrue(len(user_orders) == 0)
 
         try:

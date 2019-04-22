@@ -61,7 +61,7 @@ class Emails(object):
         msg['Subject'] = subject
         msg['To'] = to_header
         msg['From'] = config.get('email.espa_address')
-        s = SMTP(host=config.get('email.espa_server'), timeout=3)
+        s = SMTP(host=config.get('email.espa_server'), timeout=config.get('email.smtp_timeout'))
         s.sendmail(msg['From'], recipient, msg.as_string())
         s.quit()
 
