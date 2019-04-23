@@ -60,7 +60,8 @@ def build_base_order():
                         'products': ['l1']},
             'MYD13Q1': {'inputs': 'MYD13Q1.A2000072.h02v09.005.2008237032813',
                         'products': ['l1']},
-            'VNP09GA': {'inputs': 'VNP09GA.A2014245.h10v04.001.2017043103958.h5',
+            'vnp09ga': {'inputs': ['VNP09GA.A2014245.h10v04.001.2017043103958.h5',
+                                    'VNP09GA.A2014245.h10v04.001.2015012103931.h5'],
                         'products': ['l1']},
             'tm4': {'inputs': 'LT42181092013069PFS00',
                     'products': ['l1']},
@@ -103,18 +104,20 @@ def build_base_order():
                                                             ['mod09ga', 'mod09gq', 'myd13a2', 'myd13a3']),
                      '.A2000361.h24v03.006.2015111114747': (['MOD11A1', 'MYD11A1'],
                                                             ['mod11a1', 'myd11a1']),
-
-                     '.A2014245.h10v04.001.2017043103958.h5': (['VNP09GA'],
-                                                            ['vnp09ga']),
                      # TODO: REMOVE _collection from IDs
                      'L1TP_044030_19851028_20161004_01_T1': (['LT04_', 'LT05_', 'LE07_', 'LO08_', 'LC08_'],
-                                                             ['tm4_collection', 'tm5_collection', 'etm7_collection', 'oli8_collection', 'olitirs8_collection'])}
+                                                             ['tm4_collection', 'tm5_collection', 'etm7_collection',
+                                                              'oli8_collection', 'olitirs8_collection'])}
 
     for acq in sensor_acqids:
         for prefix, label in zip(sensor_acqids[acq][0], sensor_acqids[acq][1]):
             base[label] = {'inputs': ['{}{}'.format(prefix, acq)],
                            'products': sn.instance('{}{}'.format(prefix, acq)).products}
 
+    # We need to have at least 2 scenes for viirs-related tests to work
+    base['vnp09ga'] = {'inputs': ['VNP09GA.A2014245.h10v04.001.2017043103958.h5',
+                                  'VNP09GA.A2014245.h10v04.001.2015012103931.h5'],
+                       'products': ['l1']}
     return base
 
 
@@ -123,6 +126,7 @@ class InvalidOrders(object):
     Build a list of invalid orders and expected exception messages based on a
     given schema
     """
+
     def __init__(self, valid_order, schema, alt_fields=None, abbreviated=False):
         self.valid_order = valid_order
         self.schema = schema
@@ -654,7 +658,6 @@ class InvalidOrders(object):
         results.append((self.update_dict(order, upd), 'minItems', exc))
 
         return results
-
 
     def update_dict(self, old, new):
         """

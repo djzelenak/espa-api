@@ -58,7 +58,7 @@ class TransportTestCase(unittest.TestCase):
         self.base_order = lowercase_all(testorders.build_base_order())
         self.sensors = [k for k in self.base_order.keys() if isinstance(self.base_order[k], dict) and 'inputs' in self.base_order[k]]
         self.inputs = {s: self.base_order[s]['inputs'] for s in self.sensors}
-        self.input_names_all = set([s[0] for k, s in self.inputs.items()])
+        self.input_names_all = set([i for sublist in [s for k, s in self.inputs.items()] for i in sublist])
 
     def tearDown(self):
         # clean up orders
