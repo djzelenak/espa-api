@@ -627,7 +627,7 @@ def instance(product_id):
     Supported VIIRS products
     VNP09GA
 
-    VIIRS FORMAT:   VNP09GA.A2019059.h18v06.001.2019061005706
+    VIIRS FORMAT:   VNP09GA.A2019059.h18v06.001.2019061005706.h5
 
     Supported LANDSAT products
     LT04 LT05 LE07 LC08 LO08

@@ -3,10 +3,14 @@ all:
     role:
         - st
         - swe
+        - stalg_single_channel
+        - reanalsrc_narr
+        - reanalsrc_merra2
+        - reanalsrc_fp
+        - reanalsrc_fpit
         - restricted_prod
     ordering:
         - restricted_sensor
-
 
 stats:
     sensors:
@@ -76,6 +80,20 @@ etm7:
         swe:
             - "< 2016151 | > 2016164"
             - "< 2017071 | > 2017076"
+
+mod09ga:
+    role:
+        - mod_ndvi
+
+myd09ga:
+    role:
+        - mod_ndvi
+
+vnp09ga:
+    role:
+        - vnp_ndvi
+        - l1
+        - stats
 
 # This is an order which should go through alternative channels
 source:
