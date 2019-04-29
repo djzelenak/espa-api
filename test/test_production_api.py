@@ -700,6 +700,7 @@ class TestProductionAPI(unittest.TestCase):
                    'include_sr_thermal': False,
                    'include_sr_toa': False,
                    'include_mod_ndvi': False,
+                   'include_myd_ndvi': False,
                    'include_vnp_ndvi': False,
                    'include_statistics': False,
                    'latitude_true_scale': None,

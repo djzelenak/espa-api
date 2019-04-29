@@ -87,13 +87,11 @@ mod09ga:
 
 myd09ga:
     role:
-        - mod_ndvi
+        - myd_ndvi
 
 vnp09ga:
     role:
         - vnp_ndvi
-        - l1
-        - stats
 
 # This is an order which should go through alternative channels
 source:

@@ -55,9 +55,6 @@ class LTAService(object):
         self.external_modis_regex = re.compile(config.url_for('modis.external'))
         self.modis_datapool = config.url_for('modis.datapool')
 
-        self.external_viirs_regex = re.compile(config.url_for('viirs.external'))
-        self.viirs_datapool = config.url_for('viirs.datapool')
-
         if self.current_user and self.token:
             self.set_user_context(self.current_user, ipaddress=self.ipaddr)
 
