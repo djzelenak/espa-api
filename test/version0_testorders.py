@@ -60,8 +60,8 @@ def build_base_order():
                         'products': ['l1']},
             'MYD13Q1': {'inputs': 'MYD13Q1.A2000072.h02v09.005.2008237032813',
                         'products': ['l1']},
-            'vnp09ga': {'inputs': ['VNP09GA.A2014245.h10v04.001.2017043103958.h5',
-                                    'VNP09GA.A2014245.h10v04.001.2015012103931.h5'],
+            'vnp09ga': {'inputs': ['VNP09GA.A2014245.h10v04.001.2017043103958',
+                                    'VNP09GA.A2014245.h10v04.001.2015012103931'],
                         'products': ['l1']},
             'tm4': {'inputs': 'LT42181092013069PFS00',
                     'products': ['l1']},
@@ -115,8 +115,8 @@ def build_base_order():
                            'products': sn.instance('{}{}'.format(prefix, acq)).products}
 
     # We need to have at least 2 scenes for viirs-related tests to work
-    base['vnp09ga'] = {'inputs': ['VNP09GA.A2014245.h10v04.001.2017043103958.h5',
-                                  'VNP09GA.A2014245.h10v04.001.2015012103931.h5'],
+    base['vnp09ga'] = {'inputs': ['VNP09GA.A2014245.h10v04.001.2017043103958',
+                                  'VNP09GA.A2014245.h10v04.001.2015012103931'],
                        'products': ['l1']}
     return base
 

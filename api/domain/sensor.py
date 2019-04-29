@@ -611,8 +611,8 @@ class SensorCONST(object):
         'myd11a1': (r'^myd11a1\.a\d{7}\.h\d{2}v\d{2}\.00[5-6]\.\d{13}$',
                     ModisAqua11A1, 'myd13q1.A2000072.h02v09.005.2008237032813'),
 
-        'vnp09ga': (r'^vnp09ga\.a\d{7}\.h\d{2}v\d{2}\.001\.\d{13}.h5$',
-                    Viirs09GA, 'vnp09ga.A2019059.h18v06.001.2019061005706.h5')
+        'vnp09ga': (r'^vnp09ga\.a\d{7}\.h\d{2}v\d{2}\.001\.\d{13}$',
+                    Viirs09GA, 'vnp09ga.A2019059.h18v06.001.2019061005706')
     }
 
 
@@ -651,6 +651,11 @@ def instance(product_id):
     elif _id.endswith(__landsat_ext):
         index = _id.index(__landsat_ext)
         # leave original case intact
+        product_id = product_id[0:index]
+        _id = _id[0:index]
+
+    elif _id.endswith(__viirs_ext):
+        index = _id.index(__viirs_ext)
         product_id = product_id[0:index]
         _id = _id[0:index]
 

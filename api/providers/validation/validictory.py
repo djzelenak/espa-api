@@ -750,8 +750,7 @@ class ValidationProvider(ValidationInterfaceV0):
                                                       p[1].upper(),
                                                       p[2].lower(),
                                                       p[3],
-                                                      p[4],
-                                                      p[5].lower()]) for p in [s.split('.') for s in order[key]['inputs']]]
+                                                      p[4]]) for p in [s.split('.') for s in order[key]['inputs']]]
 
                 if stats:
                     if 'stats' not in order[key]['products']:

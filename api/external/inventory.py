@@ -191,6 +191,11 @@ class LTAService(object):
             #           in M2M entity lookup!
             id_list = [i.rsplit('.',1)[0] for i in id_list]
 
+        # We need to include the .h5 file extension when verifying viirs scene IDs
+        if dataset.startswith('VIIRS'):
+            viirs_ext = '.h5'
+            id_list = [i + viirs_ext for i in id_list if not i.endswith(viirs_ext)]
+
         payload = dict(apiKey=self.token,
                         idList=id_list,
                         inputField='displayId', datasetName=dataset)
@@ -202,6 +207,10 @@ class LTAService(object):
             # WARNING: See above. Need to "undo" the MODIS mapping problem.
             results = {[i for i in id_list if k in i
                         ].pop(): v for k,v in results.items()}
+
+        if dataset.startswith('VIIRS'):
+            # Undo the file extension addition from above
+            results = {[i for i in id_list if i in k].pop(): v for k, v in results.items()}
         return {k: results.get(k) for k in id_list}
 
     def verify_scenes(self, product_ids, dataset):
