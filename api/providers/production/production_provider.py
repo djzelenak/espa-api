@@ -1046,7 +1046,6 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         scenes = order.scenes({'status NOT ': ('complete', 'unavailable')})
         if len(scenes) == 0:
             logger.info('Completing order: {0}'.format(order.orderid))
-
             #only send the email if this was an espa order.
             if order.order_source == 'espa' and not order.completion_email_sent:
                 try:
