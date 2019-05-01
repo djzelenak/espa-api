@@ -394,8 +394,9 @@ class Landsat(SensorProduct):
     # dates where we are missing auxiliary data
     def sr_date_restricted(self):
         if self.sensor_name in restricted:
-            if not julian_date_check(self.julian, restricted[self.sensor_name]['by_date']['sr']):
-                return True
+            if 'by_date' in restricted[self.sensor_name].keys():
+                if not julian_date_check(self.julian, restricted[self.sensor_name]['by_date']['sr']):
+                    return True
         return False
 
 
