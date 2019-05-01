@@ -775,9 +775,11 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         rejected = []
         available = []
 
+        token = inventory.get_cached_session()
+
         # converting to a set eliminates duplicate calls to lta
         for tid in sorted_tram_ids:
-            order_status = lta.get_order_status(tid)
+            order_status = inventory.get_order_status(token, tid)
 
             # There are a variety of product statuses that come back from tram
             # on this call.  I is inprocess, Q is queued for the backend system,
@@ -786,10 +788,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             # In the case of D (duplicates), when the first product completes, all
             # duplicates will also be marked C
             for unit in order_status['units']:
-                if unit['unit_status'] == 'R':
-                    rejected.append(unit['sceneid'])
-                elif unit['unit_status'] == 'C':
-                    available.append(unit['sceneid'])
+                if unit['statusCode'] == 'R':
+                    rejected.append(unit['orderingId']) # or 'displayId', 'entityId'
+                elif unit['statusCode'] == 'C':
+                    available.append(unit['orderingId'])
 
         # Go find all the tram units that were rejected and mark them
         # unavailable in our database.  Note that we are not looking for

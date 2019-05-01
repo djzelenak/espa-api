@@ -255,6 +255,51 @@ class LTAService(object):
                 self.network_urls({i['entityId']: i['url'] for i in results},
                                   'landsat'), 'modis')
 
+    def get_order_status(self, order_number):
+        """
+        Return the order status for the given order number.
+        
+        :param order_number: EE order id
+        :type order_number: string
+        """
+        endpoint  = 'orderstatus'
+        payload   = dict(apiKey=self.token, orderNumber=order_number)
+        response  = self._post(endpoint, payload)
+        result    = response.get('data')
+        errorCode = response.get('errorCode')
+        error     = response.get('error')
+        # result keys: 'orderNumber', 'units', 'statusCode', 'statusText'
+        # 'units' dicts keys: 'datasetName', 'displayId', 'entityId', 'orderingid',
+        #                     'productCode', 'productDescription', 'statusCode',
+        #                     'statusText', 'unitNumber'
+        return result
+        
+    def update_order_status(self, order_number, unit_number, status):
+        """
+        Update the status of orders ESPA is working on.
+
+        :param order_number: EE order id
+        :type  order_number: string
+        :param unit_number:  id for unit to update
+        :type  unit_number:  string
+        :param status:       the EE defined status value
+        :type  status:       string
+        """
+        endpoint = 'setunitstatus'
+        payload  = dict(apiKey=self.token, orderNumber=order_number, unitStatus=status, 
+                        firstUnitNumber=unit_number, lastUnitNumber=unit_number)
+        response = self._post(endpoint, payload)
+        
+        # according to v1.4.1 api docs, 
+        # "This request does not have a response. Successful execution is assumed if no errors are thrown."
+        if not response:
+            return {'success': True, 'message': None, 'status': None}
+        else:
+            # throw exception if non 200 response?
+            return {'success': False, 'message': response, 'status': 'Fail'}
+
+
+
     def get_user_context(self, contactid, ipaddress=None, context='ESPA'):
         """
         This method will get the end-user details given a contactid.
@@ -393,3 +438,9 @@ def download_urls(token, product_ids, dataset, usage='[espa]'):
 
 def get_cached_session():
     return LTACachedService().cached_login()
+
+def get_order_status(token, order_number):
+    return LTAService(token).get_order_status(order_number)
+
+def update_order_status(token, order_number, unit_number, status):
+    return LTAService(token).update_order_status(order_number, unit_number, status)
