@@ -133,5 +133,10 @@ def check_valid_modis(token, prod_name_list):
     _names = [s.name for s in _scenes]
     return {_names[0]: True}
 
+def check_valid_viirs(token, prod_name_list):
+    _scenes = Scene.where({"status":"submitted", "sensor_type":"viirs"})
+    _names = [s.name for s in _scenes]
+    return {_names[0]: True}
+
 def get_user_name(token, contactid, ipaddr):
     return 'klmsith@usgs.gov'

@@ -21,8 +21,6 @@ from api.system.logger import ilogger as logger
 
 config = ConfigurationProvider()
 
-
-
 # -----------------------------------------------------------------------------+
 # Find Documentation here:                                                     |
 #      https://earthexplorer.usgs.gov/inventory/documentation/json-api         |
@@ -53,6 +51,7 @@ class LTAService(object):
 
         self.external_landsat_regex = re.compile(config.url_for('landsat.external'))
         self.landsat_datapool = config.url_for('landsat.datapool')
+
         self.external_modis_regex = re.compile(config.url_for('modis.external'))
         self.modis_datapool = config.url_for('modis.datapool')
 
@@ -65,7 +64,8 @@ class LTAService(object):
                  'modis': self.modis_datapool}[sensor]
         sub = {'landsat': self.external_landsat_regex.sub,
                'modis': self.external_modis_regex.sub}[sensor]
-        return {k: sub(match, v) for k,v in urls.items()}
+
+        return {k: sub(match, v) for k, v in urls.items()}
 
     @property
     def base_url(self):
@@ -190,6 +190,12 @@ class LTAService(object):
             # WARNING: MODIS dataset does not have processed date
             #           in M2M entity lookup!
             id_list = [i.rsplit('.',1)[0] for i in id_list]
+
+        # We need to include the .h5 file extension when verifying viirs scene IDs
+        if dataset.startswith('VIIRS'):
+            viirs_ext = '.h5'
+            id_list = [i + viirs_ext for i in id_list if not i.endswith(viirs_ext)]
+
         payload = dict(apiKey=self.token,
                         idList=id_list,
                         inputField='displayId', datasetName=dataset)
@@ -201,6 +207,10 @@ class LTAService(object):
             # WARNING: See above. Need to "undo" the MODIS mapping problem.
             results = {[i for i in id_list if k in i
                         ].pop(): v for k,v in results.items()}
+
+        if dataset.startswith('VIIRS'):
+            # Undo the file extension addition from above
+            results = {[i for i in id_list if i in k].pop(): v for k, v in results.items()}
         return {k: results.get(k) for k in id_list}
 
     def verify_scenes(self, product_ids, dataset):
@@ -235,10 +245,15 @@ class LTAService(object):
                         stage=stage, dataUse=usage)
         resp = self._post('download', payload)
         results = resp.get('data')
-        return self.network_urls(
-                   self.network_urls(
-                       {i['entityId']: i['url'] for i in results},
-                    'landsat'), 'modis')
+
+        # Use the URL taken directly from the M2M JSON API if VIIRS
+        if 'VNP' in dataset:
+            return {i['entityId']: i['url'] for i in results}
+        # Otherwise use our internal network conversion
+        else:
+            return self.network_urls(
+                self.network_urls({i['entityId']: i['url'] for i in results},
+                                  'landsat'), 'modis')
 
     def get_user_context(self, contactid, ipaddress=None, context='ESPA'):
         """
@@ -369,7 +384,6 @@ def available():
 def check_valid(token, product_ids):
     return dict(z for d, l in split_by_dataset(product_ids).items()
                  for z in verify_scenes(token, l, d).items())
-
 
 def download_urls(token, product_ids, dataset, usage='[espa]'):
     entities = convert(token, product_ids, dataset)

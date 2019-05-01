@@ -61,10 +61,12 @@ class OrderingProvider(ProviderInterfaceV0):
         all_by_date = restrict_all.get('by_date', {})
         all_ordering_rsctd = restrict_all.get('ordering', [])
 
-        upd = {'date_restricted': {}, 'ordering_restricted': {}}
+        upd = {'date_restricted': {}, 'ordering_restricted': {}, 'not_implemented': []}
         for sensor_type, prods in pub_prods.items():
             if sensor_type == 'not_implemented':
                 continue
+
+
 
             stype = sensor_type.replace('_collection', '') if '_collection' in sensor_type else sensor_type
 
@@ -77,6 +79,13 @@ class OrderingProvider(ProviderInterfaceV0):
 
             outs = pub_prods[sensor_type]['products']
             ins = pub_prods[sensor_type]['inputs']
+
+            # Restrict ordering VIIRS to staff
+            if role and sensor_type.startswith('vnp'):
+                for sc_id in ins:
+                    upd['not_implemented'].append(sc_id)
+                pub_prods.pop(sensor_type)
+                continue
 
             if sensor_type in all_ordering_rsctd:
                 for sc_id in ins:
@@ -120,6 +129,12 @@ class OrderingProvider(ProviderInterfaceV0):
             pub_prods.update(date_restricted=upd['date_restricted'])
         if upd['ordering_restricted']:
             pub_prods.update(ordering_restricted=upd['ordering_restricted'])
+        if len(upd['not_implemented']) > 0:
+            if 'not_implemented' not in pub_prods.keys():
+                pub_prods.update(not_implemented=upd['not_implemented'])
+            elif 'not_implemented' in pub_prods.keys():
+                pub_prods['not_implemented'].extend(upd['not_implemented'])
+            else: pass
 
         return pub_prods
 

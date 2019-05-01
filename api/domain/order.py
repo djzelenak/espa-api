@@ -165,6 +165,8 @@ class Order(object):
                     sensor_type = 'landsat'
                 elif isinstance(sensor.instance(item1), sensor.Modis):
                     sensor_type = 'modis'
+                elif isinstance(sensor.instance(item1), sensor.Viirs):
+                    sensor_type = 'viirs'
 
                 for s in opts[key]['inputs']:
                     scene_dict = {'name': s,
@@ -309,6 +311,9 @@ class Order(object):
              'include_sr_msavi': False,  # modified soil adjusted veg
              'include_sr_evi': False,  # enhanced vegetation
              'include_st': False,  # surface temperature
+             'include_mod_ndvi': False,  # MOD09GA NDVI
+             'include_myd_ndvi': False, # MYD09GA NDVI
+             'include_vnp_ndvi': False,  # VNP09GA NDVI
              'include_solr_index': False,  # solr search index record
              'include_statistics': False}  # should we do stats & plots?
 
@@ -672,6 +677,9 @@ class OptionsConversion(object):
                 ('include_sr_savi', 'sr_savi', True),
                 ('include_sr_msavi', 'sr_msavi', True),
                 ('include_sr_evi', 'sr_evi', True),
+                ('include_mod_ndvi', 'mod_ndvi', True),
+                ('include_myd_ndvi', 'myd_ndvi', True),
+                ('include_vnp_ndvi', 'vnp_ndvi', True),
                 ('include_st', 'st', True),
                 ('st_algorithm', 'stalg_split_window',   'split_window'),
                 ('st_algorithm', 'stalg_single_channel', 'single_channel'),

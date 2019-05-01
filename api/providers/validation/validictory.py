@@ -745,6 +745,13 @@ class ValidationProvider(ValidationInterfaceV0):
                                                       p[3],
                                                       p[4]]) for p in [s.split('.') for s in order[key]['inputs']]]
 
+                elif isinstance(prod, sn.Viirs):
+                    order[key]['inputs'] = ['.'.join([p[0].upper(),
+                                                      p[1].upper(),
+                                                      p[2].lower(),
+                                                      p[3],
+                                                      p[4]]) for p in [s.split('.') for s in order[key]['inputs']]]
+
                 if stats:
                     if 'stats' not in order[key]['products']:
                         order[key]['products'].append('stats')

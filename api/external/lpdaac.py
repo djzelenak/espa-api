@@ -17,7 +17,8 @@ config = ConfigurationProvider()
 class LPDAACService(object):
 
     def __init__(self):
-        self.datapool = config.url_for('modis.datapool')
+        self.datapool = {'modis': config.url_for('modis.datapool'),
+                         'viirs': config.url_for('viirs.datapool')}
 
     def verify_products(self, products):
         response = {}
@@ -26,7 +27,6 @@ class LPDAACService(object):
             products = [products]
 
         for product in products:
-
             if isinstance(product, basestring):
                 product = sensor.instance(product)
 
@@ -34,12 +34,12 @@ class LPDAACService(object):
 
         return response
 
-    def check_lpdaac_available(self):
+    def check_lpdaac_available(self, key='modis'):
         """
         Simple wrapper to check if lpdacc is up
         :return: bool
         """
-        return utils.connections.is_reachable(self.datapool, timeout=1)
+        return utils.connections.is_reachable(self.datapool[key], timeout=1)
 
     def input_exists(self, product):
         '''Determines if a LPDAAC product is available for download
@@ -50,7 +50,6 @@ class LPDAACService(object):
         Returns:
         True/False
         '''
-
         if isinstance(product, str) or isinstance(product, unicode):
             product = sensor.instance(product)
 
@@ -58,9 +57,7 @@ class LPDAACService(object):
 
         try:
             url = self.get_download_url(product)
-
             if 'download_url' in url[product.product_id]:
-
                 url = url[product.product_id]['download_url']
                 try:
                     result = utils.connections.is_reachable(url, timeout=1)
@@ -76,7 +73,6 @@ class LPDAACService(object):
         return result
 
     def get_download_url(self, product):
-
         url = {}
 
         #be nice and accept a string
@@ -85,10 +81,26 @@ class LPDAACService(object):
 
         #also be nice and accept a sensor.Modis object
         if isinstance(product, sensor.Modis):
+            key = 'modis'
 
             path = self._build_modis_input_file_path(product)
 
-            product_url = ''.join([self.datapool, path])
+            product_url = ''.join([self.datapool[key], path])
+
+            if not product_url.lower().startswith("http"):
+                product_url = ''.join(['http://', product_url])
+
+            if not product.product_id in url:
+                url[product.product_id] = {}
+
+            url[product.product_id]['download_url'] = product_url
+
+        elif isinstance(product, sensor.Viirs):
+            key = 'viirs'
+
+            path = self._build_viirs_input_file_path(product)
+
+            product_url = ''.join([self.datapool[key], path])
 
             if not product_url.lower().startswith("http"):
                 product_url = ''.join(['http://', product_url])
@@ -132,6 +144,42 @@ class LPDAACService(object):
                                   str(date.day).zfill(2))
 
         input_extension = config.get('file.extension.modis.input.filename')
+
+        parts = product.product_id.split('.')
+        prod_id = '.'.join([parts[0].upper(),
+                            parts[1].upper(),
+                            parts[2].lower(),
+                            parts[3],
+                            parts[4]])
+
+        input_file_name = "%s%s" % (prod_id, input_extension)
+
+        path = os.path.join(base_path,
+                            '.'.join([product.short_name.upper(),
+                                      product.version.upper()]),
+                            path_date.upper(), input_file_name)
+
+        return path
+
+    def _build_viirs_input_file_path(self, product):
+
+        if isinstance(product, str) or isinstance(product, unicode):
+            product = sensor.instance(product)
+
+        if isinstance(product, sensor.Viirs09GA):
+            base_path = config.get('path.viirs_base_source')
+
+        else:
+            msg = "Cant build input file path for unknown LPDAAC product:%s"
+            raise Exception(msg % product.product_id)
+
+        date = utils.date_from_doy(product.year, product.doy)
+
+        path_date = "%s.%s.%s" % (date.year,
+                                  str(date.month).zfill(2),
+                                  str(date.day).zfill(2))
+
+        input_extension = config.get('file.extension.viirs.input.filename')
 
         parts = product.product_id.split('.')
         prod_id = '.'.join([parts[0].upper(),

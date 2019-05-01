@@ -446,7 +446,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
 
     def query_pending_products(self, record_limit=500, for_user=None,
-                               priority=None, product_types=['landsat', 'modis']):
+                               priority=None, product_types=['landsat', 'modis', 'viirs']):
         sql = [
             'WITH order_queue AS',
                 '(SELECT u.email "email", count(name) "running"',
@@ -473,7 +473,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         }
 
         if not isinstance(product_types, list):
-            # unicode values of either: u"['plot']" or u"['landsat', 'modis']"
+            # unicode values of either: u"['plot']" or u"['landsat', 'modis', 'viirs']"
             product_types = json.loads(str(product_types).replace("'", '"'))
 
         if isinstance(product_types, list) and len(product_types) > 0:
@@ -507,7 +507,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
     def get_products_to_process(self, record_limit=500,
                                 for_user=None,
                                 priority=None,
-                                product_types=['landsat', 'modis'],
+                                product_types=['landsat', 'modis', 'viirs'],
                                 encode_urls=False):
         """
         Find scenes that are oncache and return them as properly formatted
@@ -947,6 +947,38 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         return True
 
+    def handle_submitted_viirs_products(self, viirs_products):
+        """
+        Moves all submitted viirs products to oncache if true
+        :return: True
+        """
+        if not inventory.available():
+            logger.warning('M2M down. Skip handle_submitted_viirs_products...')
+            return False
+        logger.info("Handling submitted viirs products...")
+
+        logger.warn("Found {0} submitted viirs products".format(len(viirs_products)))
+
+        if len(viirs_products) > 0:
+            lpdaac_ids = []
+            nonlp_ids = []
+
+            prod_name_list = [p.name for p in viirs_products]
+            token = inventory.get_cached_session()
+            results = inventory.check_valid(token, prod_name_list)
+            valid = list(set(r for r,v in results.items() if v))
+            invalid = list(set(prod_name_list)-set(valid))
+
+            available_ids = [p.id for p in viirs_products if p.name in valid]
+            if len(available_ids):
+                Scene.bulk_update(available_ids, {'status': 'oncache', 'note': "''"})
+
+            invalids = [p for p in viirs_products if p.name in invalid]
+            if len(invalids):
+                self.set_products_unavailable(invalids, 'No longer found in the archive, please search again')
+
+        return True
+
     def handle_submitted_plot_products(self, plot_scenes):
         """
         Moves plot products from submitted to oncache status once all their underlying rasters are complete
@@ -1201,6 +1233,9 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         scenes = Scene.where({'status': 'submitted', 'sensor_type': 'modis', 'order_id': pending_orders})
         self.handle_submitted_modis_products(scenes)
+
+        scenes = Scene.where({'status': 'submitted', 'sensor_type': 'viirs', 'order_id': pending_orders})
+        self.handle_submitted_viirs_products(scenes)
 
         scenes = Scene.where({'status': 'submitted', 'sensor_type': 'plot', 'order_id': pending_orders})
         self.handle_submitted_plot_products(scenes)

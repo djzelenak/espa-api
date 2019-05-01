@@ -83,6 +83,18 @@ products:
     category: indices
     title: "NBR2"
     display_rank: 6
+  mod_ndvi:
+    category: indices
+    title: "MOD09GA NDVI"
+    display_rank: 7
+  myd_ndvi:
+    category: indices
+    title: "MYD09GA NDVI"
+    display_rank: 8
+  vnp_ndvi:
+    category: indices
+    title: "VNP09GA NDVI"
+    display_rank: 9
   stats:
     category: stats
     title: "Summary Statistics"
