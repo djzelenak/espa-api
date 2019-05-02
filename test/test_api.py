@@ -321,18 +321,27 @@ class TestValidation(unittest.TestCase):
 
     def test_l1_only_restricted(self):
         """ Landsat Level-1 data needs to go through other channels """
-        invalid_order = {
+        invalid_orders = [{
             "olitirs8_collection": {
                 "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
                 "products": ["l1"]
             },
             "format": "gtiff"
-        }
-        with self.assertRaisesRegexp(ValidationException, 'Landsat Level-1 data products'):
-            api.validation.validate(invalid_order, self.staffuser.username)
+            },
+            {
+             "vnp09ga": {
+                 "inputs": ["vnp09ga.a2017249.h19v06.001.2016265235022"],
+                 "products": ["l1"],
+             },
+                "format": "gtiff"
+             }
+            ]
+        for iorder in invalid_orders:
+            with self.assertRaisesRegexp(ValidationException, "non-customized archive data"):
+                api.validation.validate(iorder, self.staffuser.username)
 
     def test_l1_only_restricted_override(self):
-        """ Customizations or other sensors should override Level-1 restrictions """
+        """ Customizations should override Level-1 restrictions """
         valid_orders = [{
             "olitirs8_collection": {
                 "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
@@ -341,6 +350,17 @@ class TestValidation(unittest.TestCase):
             "format": "envi"
             },
             {
+            "projection": {
+                "aea": {
+                    "standard_parallel_1": 29.5,
+                    "central_meridian": -96,
+                    "datum": "wgs84",
+                    "latitude_of_origin": 23,
+                    "standard_parallel_2": 45.5,
+                    "false_northing": 0,
+                    "false_easting": 0
+                }
+            },
             "olitirs8_collection": {
                 "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
                 "products": ["l1"]
