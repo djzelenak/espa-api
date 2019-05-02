@@ -60,6 +60,8 @@ class ProductNames(object):
         prods = namedtuple('AllProducts', product_names)
         # Internal code names
         return prods(*product_names)
+
+
 AllProducts = ProductNames().get()
 
 
@@ -232,7 +234,7 @@ class ModisTerra09A1(Terra, Modis09A1):
 class ModisTerra09GA(Terra, Modis09GA):
     """models modis 09GA from Terra"""
     lta_json_name = 'MODIS_MOD09GA_V{collection}'
-    products = [AllProducts.l1, AllProducts.stats, AllProducts.mod_ndvi]
+    products = [AllProducts.l1, AllProducts.stats, AllProducts.modis_ndvi]
 
 
 class ModisTerra09GQ(Terra, Modis09GQ):
@@ -278,7 +280,7 @@ class ModisAqua09A1(Aqua, Modis09A1):
 class ModisAqua09GA(Aqua, Modis09GA):
     """models modis 09GA from Aqua"""
     lta_json_name = 'MODIS_MYD09GA_V{collection}'
-    products = [AllProducts.l1, AllProducts.stats, AllProducts.myd_ndvi]
+    products = [AllProducts.l1, AllProducts.stats, AllProducts.modis_ndvi]
 
 
 class ModisAqua09GQ(Aqua, Modis09GQ):
@@ -356,7 +358,7 @@ class Viirs09GA(Viirs):
     sensor_name = 'viirs'
 
     lta_json_name = 'VIIRS_VNP09GA'
-    products = [AllProducts.l1, AllProducts.stats, AllProducts.vnp_ndvi]
+    products = [AllProducts.l1, AllProducts.stats, AllProducts.viirs_ndvi]
 
 
 class Landsat(SensorProduct):
@@ -402,10 +404,13 @@ class Landsat(SensorProduct):
 
 class LandsatTM(Landsat):
     """Models Landsat TM only products"""
-    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr, AllProducts.st, AllProducts.swe,
+    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr,
+                AllProducts.st, AllProducts.swe,
                 AllProducts.sr_ndvi, AllProducts.sr_evi, AllProducts.sr_savi, AllProducts.sr_msavi, AllProducts.sr_ndmi,
-                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.pixel_qa, AllProducts.stalg_single_channel, 
-                AllProducts.reanalsrc_narr, AllProducts.reanalsrc_merra2, AllProducts.reanalsrc_fp, AllProducts.reanalsrc_fpit]
+                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.pixel_qa,
+                AllProducts.stalg_single_channel,
+                AllProducts.reanalsrc_narr, AllProducts.reanalsrc_merra2, AllProducts.reanalsrc_fp,
+                AllProducts.reanalsrc_fpit]
     lta_name = 'LANDSAT_TM'
     lta_json_name = 'LANDSAT_TM_C{collection}'
     sensor_name = 'tm'
@@ -416,10 +421,13 @@ class LandsatTM(Landsat):
 
 class LandsatETM(Landsat):
     """Models Landsat ETM only products"""
-    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr, AllProducts.st, AllProducts.swe,
+    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr,
+                AllProducts.st, AllProducts.swe,
                 AllProducts.sr_ndvi, AllProducts.sr_evi, AllProducts.sr_savi, AllProducts.sr_msavi, AllProducts.sr_ndmi,
-                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.pixel_qa, AllProducts.stalg_single_channel, 
-                AllProducts.reanalsrc_narr, AllProducts.reanalsrc_merra2, AllProducts.reanalsrc_fp, AllProducts.reanalsrc_fpit]
+                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.pixel_qa,
+                AllProducts.stalg_single_channel,
+                AllProducts.reanalsrc_narr, AllProducts.reanalsrc_merra2, AllProducts.reanalsrc_fp,
+                AllProducts.reanalsrc_fpit]
     lta_name = 'LANDSAT_ETM_PLUS'
     lta_json_name = 'LANDSAT_ETM_C{collection}'
     sensor_name = 'etm'
@@ -430,10 +438,13 @@ class LandsatETM(Landsat):
 
 class LandsatOLITIRS(Landsat):
     """Models Landsat OLI/TIRS only products"""
-    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr, AllProducts.st, AllProducts.swe,
+    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr,
+                AllProducts.st, AllProducts.swe,
                 AllProducts.sr_ndvi, AllProducts.sr_evi, AllProducts.sr_savi, AllProducts.sr_msavi, AllProducts.sr_ndmi,
-                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.pixel_qa, AllProducts.stalg_split_window, 
-                AllProducts.stalg_single_channel, AllProducts.reanalsrc_narr, AllProducts.reanalsrc_merra2, AllProducts.reanalsrc_fp, 
+                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.pixel_qa,
+                AllProducts.stalg_split_window,
+                AllProducts.stalg_single_channel, AllProducts.reanalsrc_narr, AllProducts.reanalsrc_merra2,
+                AllProducts.reanalsrc_fp,
                 AllProducts.reanalsrc_fpit]
     lta_name = 'LANDSAT_8'
     lta_json_name = 'LANDSAT_8_C{collection}'
@@ -628,7 +639,7 @@ def instance(product_id):
     Supported VIIRS products
     VNP09GA
 
-    VIIRS FORMAT:   VNP09GA.A2019059.h18v06.001.2019061005706.h5
+    VIIRS FORMAT:   VNP09GA.A2019059.h18v06.001.2019061005706
 
     Supported LANDSAT products
     LT04 LT05 LE07 LC08 LO08
