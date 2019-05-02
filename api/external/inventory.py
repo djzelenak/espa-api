@@ -298,7 +298,14 @@ class LTAService(object):
             # throw exception if non 200 response?
             return {'success': False, 'message': response, 'status': 'Fail'}
 
-
+    def get_available_orders(self):
+        """
+        Return collection of ESPA orders from EE
+        """
+        endpoint = 'getorderqueue'
+        payload = dict(apiKey=self.token, queueName='espa')
+        response = self._post(endpoint, payload)
+        return response
 
     def get_user_context(self, contactid, ipaddress=None, context='ESPA'):
         """
@@ -444,3 +451,6 @@ def get_order_status(token, order_number):
 
 def update_order_status(token, order_number, unit_number, status):
     return LTAService(token).update_order_status(order_number, unit_number, status)
+
+def get_available_orders(token):
+    return LTAService(token).get_available_orders()

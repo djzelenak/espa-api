@@ -108,7 +108,7 @@ class TestProductionAPI(unittest.TestCase):
         new = Scene.get('ordering_scene.status', scene.name, order.orderid)
         self.assertTrue('retry' == new)
 
-    @patch('api.external.lta.update_order_status', mock_production_provider.respond_true)
+    @patch('api.external.inventory.update_order_status', mock_production_provider.respond_true)
     def test_production_set_product_error_unavailable(self):
         """
         Move a scene status from error to unavailable based on the error
@@ -202,7 +202,7 @@ class TestProductionAPI(unittest.TestCase):
                                               'somewhere', log_file_contents)
         self.assertEqual('unavailable', Scene.get('ordering_scene.status', scene.name, order.orderid))
 
-    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
     def test_update_product_details_update_status(self):
         """
@@ -217,7 +217,7 @@ class TestProductionAPI(unittest.TestCase):
                                     'status': 'Queued'})
         self.assertTrue(Scene.get('ordering_scene.status', scene.name, order.orderid) == 'Queued')
 
-    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
     @patch('api.external.onlinecache.capacity', onlinecache.capacity)
     def test_update_product_details_set_product_error(self):
@@ -233,7 +233,7 @@ class TestProductionAPI(unittest.TestCase):
                                            error='problems yo')
         self.assertTrue(Scene.find(scene.id).status == 'error')
 
-    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
     def test_update_product_details_set_product_unavailable(self):
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
@@ -244,7 +244,7 @@ class TestProductionAPI(unittest.TestCase):
                                            error='include_dswe is an unavailable product option for OLITIRS')
         self.assertTrue('unavailable' == Scene.get('ordering_scene.status', scene.name, order.orderid))
 
-    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
     @patch('os.path.getsize', lambda y: 999)
     def test_update_product_details_mark_product_complete(self):
@@ -260,7 +260,7 @@ class TestProductionAPI(unittest.TestCase):
 
         self.assertTrue('complete' == Scene.get('ordering_scene.status', scene.name, order.orderid))
 
-    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
     @patch('os.path.getsize', lambda y: 999)
     def test_update_product_details_mark_product_processing(self):
@@ -275,7 +275,7 @@ class TestProductionAPI(unittest.TestCase):
         scene = order.scenes({'id': scene.id})[0]
         self.assertEqual('processing', scene.status)
 
-    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
     @patch('os.path.getsize', lambda y: 999)
     def test_update_product_details_mark_cancelled_product_processing(self):
@@ -320,7 +320,7 @@ class TestProductionAPI(unittest.TestCase):
         self.assertTrue('unavailable' == scene.status)
         self.assertTrue('Solar zenith angle is too large, cannot process scene to SR' in scene.note)
 
-    @patch('api.external.lta.update_order_status', lta.update_order_status_fail)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status_fail)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
     @patch('os.path.getsize', lambda y: 999)
     def test_update_product_details_fail_lta_mark_product_complete(self):
@@ -373,11 +373,11 @@ class TestProductionAPI(unittest.TestCase):
         order.update('status', 'ordered')
         self.assertTrue(emails.Emails().send_all_initial([order]))
 
-    @patch('api.external.lta.get_order_status', lta.get_order_status)
-    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.external.inventory.get_order_status', inventory.get_order_status)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status)
     def test_production_handle_onorder_landsat_products(self):
-        tram_order_ids = lta.sample_tram_order_ids()[0:3]
-        scene_names = lta.sample_scene_names()[0:3]
+        tram_order_ids = inventory.sample_tram_order_ids()[0:3]
+        scene_names = inventory.sample_scene_names()[0:3]
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
         scenes = order.scenes()[0:3]
         for idx, scene in enumerate(scenes):
@@ -401,7 +401,7 @@ class TestProductionAPI(unittest.TestCase):
             self.assertTrue(s.status == 'submitted')
 
     @patch('api.external.lta.get_available_orders', lta.get_available_orders_partial)
-    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status)
     @patch('api.external.inventory.get_user_name', inventory.get_user_name)
     @patch('api.external.inventory.get_session', lambda: True)
     def test_production_load_ee_orders_partial(self):
@@ -419,7 +419,7 @@ class TestProductionAPI(unittest.TestCase):
                                                'tm5_collection': {'inputs': ['LT05_L1TP_025027_20110913_20160830_01_T1'],
                                                         'products': ['sr']}})
 
-    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status)
     def test_production_handle_failed_ee_updates(self):
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
         for scene in order.scenes():
@@ -439,7 +439,7 @@ class TestProductionAPI(unittest.TestCase):
         scenes = orders.scenes({'sensor_type': 'landsat'})
         self.assertTrue(production_provider.handle_submitted_landsat_products(scenes))
 
-    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status)
     def test_production_set_products_unavailable(self):
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
         self.assertTrue(production_provider.set_products_unavailable(order.scenes(), "you want a reason?"))
@@ -498,7 +498,7 @@ class TestProductionAPI(unittest.TestCase):
 
     @patch('api.external.inventory.available', lambda: True)
     @patch('api.external.inventory.get_cached_session', inventory.get_cached_session) 
-    @patch('api.external.inventory.check_valid', inventory.check_valid_modis)   
+    @patch('api.external.inventory.check_valid', inventory.check_valid_modis_unavailable)   
     def test_production_handle_submitted_modis_products_input_missing(self):
         # handle unavailable scenario
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
@@ -513,7 +513,7 @@ class TestProductionAPI(unittest.TestCase):
 
     @patch('api.external.inventory.available', lambda: True)
     @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
-    @patch('api.external.inventory.check_valid', inventory.check_valid_viirs)
+    @patch('api.external.inventory.check_valid', inventory.check_valid_viirs_missing)
     def test_production_handle_submitted_viirs_products_input_missing(self):
         # handle unavailable scenario
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))

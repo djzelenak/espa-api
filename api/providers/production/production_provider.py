@@ -132,11 +132,12 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             scene.download_size = 0
 
         if order_source == 'ee':
+            token = inventory.get_cached_session()
             # update EE
             ee_order_id = Scene.get('ee_order_id', name, orderid)
             ee_unit_id = Scene.get('ee_unit_id', name, orderid)
             try:
-                lta.update_order_status(ee_order_id, ee_unit_id, 'C')
+                inventory.update_order_status(token, ee_order_id, ee_unit_id, 'C')
             except Exception, e:
                 cache_key = 'lta.cannot.update'
                 lta_conn_failed_10mins = cache.get(cache_key)
@@ -182,7 +183,8 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             ee_order_id = Scene.get('ee_order_id', name, orderid)
             ee_unit_id = Scene.get('ee_unit_id', name, orderid)
             try:
-                lta.update_order_status(ee_order_id, ee_unit_id, 'R')
+                token = inventory.get_cached_session()
+                inventory.update_order_status(token, ee_order_id, ee_unit_id, 'R')
             except Exception, e:
                 cache_key = 'lta.cannot.update'
                 lta_conn_failed_10mins = cache.get(cache_key)
@@ -210,6 +212,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         :return: True
         """
         try:
+            token = inventory.get_cached_session()
             Scene.bulk_update([p.id for p in products],
                               {'status': 'unavailable',
                                'completion_date': datetime.datetime.now(),
@@ -217,7 +220,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             for p in products:
                 if p.order_attr('order_source') == 'ee':
                     try:
-                        lta.update_order_status(p.order_attr('ee_order_id'), p.ee_unit_id, 'R')
+                        inventory.update_order_status(token, p.order_attr('ee_order_id'), p.ee_unit_id, 'R')
                     except Exception, e:
                         # perhaps this doesn't need to be elevated to 'debug' status
                         # as its a fairly regular occurrence
@@ -697,6 +700,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         missing_scenes = []
         scenes = Scene.where({'order_id': order_id,
                               'ee_unit_id': tuple([s['unit_num'] for s in ee_scenes])})
+        token = inventory.get_cached_session()
         for s in ee_scenes:
             scene = [so for so in scenes if so.ee_unit_id == s['unit_num']]
 
@@ -710,7 +714,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     status = 'I'
                     continue  # No need to update scenes in progress
                 try:
-                    lta.update_order_status(eeorder, s['unit_num'], status)
+                    inventory.update_order_status(token, eeorder, s['unit_num'], status)
                 except Exception, e:
                     cache_key = 'lta.cannot.update'
                     lta_conn_failed_10mins = cache.get(cache_key)
@@ -1144,12 +1148,13 @@ class ProductionProvider(ProductionProviderInterfaceV0):
     @staticmethod
     def handle_failed_ee_updates(scenes):
         n_failed = len(scenes)
+        token = inventory.get_cached_session()
         if n_failed:
             logger.critical('Failed LTA status count: {} scenes'.format(n_failed))
         for s in scenes:
             try:
-                lta.update_order_status(s.order_attr('ee_order_id'), s.ee_unit_id,
-                                        s.failed_lta_status_update)
+                inventory.update_order_status(token, s.order_attr('ee_order_id'), s.ee_unit_id,
+                                              s.failed_lta_status_update)
                 s.update('failed_lta_status_update', None)
             except DBConnectException, e:
                 raise ProductionProviderException('ordering_scene update failed for '
