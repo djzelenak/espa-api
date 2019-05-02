@@ -108,15 +108,15 @@ tm4:
 
 mod09ga:
     role:
-        - mod_ndvi
+        - modis_ndvi
 
 myd09ga:
     role:
-        - myd_ndvi
+        - modis_ndvi
 
 vnp09ga:
     role:
-        - vnp_ndvi
+        - viirs_ndvi
 
 # This is an order which should go through alternative channels
 source:
