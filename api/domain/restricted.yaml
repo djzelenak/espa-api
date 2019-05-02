@@ -3,11 +3,6 @@ all:
     role:
         - st
         - swe
-        - stalg_single_channel
-        - reanalsrc_narr
-        - reanalsrc_merra2
-        - reanalsrc_fp
-        - reanalsrc_fpit
         - restricted_prod
     ordering:
         - restricted_sensor
@@ -35,6 +30,12 @@ stats:
 olitirs8:
     role:
         - st
+        - stalg_split_window
+        - stalg_single_channel
+        - reanalsrc_narr
+        - reanalsrc_merra2
+        - reanalsrc_fp
+        - reanalsrc_fpit
     by_date:
         sr:
             - "< 2016050 | > 2016058"
@@ -55,6 +56,13 @@ olitirs8:
         swe:
             - "< 2016050 | > 2016058"
 etm7:
+    role:
+        - st
+        - stalg_single_channel
+        - reanalsrc_narr
+        - reanalsrc_merra2
+        - reanalsrc_fp
+        - reanalsrc_fpit
     by_date:
         sr:
             - "< 2016151 | > 2016164"
@@ -80,25 +88,46 @@ etm7:
         swe:
             - "< 2016151 | > 2016164"
             - "< 2017071 | > 2017076"
+tm5:
+    role:
+        - st
+        - stalg_single_channel
+        - reanalsrc_narr
+        - reanalsrc_merra2
+        - reanalsrc_fp
+        - reanalsrc_fpit
+
+tm4:
+    role:
+        - st
+        - stalg_single_channel
+        - reanalsrc_narr
+        - reanalsrc_merra2
+        - reanalsrc_fp
+        - reanalsrc_fpit
 
 mod09ga:
     role:
-        - mod_ndvi
+        - modis_ndvi
 
 myd09ga:
     role:
-        - myd_ndvi
+        - modis_ndvi
 
 vnp09ga:
     role:
-        - vnp_ndvi
+        - viirs_ndvi
 
 # This is an order which should go through alternative channels
 source:
-    sensors: [olitirs8_collection, etm7_collection, tm4_collection, tm5_collection]
+    sensors: [olitirs8_collection, etm7_collection, tm4_collection, tm5_collection,
+    mod09a1, mod09ga, mod09gq, mod09q1, myd09a1, myd09ga, myd09gq, myd09q1,
+    mod13q1, mod13a1, mod13a2, mod13a3, myd13q1, myd13a1, myd13a2, myd13a3,
+    mod11a1, myd11a1,
+    vnp09ga]
     products: [l1, source_metadata]
     format: gtiff
     custom: [format, image_extents, resize, projection]
     message: >
-        order includes only Landsat Level-1 data products, please contact
+        order includes only non-customized archive data please contact
         User Services for other available options
