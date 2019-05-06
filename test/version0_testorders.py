@@ -111,8 +111,15 @@ def build_base_order():
 
     for acq in sensor_acqids:
         for prefix, label in zip(sensor_acqids[acq][0], sensor_acqids[acq][1]):
-            base[label] = {'inputs': ['{}{}'.format(prefix, acq)],
-                           'products': sn.instance('{}{}'.format(prefix, acq)).products}
+            # We need to avoid any requests for modis_ndvi - this will raise an error since we have
+            # non-NDVI available MODIS products in the base order.  Testing of modis_ndvi
+            # and viirs_ndvi orders is conducted separately in test_api.py
+            if label.startswith('mod') or label.startswith('myd'):
+                base[label] = {'inputs': ['{}{}'.format(prefix, acq)],
+                               'products': ['l1']}
+            else:
+                base[label] = {'inputs': ['{}{}'.format(prefix, acq)],
+                               'products': sn.instance('{}{}'.format(prefix, acq)).products}
 
     # We need to have at least 2 scenes for viirs-related tests to work
     base['vnp09ga'] = {'inputs': ['VNP09GA.A2014245.h10v04.001.2017043103958',
