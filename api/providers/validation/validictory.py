@@ -433,6 +433,16 @@ class OrderValidatorV0(validictory.SchemaValidator):
                     if msg not in self._errors:
                         self._errors.append(msg)
 
+        restr_modis_viirs = self.restricted['source_daac']
+        daac_sensors = restr_modis_viirs['sensors']
+        req_sensors = [s for s in self.data_source.keys() if s in sn.SensorCONST.instances.keys()
+                       and s in daac_sensors]
+        invalid_req = set(req_sensors) - set(restr_modis_viirs['ndvi'])
+        if invalid_req:
+            if 'modis_ndvi' in req_prods or 'viirs_ndvi' in req_prods:
+                msg = restr_modis_viirs['message'].strip()
+                if msg not in self._errors:
+                    self._errors.append(msg)
 
     def validate_oneormoreobjects(self, x, fieldname, schema, path, key_list):
         """Validates that at least one value is present from the list"""

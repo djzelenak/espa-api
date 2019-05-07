@@ -276,11 +276,11 @@ class TestValidation(unittest.TestCase):
         """
         exc_type = ValidationException
         invalid_list = {'olitirs8_collection': {'inputs': ['lc08_l1tp_031043_20160225_20170224_01_t1'],
-                                     'products': ['sr'],
-                                     'err_msg': 'Requested {} products are restricted by date'},
+                                                'products': ['sr'],
+                                                'err_msg': 'Requested {} products are restricted by date'},
                         'oli8_collection': {'inputs': ['lo08_l1tp_021049_20150304_20170227_01_t1'],
-                                 'products': ['sr'],
-                                 'err_msg': 'Requested {} products are not available'}}
+                                            'products': ['sr'],
+                                            'err_msg': 'Requested {} products are not available'}}
 
         for stype in invalid_list:
             invalid_order = copy.deepcopy(self.base_order)
@@ -303,12 +303,12 @@ class TestValidation(unittest.TestCase):
             "projection": {"lonlat": None},
             "format": "gtiff",
             "resampling_method": "cc"
-            }
+        }
         bad_parts = {
             "resize": {"pixel_size": 30, "pixel_size_units": "meters"},
             "image_extents": {"north": 80, "south": -80,
                               "east": 170, "west": -170, "units": "meters"},
-            }
+        }
 
         err_msg = '{} units must be in "dd" for projection "lonlat"'
         exc_type = ValidationException
@@ -321,56 +321,81 @@ class TestValidation(unittest.TestCase):
 
     def test_l1_only_restricted(self):
         """ Landsat Level-1 data needs to go through other channels """
-        invalid_orders = [{
-            "olitirs8_collection": {
-                "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
-                "products": ["l1"]
-            },
-            "format": "gtiff"
-            },
+        invalid_orders = [
             {
-             "vnp09ga": {
-                 "inputs": ["vnp09ga.a2017249.h19v06.001.2016265235022"],
-                 "products": ["l1"],
-             },
+                "olitirs8_collection": {
+                    "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
+                    "products": ["l1"]
+                },
                 "format": "gtiff"
-             }
-            ]
+            },
+
+            {
+                "mod09ga": {
+                    "inputs": ["mod09ga.a2017249.h29v10.006.2016256236022"],
+                    "products": ["modis_ndvi"]
+                },
+                "olitirs8_collection": {
+                    "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
+                    "products": ["l1"]
+                },
+                "format": "gtiff"
+            },
+
+            {
+                "vnp09ga": {
+                    "inputs": ["vnp09ga.a2017249.h19v06.001.2016265235022"],
+                    "products": ["l1"],
+                },
+                "format": "gtiff"
+            }
+        ]
         for iorder in invalid_orders:
-            with self.assertRaisesRegexp(ValidationException, "non-customized archive data"):
+            with self.assertRaisesRegexp(ValidationException, "non-customized products"):
                 api.validation.validate(iorder, self.staffuser.username)
 
     def test_l1_only_restricted_override(self):
         """ Customizations should override Level-1 restrictions """
-        valid_orders = [{
-            "olitirs8_collection": {
-                "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
-                "products": ["l1"]
-            },
-            "format": "envi"
-            },
+        valid_orders = [
             {
-            "projection": {
-                "aea": {
-                    "standard_parallel_1": 29.5,
-                    "central_meridian": -96,
-                    "datum": "wgs84",
-                    "latitude_of_origin": 23,
-                    "standard_parallel_2": 45.5,
-                    "false_northing": 0,
-                    "false_easting": 0
-                }
+                "olitirs8_collection": {
+                    "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
+                    "products": ["l1"]
+                },
+                "format": "envi"
             },
-            "olitirs8_collection": {
-                "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
-                "products": ["l1"]
+
+            {
+                "projection": {
+                    "aea": {
+                        "standard_parallel_1": 29.5,
+                        "central_meridian": -96,
+                        "datum": "wgs84",
+                        "latitude_of_origin": 23,
+                        "standard_parallel_2": 45.5,
+                        "false_northing": 0,
+                        "false_easting": 0
+                    }
+                },
+                "olitirs8_collection": {
+                    "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
+                    "products": ["l1"]
+                },
+                "myd13a2": {
+                    "inputs": ["myd13a2.a2017249.h19v06.006.2017265235022"],
+                    "products": ["l1"]
+                },
+                "format": "gtiff"
             },
-            "myd13a2": {
-                "inputs": ["myd13a2.a2017249.h19v06.006.2017265235022"],
-                "products": ["l1"]
-            },
-            "format": "gtiff"
-        }]
+
+            {
+                "vnp09ga": {
+                    "inputs": ["vnp09ga.a2017249.h19v06.001.2016265235022"],
+                    "products": ["viirs_ndvi"],
+                },
+                "format": "gtiff"
+            }
+        ]
         for vorder in valid_orders:
             api.validation.validate(vorder, self.staffuser.username)
 
@@ -380,6 +405,101 @@ class TestValidation(unittest.TestCase):
     #     invalid_order['image_extents'] = {'east': 32.5, 'north': 114.9, 'south': 113.5, 'units': u'dd', 'west': 31.5}
     #     with self.assertRaisesRegexp(ValidationException, 'are not near the requested UTM zone'):
     #         api.validation.validate(invalid_order, self.staffuser.username)
+
+    def test_modis_viirs_ndvi_restricted(self):
+        """ Users should only be able to order NDVI for
+        Daily Surface Reflectance 500-m MODIS and VIIRS products """
+        invalid_orders = [
+            {
+                "projection": {
+                    "aea": {
+                        "standard_parallel_1": 29.5,
+                        "central_meridian": -96,
+                        "datum": "wgs84",
+                        "latitude_of_origin": 23,
+                        "standard_parallel_2": 45.5,
+                        "false_northing": 0,
+                        "false_easting": 0
+                    }
+                },
+                "myd13a2": {
+                    "inputs": ["myd13a2.a2017249.h19v06.006.2017265235022"],
+                    "products": ["l1"]
+                },
+                "vnp09ga": {
+                    "inputs": ["vnp09ga.a2017249.h19v06.001.2016265235022"],
+                    "products": ["viirs_ndvi"],
+                },
+                "format": "gtiff"
+            },
+
+            {
+                "projection": {
+                    "aea": {
+                        "standard_parallel_1": 29.5,
+                        "central_meridian": -96,
+                        "datum": "wgs84",
+                        "latitude_of_origin": 23,
+                        "standard_parallel_2": 45.5,
+                        "false_northing": 0,
+                        "false_easting": 0
+                    }
+                },
+                "myd13a2": {
+                    "inputs": ["myd13a2.a2017249.h19v06.006.2017265235022"],
+                    "products": ["l1"]
+                },
+                "myd09ga": {
+                    "inputs": ["myd09ga.a2017249.h19v06.006.2017265235022"],
+                    "products": ["modis_ndvi"]
+                },
+                "mod09ga": {
+                    "inputs": ["myd13a2.a2017249.h19v06.006.2017265235022"],
+                    "products": ["modis_ndvi"]
+                },
+                "vnp09ga": {
+                    "inputs": ["vnp09ga.a2017249.h19v06.001.2016265235022"],
+                    "products": ["viirs_ndvi"]
+                },
+                "format": "gtiff"
+            }
+        ]
+
+        for iorder in invalid_orders:
+            with self.assertRaisesRegexp(ValidationException, "NDVI not available for requested products"):
+                api.validation.validate(iorder, self.staffuser.username)
+
+        valid_orders = [
+            {
+                "myd09ga": {
+                    "inputs": ["myd09ga.a2017249.h19v06.006.2017265235022"],
+                    "products": ["modis_ndvi"]
+                },
+                "vnp09ga": {
+                    "inputs": ["vnp09ga.a2017249.h19v06.001.2016265235022"],
+                    "products": ["viirs_ndvi"],
+                },
+                "format": "gtiff"
+            },
+
+            {
+                "myd09ga": {
+                    "inputs": ["myd09ga.a2017249.h19v06.006.2017265235022"],
+                    "products": ["modis_ndvi"]
+                },
+                "vnp09ga": {
+                    "inputs": ["vnp09ga.a2017249.h19v06.001.2016265235022"],
+                    "products": ["viirs_ndvi"],
+                },
+                "olitirs8_collection": {
+                    "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
+                    "products": ["sr"]
+                },
+                "format": "gtiff"
+            }
+        ]
+        for vorder in valid_orders:
+            api.validation.validate(vorder, self.staffuser.username)
 
 
 class TestInventory(unittest.TestCase):
@@ -432,4 +552,3 @@ class TestInventory(unittest.TestCase):
         """
         with self.assertRaises(InventoryException):
             api.inventory.check(self.lpdaac_order_bad)
-

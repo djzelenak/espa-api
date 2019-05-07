@@ -118,16 +118,23 @@ vnp09ga:
     role:
         - viirs_ndvi
 
-# This is an order which should go through alternative channels
+# These are orders which should go through alternative channels
 source:
     sensors: [olitirs8_collection, etm7_collection, tm4_collection, tm5_collection,
-    mod09a1, mod09ga, mod09gq, mod09q1, myd09a1, myd09ga, myd09gq, myd09q1,
-    mod13q1, mod13a1, mod13a2, mod13a3, myd13q1, myd13a1, myd13a2, myd13a3,
-    mod11a1, myd11a1,
-    vnp09ga]
+              mod09a1, mod09ga, mod09gq, mod09q1, myd09a1, myd09ga, myd09gq, myd09q1,
+              mod13q1, mod13a1, mod13a2, mod13a3, myd13q1, myd13a1, myd13a2, myd13a3,
+              mod11a1, myd11a1, vnp09ga]
     products: [l1, source_metadata]
     format: gtiff
     custom: [format, image_extents, resize, projection]
     message: >
-        order includes only non-customized archive data please contact
+        order includes non-customized products, please contact
         User Services for other available options
+
+source_daac:
+    sensors: [mod09a1, mod09ga, mod09gq, mod09q1, myd09a1, myd09ga, myd09gq, myd09q1,
+    mod13q1, mod13a1, mod13a2, mod13a3, myd13q1, myd13a1, myd13a2, myd13a3,
+    mod11a1, myd11a1, vnp09ga]
+    ndvi: [mod09ga, myd09ga, vnp09ga]
+    message: >
+        NDVI not available for requested products
