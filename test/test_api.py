@@ -343,11 +343,23 @@ class TestValidation(unittest.TestCase):
             },
 
             {
+                "mod09ga": {
+                    "inputs": ["mod09ga.a2017249.h29v10.006.2016256236022"],
+                    "products": ["l1"]
+                },
+                "olitirs8_collection": {
+                    "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
+                    "products": ["sr"]
+                },
+                "format": "hdf-eos2"
+            },
+
+            {
                 "vnp09ga": {
                     "inputs": ["vnp09ga.a2017249.h19v06.001.2016265235022"],
                     "products": ["l1"],
                 },
-                "format": "gtiff"
+                "format": "hdf-eos2"
             }
         ]
         for iorder in invalid_orders:
@@ -389,11 +401,34 @@ class TestValidation(unittest.TestCase):
             },
 
             {
+                "projection": {
+                    "aea": {
+                        "standard_parallel_1": 29.5,
+                        "central_meridian": -96,
+                        "datum": "wgs84",
+                        "latitude_of_origin": 23,
+                        "standard_parallel_2": 45.5,
+                        "false_northing": 0,
+                        "false_easting": 0
+                    }
+                },
+                "olitirs8_collection": {
+                    "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
+                    "products": ["l1"]
+                },
+                "myd13a2": {
+                    "inputs": ["myd13a2.a2017249.h19v06.006.2017265235022"],
+                    "products": ["l1"]
+                },
+                "format": "hdf-eos2"
+            },
+
+            {
                 "vnp09ga": {
                     "inputs": ["vnp09ga.a2017249.h19v06.001.2016265235022"],
                     "products": ["viirs_ndvi"],
                 },
-                "format": "gtiff"
+                "format": "hdf-eos2"
             }
         ]
         for vorder in valid_orders:
@@ -408,7 +443,7 @@ class TestValidation(unittest.TestCase):
 
     def test_modis_viirs_ndvi_restricted(self):
         """ Users should only be able to order NDVI for
-        Daily Surface Reflectance 500-m MODIS and VIIRS products """
+        Daily Surface Reflectance 500-m MODIS products """
         invalid_orders = [
             {
                 "projection": {
@@ -426,9 +461,9 @@ class TestValidation(unittest.TestCase):
                     "inputs": ["myd13a2.a2017249.h19v06.006.2017265235022"],
                     "products": ["l1"]
                 },
-                "vnp09ga": {
-                    "inputs": ["vnp09ga.a2017249.h19v06.001.2016265235022"],
-                    "products": ["viirs_ndvi"],
+                "mod09ga": {
+                    "inputs": ["mod09ga.a2017249.h29v10.006.2016256236022"],
+                    "products": ["modis_ndvi"]
                 },
                 "format": "gtiff"
             },
@@ -453,10 +488,6 @@ class TestValidation(unittest.TestCase):
                     "inputs": ["myd09ga.a2017249.h19v06.006.2017265235022"],
                     "products": ["modis_ndvi"]
                 },
-                "mod09ga": {
-                    "inputs": ["myd13a2.a2017249.h19v06.006.2017265235022"],
-                    "products": ["modis_ndvi"]
-                },
                 "vnp09ga": {
                     "inputs": ["vnp09ga.a2017249.h19v06.001.2016265235022"],
                     "products": ["viirs_ndvi"]
@@ -474,6 +505,18 @@ class TestValidation(unittest.TestCase):
                 "myd09ga": {
                     "inputs": ["myd09ga.a2017249.h19v06.006.2017265235022"],
                     "products": ["modis_ndvi"]
+                },
+                "vnp09ga": {
+                    "inputs": ["vnp09ga.a2017249.h19v06.001.2016265235022"],
+                    "products": ["viirs_ndvi"],
+                },
+                "format": "gtiff"
+            },
+
+            {
+                "myd13a2": {
+                    "inputs": ["myd13a2.a2017249.h19v06.006.2017265235022"],
+                    "products": ["l1"]
                 },
                 "vnp09ga": {
                     "inputs": ["vnp09ga.a2017249.h19v06.001.2016265235022"],
