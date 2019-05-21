@@ -176,3 +176,31 @@ def sample_tram_order_ids():
 
 def sample_scene_names():
     return 'LC81370432014073LGN00', 'LC81390422014071LGN00', 'LC81370422014073LGN00'
+
+def get_available_orders_partial(token, contactid):
+    ret = [{u'contactId': contactid,
+            u'orderNumber': u'0101905173361',
+            u'statusCode': u'Q',
+            u'statusText': u'Queued for Processing',
+            u'units': [{u'datasetName': None,
+                        u'displayId': None,
+                        u'entityId': None,
+                        u'orderingId': u'LT05_L1GS_125061_19871229_20170210_01_T2',
+                        u'productCode': u'SR05',
+                        u'productDescription': u'LANDSAT TM COLLECTIONS LAND SURFACE REFLECTANCE ON-DEMAND',
+                        u'statusCode': None,
+                        u'statusText': None,
+                        u'unitNumber': 1}]}]
+
+    # if partial:
+    #     ret[('125', 'klsmith@usgs.gov', 418781)] = [{'sceneid': 'LE07_L1TP_026027_20170912_20171008_01_T1',
+    #                                                'unit_num': 789}]
+    # else:
+    #     ret[('125', 'klsmith@usgs.gov', 418781)] = [{'sceneid': 'LE07_L1TP_026027_20170912_20171008_01_T1',
+    #                                                'unit_num': 789},
+    #                                               {'sceneid': 'LT05_L1TP_025027_20110913_20160830_01_T1',
+    #                                                'unit_num': 780}]
+
+
+
+    return ret

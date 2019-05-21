@@ -7,6 +7,7 @@ from test.version0_testorders import build_base_order
 from api.providers.ordering.ordering_provider import OrderingProvider
 from api.providers.production.production_provider import ProductionProvider
 from api.external.mocks import lta as mock_lta
+from api.external.mocks import inventory as mock_inventory
 import os
 import random
 import datetime
@@ -55,14 +56,18 @@ class MockOrder(object):
         return order.id
 
     def generate_ee_testing_order(self, user_id, partial=False):
-        ee_order = mock_lta.get_available_orders_partial(partial)
-
         # Have to emulate a bunch of load_ee_orders
+        cond_str  = lambda i: str(i) if isinstance(i, unicode) else i
+        conv_dict = lambda i: dict([(cond_str(k), cond_str(v)) for k, v in i.items()])
+        ee_orders = map(conv_dict, mock_inventory.get_available_orders_partial('fauxtoken', partial))
+        email_addr = 'klsmith@usgs.gov'
 
-        for eeorder, email_addr, contactid in ee_order:
-            order_id = Order.generate_ee_order_id(email_addr, eeorder)
-            scene_info = ee_order[eeorder, email_addr, contactid]
+        print("** ee_orders: {}".format(ee_orders))
 
+        for eeorder in ee_orders:
+            order_id = Order.generate_ee_order_id(email_addr, eeorder.get('orderNumber'))
+            scene_info = map(conv_dict, eeorder.get('units'))
+            print("** scene_info: {}".format(scene_info))
             user = User.find(user_id)
             ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
 
@@ -70,14 +75,16 @@ class MockOrder(object):
                           'user_id': user.id,
                           'order_type': 'level2_ondemand',
                           'status': 'ordered',
-                          'note': 'EarthExplorer order id: {}'.format(eeorder),
-                          'ee_order_id': eeorder,
+                          'note': 'EarthExplorer order id: {}'.format(eeorder.get('orderNumber')),
+                          'ee_order_id': eeorder.get('orderNumber'),
                           'order_source': 'ee',
                           'order_date': ts,
                           'priority': 'normal',
                           'email': user.email,
                           'product_options': 'include_sr: true',
                           'product_opts': Order.get_default_ee_options(scene_info)}
+
+            print("** order_dict: {}".format(order_dict))
 
             order = Order.create(order_dict)
             self.production_provider.load_ee_scenes(scene_info, order.id)

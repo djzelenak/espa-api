@@ -298,14 +298,56 @@ class LTAService(object):
             # throw exception if non 200 response?
             return {'success': False, 'message': response, 'status': 'Fail'}
 
-    def get_available_orders(self):
+    def get_available_orders(self, contactid=None):
         """
         Return collection of ESPA orders from EE
         """
         endpoint = 'getorderqueue'
         payload = dict(apiKey=self.token, queueName='espa')
         response = self._post(endpoint, payload)
-        return response
+        data = response.get('data')
+        orders = []
+
+        if 'orders' in data.keys():
+            if contactid:
+              orders = [o for o in data.get('orders') if o.get('contactId') == contactid] 
+            else:
+              orders = data.get('orders')
+
+        return orders
+
+## sample response, now includes contactId
+# {u'access_level': u'appuser',
+#  u'api_version': u'1.4.1',
+#  u'catalog_id': u'EE',
+#  u'data': {u'orders': [{u'contactId': 888718,
+#                         u'orderNumber': u'0101905173361',
+#                         u'statusCode': u'Q',
+#                         u'statusText': u'Queued for Processing',
+#                         u'units': [{u'datasetName': None,
+#                                     u'displayId': None,
+#                                     u'entityId': None,
+#                                     u'orderingId': u'LT05_L1GS_125061_19871229_20170210_01_T2',
+#                                     u'productCode': u'SR05',
+#                                     u'productDescription': u'LANDSAT TM COLLECTIONS LAND SURFACE REFLECTANCE ON-DEMAND',
+#                                     u'statusCode': None,
+#                                     u'statusText': None,
+#                                     u'unitNumber': 1}]},
+
+    def get_user_email(self, contactid):
+        """
+        This method will get the end-user lookup data given a contactid.
+
+        :param contactid: ERS identification key (number form
+        :type contactid: int
+        :return: dictionary
+        """
+        endpoint = 'userLookup'
+        payload = dict(apiKey=self.token, contactId=int(contactid))
+        resp = self._post(endpoint, payload)
+        if not bool(resp.get('data')):
+            raise LTAError('Get user email failed for contactid {}'.format(contactid))
+        return str(resp.get('data'))
 
     def get_user_context(self, contactid, ipaddress=None, context='ESPA'):
         """
@@ -412,18 +454,23 @@ def get_download_urls(token, entity_ids, dataset, usage='[espa]'):
     return LTAService(token).get_download_urls(entity_ids, dataset, usage=usage)
 
 
-def get_user_context(token, contactid, ipaddress=None):
-    return LTAService(token).get_user_context(contactid, ipaddress)
+# unused, remove?
+#def get_user_context(token, contactid, ipaddress=None):
+#    return LTAService(token).get_user_context(contactid, ipaddress)
 
-
-def set_user_context(token, contactid, ipaddress=None):
-    return LTAService(token).set_user_context(contactid, ipaddress)
+# unused, remove?
+#def set_user_context(token, contactid, ipaddress=None):
+#    return LTAService(token).set_user_context(contactid, ipaddress)
 
 
 def get_user_name(token, contactid, ipaddress=None):
-    context = get_user_context(token, contactid, ipaddress)
+    context = LTAService(token).get_user_context(contactid, ipaddress)
     return str(context.get('username'))
 
+def get_user_details(token, contactid, ipaddress=None):
+    email    = LTAService(token).get_user_email(contactid)
+    username = get_user_name(token, contactid, ipaddress)
+    return username, email
 
 def clear_user_context(token):
     return LTAService(token).clear_user_context()
@@ -442,7 +489,6 @@ def download_urls(token, product_ids, dataset, usage='[espa]'):
     urls = get_download_urls(token, entities.values(), dataset, usage=usage)
     return {p: urls.get(e) for p, e in entities.items() if e in urls}
 
-
 def get_cached_session():
     return LTACachedService().cached_login()
 
@@ -452,5 +498,5 @@ def get_order_status(token, order_number):
 def update_order_status(token, order_number, unit_number, status):
     return LTAService(token).update_order_status(order_number, unit_number, status)
 
-def get_available_orders(token):
-    return LTAService(token).get_available_orders()
+def get_available_orders(token, contactid=None):
+    return LTAService(token).get_available_orders(contactid)
