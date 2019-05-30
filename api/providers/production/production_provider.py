@@ -632,8 +632,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             # All EE orders are for SR, require auxiliary data
             if product.sr_date_restricted():
                 status = 'unavailable'
-                note = 'auxiliary data unavailable for' \
-                       'this scenes acquisition date'
+                note = 'Missing Auxiliary data - cannot process SR'
                 logger.info('check ee unavailable: {}'.format(product.__dict__))
 
             scene_dict = {'name': product.product_id,
@@ -662,6 +661,11 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         bulk_ls = self.gen_ee_scene_list(ee_scenes, order_id)
         try:
             Scene.create(bulk_ls)
+            for params in bulk_ls:
+                # Add the note from the scene_dict in bulk_ls, not included in Scene.create()
+                scene = Scene.by_name_orderid(name=params['name'], order_id=params['order_id'])
+                scene.note = params['note']
+                scene.save()
         except (SceneException, sensor.ProductNotImplemented) as e:
             if missed:
                 # we failed to load scenes missed on initial EE order import
