@@ -83,6 +83,14 @@ products:
     category: indices
     title: "NBR2"
     display_rank: 6
+  modis_ndvi:
+    category: indices
+    title: "MODIS Daily NDVI"
+    display_rank: 7
+  viirs_ndvi:
+    category: indices
+    title: "VIIRS Daily NDVI"
+    display_rank: 8
   stats:
     category: stats
     title: "Summary Statistics"

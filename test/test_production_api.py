@@ -56,6 +56,18 @@ class TestProductionAPI(unittest.TestCase):
     @patch('api.external.inventory.available', lambda: True)
     @patch('api.providers.production.production_provider.ProductionProvider.parse_urls_m2m',
             lambda x, y: y)
+    def test_fetch_production_products_viirs(self):
+        order_id = self.mock_order.generate_testing_order(self.user_id)
+        # need scenes with statuses of 'processing'
+        self.mock_order.update_scenes(order_id, 'viirs', 'status', ['processing', 'oncache'])
+        user = User.find(self.user_id)
+        params = {'product_types': ['viirs']}
+        response = api.fetch_production_products(params)
+        self.assertTrue('bilbo' in response[0]['orderid'])
+
+    @patch('api.external.inventory.available', lambda: True)
+    @patch('api.providers.production.production_provider.ProductionProvider.parse_urls_m2m',
+            lambda x, y: y)
     def test_fetch_production_products_landsat(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
         # need scenes with statuses of 'processing'
@@ -67,7 +79,7 @@ class TestProductionAPI(unittest.TestCase):
 
     def test_fetch_production_products_plot(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
-        self.mock_order.update_scenes(order_id, ('landsat', 'modis'), 'status', ['complete'])
+        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs'), 'status', ['complete'])
         order = Order.find(order_id)
         plot_scene = order.scenes({'name': 'plot'})[0]
         plot_scene.name = 'plot'
@@ -471,6 +483,20 @@ class TestProductionAPI(unittest.TestCase):
         #self.assertEquals(Scene.find(sid).status, "oncache")
 
     @patch('api.external.inventory.available', lambda: True)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.check_valid', inventory.check_valid_viirs)
+    def test_production_handle_submitted_viirs_products_input_exists(self):
+        # handle oncache scenario
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        for scene in order.scenes({'name !=': 'plot'}):
+            scene.status = 'submitted'
+            scene.sensor_type = 'viirs'
+            scene.save()
+            sid = scene.id
+        scenes = order.scenes({'sensor_type': 'viirs'})
+        self.assertTrue(production_provider.handle_submitted_viirs_products(scenes))
+
+    @patch('api.external.inventory.available', lambda: True)
     @patch('api.external.inventory.get_cached_session', inventory.get_cached_session) 
     @patch('api.external.inventory.check_valid', inventory.check_valid_modis)   
     def test_production_handle_submitted_modis_products_input_missing(self):
@@ -483,6 +509,21 @@ class TestProductionAPI(unittest.TestCase):
             sid = scene.id
         scenes = order.scenes({'sensor_type': 'modis'})
         self.assertTrue(production_provider.handle_submitted_modis_products(scenes))
+        self.assertEquals(Scene.find(sid).status, "unavailable")
+
+    @patch('api.external.inventory.available', lambda: True)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.check_valid', inventory.check_valid_viirs)
+    def test_production_handle_submitted_viirs_products_input_missing(self):
+        # handle unavailable scenario
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        for scene in order.scenes({'name !=': 'plot'}):
+            scene.status = 'submitted'
+            scene.sensor_type = 'viirs'
+            scene.save()
+            sid = scene.id
+        scenes = order.scenes({'sensor_type': 'viirs'})
+        self.assertTrue(production_provider.handle_submitted_viirs_products(scenes))
         self.assertEquals(Scene.find(sid).status, "unavailable")
 
     def test_production_handle_submitted_plot_products(self):
@@ -538,6 +579,20 @@ class TestProductionAPI(unittest.TestCase):
         order.save()
         self.assertTrue(production_provider.update_order_if_complete(order))
 
+    @patch('api.providers.production.production_provider.ProductionProvider.send_completion_email',
+           mock_production_provider.respond_error)
+    def test_production_order_completion_email_error(self):
+        """
+        Make sure that order status is not set to complete if the completion email failed to send
+        """
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        Scene.bulk_update([s.id for s in order.scenes()], {'status': 'complete'})
+        order.order_source = 'espa'
+        order.completion_email_sent = None
+        order.save()
+        production_provider.update_order_if_complete(order)
+        self.assertEquals(order.status, 'ordered')
+
     def test_production_queue_products_success(self):
         names_tuple = self.mock_order.names_tuple(3, self.user_id)
         processing_loc = "get_products_to_process"
@@ -562,7 +617,7 @@ class TestProductionAPI(unittest.TestCase):
     def test_catch_orphaned_scenes(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
         # need scenes with statuses of 'queued'
-        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'plot'), 'status', ['queued'])
+        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs', 'plot'), 'status', ['queued'])
         response = production_provider.catch_orphaned_scenes()
         self.assertTrue(response)
 
@@ -583,8 +638,8 @@ class TestProductionAPI(unittest.TestCase):
     def test_handle_stuck_jobs(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
         # Make some really old jobs
-        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'plot'), 'status', ['processing'])
-        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'plot'), 'status_modified', [datetime.datetime(1900, 1, 1)])
+        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs', 'plot'), 'status', ['processing'])
+        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs', 'plot'), 'status_modified', [datetime.datetime(1900, 1, 1)])
         scenes = Scene.where({'status': 'processing', 'order_id': order_id})
         n_scenes = len(scenes)
         response = production_provider.handle_stuck_jobs(scenes)
@@ -593,7 +648,7 @@ class TestProductionAPI(unittest.TestCase):
         scenes = Scene.where({'status': 'processing', 'order_id': order_id, 'reported_orphan is not': None})
         self.assertEqual(n_scenes, len(scenes))
 
-        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'plot'), 'reported_orphan', [datetime.datetime(1900, 1, 1)])
+        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs', 'plot'), 'reported_orphan', [datetime.datetime(1900, 1, 1)])
         response = production_provider.handle_stuck_jobs(scenes)
         self.assertTrue(response)
 
@@ -658,6 +713,8 @@ class TestProductionAPI(unittest.TestCase):
                    'include_sr_savi': False,
                    'include_sr_thermal': False,
                    'include_sr_toa': False,
+                   'include_modis_ndvi': False,
+                   'include_viirs_ndvi': False,
                    'include_statistics': False,
                    'latitude_true_scale': None,
                    'longitude_pole': None,

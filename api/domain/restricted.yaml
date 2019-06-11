@@ -7,7 +7,6 @@ all:
     ordering:
         - restricted_sensor
 
-
 stats:
     sensors:
         - olitirs8
@@ -31,6 +30,12 @@ stats:
 olitirs8:
     role:
         - st
+        - stalg_split_window
+        - stalg_single_channel
+        - reanalsrc_narr
+        - reanalsrc_merra2
+        - reanalsrc_fp
+        - reanalsrc_fpit
     by_date:
         sr:
             - "< 2016050 | > 2016058"
@@ -51,6 +56,13 @@ olitirs8:
         swe:
             - "< 2016050 | > 2016058"
 etm7:
+    role:
+        - st
+        - stalg_single_channel
+        - reanalsrc_narr
+        - reanalsrc_merra2
+        - reanalsrc_fp
+        - reanalsrc_fpit
     by_date:
         sr:
             - "< 2016151 | > 2016164"
@@ -76,13 +88,61 @@ etm7:
         swe:
             - "< 2016151 | > 2016164"
             - "< 2017071 | > 2017076"
+tm5:
+    role:
+        - st
+        - stalg_single_channel
+        - reanalsrc_narr
+        - reanalsrc_merra2
+        - reanalsrc_fp
+        - reanalsrc_fpit
 
-# This is an order which should go through alternative channels
+tm4:
+    role:
+        - st
+        - stalg_single_channel
+        - reanalsrc_narr
+        - reanalsrc_merra2
+        - reanalsrc_fp
+        - reanalsrc_fpit
+
+mod09ga:
+    role:
+        - modis_ndvi
+
+myd09ga:
+    role:
+        - modis_ndvi
+
+vnp09ga:
+    role:
+        - viirs_ndvi
+
+# These are orders which should go through alternative channels
 source:
     sensors: [olitirs8_collection, etm7_collection, tm4_collection, tm5_collection]
     products: [l1, source_metadata]
     format: gtiff
     custom: [format, image_extents, resize, projection]
     message: >
-        order includes only Landsat Level-1 data products, please contact
+        order includes non-customized products, please contact
         User Services for other available options
+
+source_daac:
+    sensors: [mod09a1, mod09ga, mod09gq, mod09q1, myd09a1, myd09ga, myd09gq, myd09q1,
+              mod13q1, mod13a1, mod13a2, mod13a3, myd13q1, myd13a1, myd13a2, myd13a3,
+              mod11a1, myd11a1, vnp09ga]
+    products: [l1]
+    format: hdf-eos2
+    custom: [format, image_extents, resize, projection]
+    message: >
+        order includes non-customized products, please contact
+        User Services for other available options
+
+source_modis_ndvi:
+    modis_sensors: [mod09a1, mod09ga, mod09gq, mod09q1, myd09a1, myd09ga, myd09gq, myd09q1,
+                    mod13q1, mod13a1, mod13a2, mod13a3, myd13q1, myd13a1, myd13a2, myd13a3,
+                    mod11a1, myd11a1]
+    ndvi_sensors: [mod09ga, myd09ga]
+    message: >
+        NDVI not available for requested products

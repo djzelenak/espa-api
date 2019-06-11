@@ -22,6 +22,7 @@ with open(os.path.join(__location__, 'domain/restricted.yaml')) as f:
 with open(os.path.join(__location__, 'domain/products.yaml')) as f:
     products = yaml.safe_load(f.read())
 
+
 class ProductNames(object):
     def groups(self, staff_role=False):
         """ Gives human-readable mappings and logical-groups to all orderable products"""
@@ -59,7 +60,10 @@ class ProductNames(object):
         prods = namedtuple('AllProducts', product_names)
         # Internal code names
         return prods(*product_names)
+
+
 AllProducts = ProductNames().get()
+
 
 class SensorProduct(object):
     """Base class for all sensor products"""
@@ -135,7 +139,6 @@ class Modis(SensorProduct):
 
     def __repr__(self):
         return 'MODIS: {}'.format(self.__dict__)
-
 
 
 class Terra(Modis):
@@ -231,6 +234,7 @@ class ModisTerra09A1(Terra, Modis09A1):
 class ModisTerra09GA(Terra, Modis09GA):
     """models modis 09GA from Terra"""
     lta_json_name = 'MODIS_MOD09GA_V{collection}'
+    products = [AllProducts.l1, AllProducts.stats, AllProducts.modis_ndvi]
 
 
 class ModisTerra09GQ(Terra, Modis09GQ):
@@ -276,6 +280,7 @@ class ModisAqua09A1(Aqua, Modis09A1):
 class ModisAqua09GA(Aqua, Modis09GA):
     """models modis 09GA from Aqua"""
     lta_json_name = 'MODIS_MYD09GA_V{collection}'
+    products = [AllProducts.l1, AllProducts.stats, AllProducts.modis_ndvi]
 
 
 class ModisAqua09GQ(Aqua, Modis09GQ):
@@ -313,6 +318,49 @@ class ModisAqua11A1(Aqua, Modis11A1):
     lta_json_name = 'MODIS_MYD11A1_V{collection}'
 
 
+class Viirs(SensorProduct):
+    """Superclass for all VIIRS products"""
+    short_name = None
+    horizontal = None
+    vertical = None
+    date_acquired = None
+    date_produced = None
+    input_filename_extension = '.h5'
+    l1_provider = 'lpdaac'
+
+    def __init__(self, product_id):
+        super(Viirs, self).__init__(product_id)
+
+        parts = product_id.strip().split('.')
+
+        self.short_name = parts[0]
+        self.date_acquired = parts[1][1:]
+        self.year = self.date_acquired[0:4]
+        self.doy = self.date_acquired[4:8]
+
+        __hv = parts[2]
+        self.horizontal = __hv[1:3]
+        self.vertical = __hv[4:6]
+        self.version = parts[3]
+        self.date_produced = parts[4]
+        self.lta_json_name = self.lta_json_name.format(collection=int(self.version))
+
+    def __repr__(self):
+        return 'VIIRS: {}'.format(self.__dict__)
+
+
+class Viirs09GA(Viirs):
+    """models VIIRS VNP09GA"""
+    default_resolution_m = 500
+    default_resolution_dd = 0.00449155
+    default_rows = 2400
+    default_cols = 2400
+    sensor_name = 'viirs'
+
+    lta_json_name = 'VIIRS_VNP09GA'
+    products = [AllProducts.l1, AllProducts.stats, AllProducts.viirs_ndvi]
+
+
 class Landsat(SensorProduct):
     """Superclass for all landsat based products"""
     path = None
@@ -348,17 +396,21 @@ class Landsat(SensorProduct):
     # dates where we are missing auxiliary data
     def sr_date_restricted(self):
         if self.sensor_name in restricted:
-            if not julian_date_check(self.julian, restricted[self.sensor_name]['by_date']['sr']):
-                return True
+            if 'by_date' in restricted[self.sensor_name].keys():
+                if not julian_date_check(self.julian, restricted[self.sensor_name]['by_date']['sr']):
+                    return True
         return False
 
 
 class LandsatTM(Landsat):
     """Models Landsat TM only products"""
-    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr, AllProducts.st, AllProducts.swe,
+    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr,
+                AllProducts.st, AllProducts.swe,
                 AllProducts.sr_ndvi, AllProducts.sr_evi, AllProducts.sr_savi, AllProducts.sr_msavi, AllProducts.sr_ndmi,
-                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.pixel_qa, AllProducts.stalg_single_channel, 
-                AllProducts.reanalsrc_narr, AllProducts.reanalsrc_merra2, AllProducts.reanalsrc_fp, AllProducts.reanalsrc_fpit]
+                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.pixel_qa,
+                AllProducts.stalg_single_channel,
+                AllProducts.reanalsrc_narr, AllProducts.reanalsrc_merra2, AllProducts.reanalsrc_fp,
+                AllProducts.reanalsrc_fpit]
     lta_name = 'LANDSAT_TM'
     lta_json_name = 'LANDSAT_TM_C{collection}'
     sensor_name = 'tm'
@@ -369,10 +421,13 @@ class LandsatTM(Landsat):
 
 class LandsatETM(Landsat):
     """Models Landsat ETM only products"""
-    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr, AllProducts.st, AllProducts.swe,
+    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr,
+                AllProducts.st, AllProducts.swe,
                 AllProducts.sr_ndvi, AllProducts.sr_evi, AllProducts.sr_savi, AllProducts.sr_msavi, AllProducts.sr_ndmi,
-                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.pixel_qa, AllProducts.stalg_single_channel, 
-                AllProducts.reanalsrc_narr, AllProducts.reanalsrc_merra2, AllProducts.reanalsrc_fp, AllProducts.reanalsrc_fpit]
+                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.pixel_qa,
+                AllProducts.stalg_single_channel,
+                AllProducts.reanalsrc_narr, AllProducts.reanalsrc_merra2, AllProducts.reanalsrc_fp,
+                AllProducts.reanalsrc_fpit]
     lta_name = 'LANDSAT_ETM_PLUS'
     lta_json_name = 'LANDSAT_ETM_C{collection}'
     sensor_name = 'etm'
@@ -383,10 +438,13 @@ class LandsatETM(Landsat):
 
 class LandsatOLITIRS(Landsat):
     """Models Landsat OLI/TIRS only products"""
-    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr, AllProducts.st, AllProducts.swe,
+    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.bt, AllProducts.sr,
+                AllProducts.st, AllProducts.swe,
                 AllProducts.sr_ndvi, AllProducts.sr_evi, AllProducts.sr_savi, AllProducts.sr_msavi, AllProducts.sr_ndmi,
-                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.pixel_qa, AllProducts.stalg_split_window, 
-                AllProducts.stalg_single_channel, AllProducts.reanalsrc_narr, AllProducts.reanalsrc_merra2, AllProducts.reanalsrc_fp, 
+                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats, AllProducts.pixel_qa,
+                AllProducts.stalg_split_window,
+                AllProducts.stalg_single_channel, AllProducts.reanalsrc_narr, AllProducts.reanalsrc_merra2,
+                AllProducts.reanalsrc_fp,
                 AllProducts.reanalsrc_fpit]
     lta_name = 'LANDSAT_8'
     lta_json_name = 'LANDSAT_8_C{collection}'
@@ -563,7 +621,10 @@ class SensorCONST(object):
                     ModisAqua13Q1, 'myd13q1.A2000072.h02v09.005.2008237032813'),
 
         'myd11a1': (r'^myd11a1\.a\d{7}\.h\d{2}v\d{2}\.00[5-6]\.\d{13}$',
-                    ModisAqua11A1, 'myd13q1.A2000072.h02v09.005.2008237032813')
+                    ModisAqua11A1, 'myd13q1.A2000072.h02v09.005.2008237032813'),
+
+        'vnp09ga': (r'^vnp09ga\.a\d{7}\.h\d{2}v\d{2}\.001\.\d{13}$',
+                    Viirs09GA, 'vnp09ga.A2019059.h18v06.001.2019061005706')
     }
 
 
@@ -575,6 +636,11 @@ def instance(product_id):
 
     MODIS FORMAT:   MOD09GQ.A2000072.h02v09.005.2008237032813
 
+    Supported VIIRS products
+    VNP09GA
+
+    VIIRS FORMAT:   VNP09GA.A2019059.h18v06.001.2019061005706
+
     Supported LANDSAT products
     LT04 LT05 LE07 LC08 LO08
 
@@ -585,6 +651,7 @@ def instance(product_id):
     # do not alter the case of the actual product_id!
     _id = product_id.lower().strip()
     __modis_ext = Modis.input_filename_extension
+    __viirs_ext = Viirs.input_filename_extension
     __landsat_ext = Landsat.input_filename_extension
 
     if _id.endswith(__modis_ext):
@@ -596,6 +663,11 @@ def instance(product_id):
     elif _id.endswith(__landsat_ext):
         index = _id.index(__landsat_ext)
         # leave original case intact
+        product_id = product_id[0:index]
+        _id = _id[0:index]
+
+    elif _id.endswith(__viirs_ext):
+        index = _id.index(__viirs_ext)
         product_id = product_id[0:index]
         _id = _id[0:index]
 

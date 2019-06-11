@@ -9,7 +9,7 @@ from api.system.logger import ilogger as logger
 from api.util.dbconnect import db_instance
 from api.util.dbconnect import DBConnectException
 from api.domain.order import Order
-from api.domain.scene import SceneException
+from api.domain.scene import SceneException, Scene
 from api.util import api_cfg
 
 
@@ -68,13 +68,20 @@ class AdministrationProvider(AdminProviderInterfaceV0):
         order = Order.find(orderid)
         err_scenes = order.scenes({'status': 'error'})
         try:
-            for scene in err_scenes:
-                scene.update('status', state)
-
             if state == 'submitted':
+                Scene.bulk_update([s.id for s in err_scenes], {'status': state,
+                                                               'orphaned': None,
+                                                               'reported_orphan': None,
+                                                               'log_file_contents': '',
+                                                               'note': '',
+                                                               'retry_count': 0})
+
                 order.status = 'ordered'
                 order.completion_email_sent = None
                 order.save()
+
+            else:
+                Scene.bulk_update([s.id for s in err_scenes], {'status': state})
 
             return True
         except SceneException as e:
