@@ -26,9 +26,11 @@ stats:
         - 'sr_nbr'
         - 'sr_nbr2'
         - 'st'
+        - 'orca'
 
 olitirs8:
     role:
+        - orca
         - st
         - stalg_split_window
         - stalg_single_channel

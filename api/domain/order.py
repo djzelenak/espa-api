@@ -311,6 +311,7 @@ class Order(object):
              'include_sr_msavi': False,  # modified soil adjusted veg
              'include_sr_evi': False,  # enhanced vegetation
              'include_st': False,  # surface temperature
+             'include_orca': False, # surface water reflectance
              'include_modis_ndvi': False,  # Daily modis ndvi
              'include_viirs_ndvi': False,  # Daily viirs ndvi
              'include_solr_index': False,  # solr search index record
@@ -681,6 +682,7 @@ class OptionsConversion(object):
                 ('include_sr_evi', 'sr_evi', True),
                 ('include_modis_ndvi', 'modis_ndvi', True),
                 ('include_viirs_ndvi', 'viirs_ndvi', True),
+                ('include_orca', 'orca', True),
                 ('include_st', 'st', True),
                 ('st_algorithm', 'stalg_split_window',   'split_window'),
                 ('st_algorithm', 'stalg_single_channel', 'single_channel'),

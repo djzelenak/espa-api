@@ -23,6 +23,10 @@ products:
     category: l2p
     title: "Surface Reflectance"
     display_rank: 0
+  orca:
+    category: l2p
+    title: "Surface Water Reflectance"
+    display_rank: 1
   st:
     category: l2p
     title: "Surface Temperature"
