@@ -30,7 +30,6 @@ stats:
 
 olitirs8:
     role:
-        - orca
         - st
         - stalg_split_window
         - stalg_single_channel
@@ -122,7 +121,7 @@ vnp09ga:
 
 # These are orders which should go through alternative channels
 source:
-    sensors: [olitirs8_collection, etm7_collection, tm4_collection, tm5_collection]
+    sensors: [olitirs8_collection, oli8_collection, etm7_collection, tm4_collection, tm5_collection]
     products: [l1, source_metadata]
     format: gtiff
     custom: [format, image_extents, resize, projection]
@@ -148,3 +147,9 @@ source_modis_ndvi:
     ndvi_sensors: [mod09ga, myd09ga]
     message: >
         NDVI not available for requested products
+
+source_orca_sensors:
+    sensors: [olitirs8_collection, oli8_collection, etm7_collection, tm4_collection, tm5_collection]
+    orca_sensors: [olitirs8_collection, oli8_collection]
+    message: >
+        LaORCA currently only available for Landsat 8 OLI or OLI/TIRS
