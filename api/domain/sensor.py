@@ -445,7 +445,8 @@ class LandsatOLITIRS(Landsat):
                 AllProducts.stalg_split_window,
                 AllProducts.stalg_single_channel, AllProducts.reanalsrc_narr, AllProducts.reanalsrc_merra2,
                 AllProducts.reanalsrc_fp,
-                AllProducts.reanalsrc_fpit]
+                AllProducts.reanalsrc_fpit,
+                AllProducts.orca]
     lta_name = 'LANDSAT_8'
     lta_json_name = 'LANDSAT_8_C{collection}'
     sensor_name = 'olitirs'
@@ -456,7 +457,8 @@ class LandsatOLITIRS(Landsat):
 
 class LandsatOLI(Landsat):
     """Models Landsat OLI only products"""
-    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.stats, AllProducts.pixel_qa]
+    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.toa, AllProducts.orca,
+                AllProducts.stats, AllProducts.pixel_qa]
     lta_name = 'LANDSAT_8'
     lta_json_name = 'LANDSAT_8_C{collection}'
     sensor_name = 'oli'
