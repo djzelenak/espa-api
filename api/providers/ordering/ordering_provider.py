@@ -78,12 +78,15 @@ class OrderingProvider(ProviderInterfaceV0):
             outs = pub_prods[sensor_type]['products']
             ins = pub_prods[sensor_type]['inputs']
 
+            ### Leaving this here as it could be a useful template
+            ### if we introduce new sensors in the future which are
+            ### role restricted.
             # Restrict ordering VIIRS to staff
-            if role and sensor_type.startswith('vnp'):
-                for sc_id in ins:
-                    upd['not_implemented'].append(sc_id)
-                pub_prods.pop(sensor_type)
-                continue
+            # if role and sensor_type.startswith('vnp'):
+            #     for sc_id in ins:
+            #         upd['not_implemented'].append(sc_id)
+            #     pub_prods.pop(sensor_type)
+            #     continue
 
             if sensor_type in all_ordering_rsctd:
                 for sc_id in ins:

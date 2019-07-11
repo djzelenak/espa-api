@@ -106,18 +106,6 @@ tm4:
         - reanalsrc_fp
         - reanalsrc_fpit
 
-mod09ga:
-    role:
-        - modis_ndvi
-
-myd09ga:
-    role:
-        - modis_ndvi
-
-vnp09ga:
-    role:
-        - viirs_ndvi
-
 # These are orders which should go through alternative channels
 source:
     sensors: [olitirs8_collection, etm7_collection, tm4_collection, tm5_collection]
