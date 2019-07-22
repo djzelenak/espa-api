@@ -469,6 +469,18 @@ class OrderValidatorV0(validictory.SchemaValidator):
                     if msg not in self._errors:
                         self._errors.append(msg)
 
+        # Enforce sensor-restricted product ordering for LaORCA
+        if 'orca' in req_prods:
+            restr_orca_info = self.restricted['source_orca_sensors']
+            orca_sensors = restr_orca_info['sensors']
+            req_orca_sensors = [s for s in self.data_source.keys() if s in sn.SensorCONST.instances.keys()
+                                and s in orca_sensors]
+            invalid_orca_req = set(req_orca_sensors) - set(restr_orca_info['orca_sensors'])
+            if invalid_orca_req:
+                msg = restr_orca_info['message'].strip()
+                if msg not in self._errors:
+                    self._errors.append(msg)
+
     def validate_oneormoreobjects(self, x, fieldname, schema, path, key_list):
         """Validates that at least one value is present from the list"""
         val = x.get(fieldname)

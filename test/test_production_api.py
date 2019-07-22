@@ -699,6 +699,7 @@ class TestProductionAPI(unittest.TestCase):
                    'include_customized_source_data': False,
                    'include_dswe': False,
                    'include_st': False,
+                   'include_orca': False,
                    'include_solr_index': False,
                    'include_source_data': False,
                    'include_source_metadata': False,
@@ -742,6 +743,16 @@ class TestProductionAPI(unittest.TestCase):
             self.assertDictEqual(ruberic, old_format)
 
             ruberic[include] = False
+
+    def test_options_conversion_orca_algorithm(self):
+        opts = {'note': '',
+                'olitirs8_collection': {'inputs': ['LC08_L1TP_025027_20160521_20170223_01_T1'],
+                                        'products': ['orca']},
+                'resampling_method': 'nn',
+                'format': 'gtiff'}
+
+        self.assertDictEqual(OptionsConversion._flatten(opts, OptionsConversion.keywords_map),
+                             {'include_orca': True, 'output_format': 'gtiff'})
 
     def test_options_conversion_st_algorithm(self):
         opts = {'note': '', 

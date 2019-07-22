@@ -544,6 +544,39 @@ class TestValidation(unittest.TestCase):
         for vorder in valid_orders:
             api.validation.validate(vorder, self.staffuser.username)
 
+    def test_orca_sensor_restricted(self):
+        """ Users should only be able to order LaORCA for
+            Landsat 8 OLI and/or OLITIRS"""
+        valid_orders = [
+            {
+            "olitirs8_collection": {
+                "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
+                "products": ["orca"]
+            },
+            "oli8_collection": {
+                "inputs": ["lo08_l1tp_021049_20150304_20170227_01_t1"],
+                "products": ["orca"]
+            },
+            "format": "gtiff"
+        }]
+
+        invalid_orders = [
+            {
+            "olitirs8_collection": {
+                "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
+                "products": ["orca"]
+            },
+            "etm7_collection": {
+                "inputs": ["le07_l1tp_151041_20190218_20190316_01_t1"],
+                "products": ["orca"]
+            },
+            "format": "gtiff"
+        }]
+        for iorder in invalid_orders:
+            with self.assertRaisesRegexp(ValidationException, "LaORCA currently only available for Landsat 8 OLI or OLI/TIRS"):
+                api.validation.validate(iorder, self.staffuser.username)
+        for vorder in valid_orders:
+            api.validation.validate(vorder, self.staffuser.username)
 
 class TestInventory(unittest.TestCase):
     def setUp(self):
