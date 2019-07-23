@@ -359,6 +359,13 @@ class OrderValidatorV0(validictory.SchemaValidator):
         if not req_prods:
             return
 
+        try:
+            req_scene = x.get('inputs')[0]
+        except IndexError:
+            return
+
+        inst = sn.instance(req_scene)
+
         avail_prods = (ordering.OrderingProvider()
                        .available_products(x['inputs'], self.username))
 
@@ -421,18 +428,58 @@ class OrderValidatorV0(validictory.SchemaValidator):
                            .format(d, path.split('.products')[0], scene_ids))
                     self._errors.append(msg)
 
+        # Enforce non-customized l1 ordering restriction for Landsat
         restr_source = self.restricted['source']
-        sensors = [s for s in self.data_source.keys() if s in sn.SensorCONST.instances.keys()]
-        other_sensors = set(sensors) - set(restr_source['sensors'])
-        parse_customize = lambda c: ((c in self.data_source) and
-                                     (self.data_source.get(c) != restr_source.get(c)))
-        if not other_sensors:
+        landsat_sensors = restr_source['sensors']
+        sensors = [s for s in self.data_source.keys() if s in sn.SensorCONST.instances.keys() and
+                   s in landsat_sensors]
+        parse_customize = lambda c: ((c in self.data_source)
+                                     and (self.data_source.get(c) != restr_source.get(c)))
+        if sensors and 'LANDSAT' in inst.lta_json_name:
             if not set(req_prods) - set(restr_source['products']):
                 if not any(map(parse_customize, restr_source['custom'])):
                     msg = restr_source['message'].strip()
                     if msg not in self._errors:
                         self._errors.append(msg)
 
+        # Enforce non-customized l1 ordering restriction for MODIS and VIIRS
+        restr_modis_viirs = self.restricted['source_daac']
+        modis_viirs_sensors = restr_modis_viirs['sensors']
+        sensors_mv = [s for s in self.data_source.keys() if s in sn.SensorCONST.instances.keys()
+                      and s in modis_viirs_sensors]
+        parse_modis_customize = lambda c: ((c in self.data_source)
+                                           and (self.data_source.get(c) != restr_modis_viirs.get(c)))
+        if sensors_mv and ('MODIS' in inst.lta_json_name or 'VIIRS' in inst.lta_json_name):
+            if not set(req_prods) - set(restr_modis_viirs['products']):
+                if not any(map(parse_modis_customize, restr_modis_viirs['custom'])):
+                    msg = restr_modis_viirs['message'].strip()
+                    if msg not in self._errors:
+                        self._errors.append(msg)
+
+        # Enforce restricted product ordering for MODIS NDVI
+        if 'MODIS' in inst.lta_json_name:
+            restr_modis_ndvi = self.restricted['source_modis_ndvi']
+            modis_sensors = restr_modis_ndvi['modis_sensors']
+            req_ndvi_sensors = [s for s in self.data_source.keys() if s in sn.SensorCONST.instances.keys()
+                                and s in modis_sensors]
+            invalid_req = set(req_ndvi_sensors) - set(restr_modis_ndvi['ndvi_sensors'])
+            if invalid_req:
+                if 'modis_ndvi' in req_prods:
+                    msg = restr_modis_ndvi['message'].strip()
+                    if msg not in self._errors:
+                        self._errors.append(msg)
+
+        # Enforce sensor-restricted product ordering for LaORCA
+        if 'orca' in req_prods:
+            restr_orca_info = self.restricted['source_orca_sensors']
+            orca_sensors = restr_orca_info['sensors']
+            req_orca_sensors = [s for s in self.data_source.keys() if s in sn.SensorCONST.instances.keys()
+                                and s in orca_sensors]
+            invalid_orca_req = set(req_orca_sensors) - set(restr_orca_info['orca_sensors'])
+            if invalid_orca_req:
+                msg = restr_orca_info['message'].strip()
+                if msg not in self._errors:
+                    self._errors.append(msg)
 
     def validate_oneormoreobjects(self, x, fieldname, schema, path, key_list):
         """Validates that at least one value is present from the list"""

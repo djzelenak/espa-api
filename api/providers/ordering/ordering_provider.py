@@ -66,8 +66,6 @@ class OrderingProvider(ProviderInterfaceV0):
             if sensor_type == 'not_implemented':
                 continue
 
-
-
             stype = sensor_type.replace('_collection', '') if '_collection' in sensor_type else sensor_type
 
             sensor_restr = restricted.get(stype, {})

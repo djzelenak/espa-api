@@ -23,6 +23,10 @@ products:
     category: l2p
     title: "Surface Reflectance"
     display_rank: 0
+  orca:
+    category: l2p
+    title: "Surface Water Reflectance"
+    display_rank: 1
   st:
     category: l2p
     title: "Surface Temperature"
@@ -83,18 +87,14 @@ products:
     category: indices
     title: "NBR2"
     display_rank: 6
-  mod_ndvi:
+  modis_ndvi:
     category: indices
-    title: "MOD09GA NDVI"
+    title: "MODIS Daily NDVI"
     display_rank: 7
-  myd_ndvi:
+  viirs_ndvi:
     category: indices
-    title: "MYD09GA NDVI"
+    title: "VIIRS Daily NDVI"
     display_rank: 8
-  vnp_ndvi:
-    category: indices
-    title: "VNP09GA NDVI"
-    display_rank: 9
   stats:
     category: stats
     title: "Summary Statistics"
