@@ -7,10 +7,11 @@ coverage==4.5.1
 cryptography==2.3.1
 ecdsa==0.13
 enum34==1.1.6
-Flask==0.12.3
-Flask-HTTPAuth==3.2.4
-Flask-Login==0.3.2
-Flask-RESTful==0.3.6
+Flask==1.1.1
+Flask-HTTPAuth==3.3.0
+Flask-Login==0.4.1
+Flask-RESTful==0.3.7
+Flask-Session==0.3.1
 funcsigs==0.4
 idna==2.7
 ipaddress==1.0.22
