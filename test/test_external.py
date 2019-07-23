@@ -113,11 +113,12 @@ class TestInventory(unittest.TestCase):
         for pid in entity_ids.values():
             self.assertRegexpMatches(results.get(pid), ip_address_host_regex)
 
-    @patch('api.external.inventory.requests.get', mockinventory.RequestsSpoof)
-    @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
-    def test_set_user_context(self):
-        success = inventory.set_user_context(self.token, self.contact_id)
-        self.assertTrue(success)
+    # inventory.set_user_context not being used
+    # @patch('api.external.inventory.requests.get', mockinventory.RequestsSpoof)
+    # @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
+    # def test_set_user_context(self):
+    #     success = inventory.set_user_context(self.token, self.contact_id)
+    #     self.assertTrue(success)
 
     @patch('api.external.inventory.requests.get', mockinventory.RequestsSpoof)
     @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
@@ -125,12 +126,13 @@ class TestInventory(unittest.TestCase):
         success = inventory.clear_user_context(self.token)
         self.assertTrue(success)
 
-    @patch('api.external.inventory.requests.get', mockinventory.BadRequestSpoofNegative)
-    @patch('api.external.inventory.requests.post', mockinventory.BadRequestSpoofNegative)
-    def test_false_data_response(self):
-        expected = 'Get user context ESPA failed for user {}'.format(self.contact_id)
-        with self.assertRaisesRegexp(inventory.LTAError, expected):
-            _ = inventory.set_user_context(self.token, self.contact_id)
+    # inventory.set_user_context not used
+    # @patch('api.external.inventory.requests.get', mockinventory.BadRequestSpoofNegative)
+    # @patch('api.external.inventory.requests.post', mockinventory.BadRequestSpoofNegative)
+    # def test_false_data_response(self):
+    #     expected = 'Get user context ESPA failed for user {}'.format(self.contact_id)
+    #     with self.assertRaisesRegexp(inventory.LTAError, expected):
+    #         _ = inventory.set_user_context(self.token, self.contact_id)
 
 
 class TestCachedInventory(unittest.TestCase):
