@@ -433,7 +433,6 @@ class Order(object):
         """
         ee_order = {'format': 'gtiff'}
         for item in item_ls:
-            print("*** item keys: {}".format(item.keys()))
             sceneid = item['orderingId']
             try:
                 scene_info = sensor.instance(sceneid)

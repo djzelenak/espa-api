@@ -62,12 +62,9 @@ class MockOrder(object):
         ee_orders = map(conv_dict, mock_inventory.get_available_orders_partial('fauxtoken', partial))
         email_addr = 'klsmith@usgs.gov'
 
-        print("** ee_orders: {}".format(ee_orders))
-
         for eeorder in ee_orders:
             order_id = Order.generate_ee_order_id(email_addr, eeorder.get('orderNumber'))
             scene_info = map(conv_dict, eeorder.get('units'))
-            print("** scene_info: {}".format(scene_info))
             user = User.find(user_id)
             ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
 
@@ -84,7 +81,6 @@ class MockOrder(object):
                           'product_options': 'include_sr: true',
                           'product_opts': Order.get_default_ee_options(scene_info)}
 
-            print("** order_dict: {}".format(order_dict))
 
             order = Order.create(order_dict)
             self.production_provider.load_ee_scenes(scene_info, order.id)
