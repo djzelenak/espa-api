@@ -12,8 +12,6 @@ from api import OpenSceneLimitException
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.providers.caching.caching_provider import CachingProvider
 # ----------------------------------------------------------------------------------
-from api.external import lta, onlinecache  # TODO: is this the best place for these?
-from api.notification import emails        # TODO: is this the best place for these?
 from api.system.logger import ilogger as logger  # TODO: is this the best place for these?
 
 import copy
