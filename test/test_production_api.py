@@ -18,6 +18,7 @@ from api.providers.ordering.ordering_provider import OrderingProvider, OrderingP
 from api.system.mocks import errors
 from mock import patch
 from copy import deepcopy
+from functools import partial
 
 api = API()
 ordering_provider = OrderingProvider()
@@ -409,28 +410,27 @@ class TestProductionAPI(unittest.TestCase):
         for s in Scene.where({'order_id': order_id, 'sensor_type': 'landsat'}):
             self.assertTrue(s.status == 'submitted')
 
-    @patch('api.external.inventory.get_available_orders', inventory.get_available_orders_partial)
+    available_partial = partial(inventory.get_available_orders_partial, partial=True)
+    @patch('api.external.inventory.get_available_orders', available_partial)
     @patch('api.external.inventory.update_order_status', inventory.update_order_status)
     @patch('api.external.inventory.get_user_details', lambda a, b, c: ('klsmith', 'klsmith@usgs.gov'))
     @patch('api.external.inventory.get_session', lambda: True)
     @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
     def test_production_load_ee_orders_partial(self):
-        order = Order.find(self.mock_order.generate_ee_testing_order(self.user_id, partial=True))
-        print("order.product_opts {}".format(order.product_opts))
-        print("order: {}".format(order))
-        self.assertTrue(False)
-        #self.assertEqual(order.product_opts, {'format': 'gtiff',
-        #                                       'etm7_collection': {'inputs': ['LE07_L1TP_026027_20170912_20171008_01_T1'],
-        #                                                'products': ['sr']}})
-        # key = 'system.load_ee_orders_enabled'
-        # self.assertEqual(api.get_production_key(key)[key], 'True')
-        # production_provider.load_ee_orders()
-        # reorder = Order.find(order.id)
-        # self.assertEqual(reorder.product_opts, {'format': 'gtiff',
-        #                                        'etm7_collection': {'inputs': ['LE07_L1TP_026027_20170912_20171008_01_T1'],
-        #                                                 'products': ['sr']},
-        #                                        'tm5_collection': {'inputs': ['LT05_L1TP_025027_20110913_20160830_01_T1'],
-        #                                                 'products': ['sr']}})
+        order   = Order.find(self.mock_order.generate_ee_testing_order(self.user_id, partial=True))
+        key     = 'system.load_ee_orders_enabled'
+
+        self.assertEqual(api.get_production_key(key)[key], 'True')
+        self.assertEqual(order.product_opts, {'format': 'gtiff',
+                                              'tm5_collection': {'inputs': ['LT05_L1GS_125061_19871229_20170210_01_T2'],
+                                                       'products': ['sr']}})
+        
+        production_provider.load_ee_orders()
+        reorder = Order.find(order.id)
+        self.assertEqual(reorder.product_opts, {'format': 'gtiff',
+                                                'tm5_collection': {'inputs': ['LT05_L1GS_125061_19871229_20170210_01_T2', 
+                                                                              'LT05_L1TP_025027_20110913_20160830_01_T1'],
+                                                         'products': ['sr']}})
 
     @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
     @patch('api.external.inventory.update_order_status', inventory.update_order_status)
