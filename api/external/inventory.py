@@ -13,8 +13,7 @@ import requests
 import memcache
 
 from api.domain import sensor
-from api.providers.configuration.configuration_provider import (
-    ConfigurationProvider)
+from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.providers.caching.caching_provider import CachingProvider
 from api.system.logger import ilogger as logger
 
