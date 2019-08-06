@@ -37,7 +37,6 @@ olitirs8:
         - reanalsrc_merra2
         - reanalsrc_fp
         - reanalsrc_fpit
-        - orca
     by_date:
         sr:
             - "< 2016050 | > 2016058"
