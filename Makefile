@@ -26,8 +26,7 @@ docker-deps-down-nuke:
 	docker-compose -f setup/docker-compose.yml down
 	docker network rm backend
 	docker image rm setup_postgres:latest
-	docker volume prune -f
-	docker system prune -f
+	docker system prune -f --volumes
 
 deploy-pypi:
 
