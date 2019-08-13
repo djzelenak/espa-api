@@ -19,6 +19,7 @@ import socket
 import os
 import time
 import yaml
+import re
 
 from cStringIO import StringIO
 
@@ -1288,18 +1289,30 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
     @staticmethod
     def production_whitelist():
+
+        def getpid(slave):
+            return slave.get('pid')
+
+        def getip(instr):
+            match = re.search("[0-9]{2}.[0-9]{1}.[0-9]{2}.[0-9]{3}", instr)
+            return match.group(0)
+
         cache_key = 'prod_whitelist'
-        prodlist = cache.get(cache_key)
+        prodlist  = cache.get(cache_key)
+        mesos_url = config.url_for('mesos_master') # url.<mode>.mesos_master
+
         if prodlist is None:
             logger.info("Regenerating production whitelist...")
             # timeout in 6 hours
             timeout = 60 * 60 * 6
-            prodlist = list(['127.0.0.1', socket.gethostbyname(socket.gethostname())])
             try:
-                prodlist.append(hadoop_handler.master_ip())
-                prodlist.extend(hadoop_handler.slave_ips())
+                slaves   = requests.get(mesos_url + "/slaves", verify=False)
+                pids     = list(map(getpid, slaves))
+                prodlist = list(map(getip, pids))
+                prodlist.append('127.0.0.1')
+                prodlist.append(socket.gethostbyname(socket.gethostname()))
             except BaseException, e:
-                logger.exception('Could not access hadoop!')
+                logger.exception('Could not access Mesos!')
             cache.set(cache_key, prodlist, timeout)
 
         return prodlist
