@@ -1307,7 +1307,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             timeout = 60 * 60 * 6
             try:
                 slaves   = requests.get(mesos_url + "/slaves", verify=False)
-                pids     = list(map(getpid, slaves))
+                pids     = list(map(getpid, slaves.json()['slaves']))
                 prodlist = list(map(getip, pids))
                 prodlist.append('127.0.0.1')
                 prodlist.append(socket.gethostbyname(socket.gethostname()))
