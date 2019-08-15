@@ -1294,7 +1294,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             return slave.get('pid')
 
         def getip(instr):
-            match = re.search("[0-9]{2}.[0-9]{1}.[0-9]{2}.[0-9]{3}", instr)
+            match = re.search("[0-9]{2}.[0-9]{1}.[0-9]{2}.[0-9]{2,3}", instr)
             return match.group(0)
 
         cache_key = 'prod_whitelist'
