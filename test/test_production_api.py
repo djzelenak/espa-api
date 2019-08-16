@@ -498,7 +498,7 @@ class TestProductionAPI(unittest.TestCase):
 
     @patch('api.external.inventory.available', lambda: True)
     @patch('api.external.inventory.get_cached_session', inventory.get_cached_session) 
-    @patch('api.external.inventory.check_valid', inventory.check_valid_modis)   
+    @patch('api.external.inventory.check_valid', inventory.check_valid_modis_false)   
     def test_production_handle_submitted_modis_products_input_missing(self):
         # handle unavailable scenario
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
@@ -513,7 +513,7 @@ class TestProductionAPI(unittest.TestCase):
 
     @patch('api.external.inventory.available', lambda: True)
     @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
-    @patch('api.external.inventory.check_valid', inventory.check_valid_viirs)
+    @patch('api.external.inventory.check_valid', inventory.check_valid_viirs_false)
     def test_production_handle_submitted_viirs_products_input_missing(self):
         # handle unavailable scenario
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
