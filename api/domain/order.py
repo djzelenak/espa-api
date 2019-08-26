@@ -454,7 +454,7 @@ class Order(object):
                     ee_order[short] = {'inputs': [sceneid],
                                        'products': ['l1']}
                 elif isinstance(scene_info, sensor.Viirs):
-                    ee_order[short] = {'inputs': [item['sceneid']],
+                    ee_order[short] = {'inputs': [sceneid],
                                        'products': ['l1']}
 
         return ee_order

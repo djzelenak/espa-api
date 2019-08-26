@@ -295,6 +295,7 @@ class LTAService(object):
             return {'success': True, 'message': None, 'status': None}
         else:
             # throw exception if non 200 response?
+            logger.error("Problem updating order status in EE. order_number: {}  unit_number: {}  status: {}  response: {}".format(order_number, unit_number, status, response))
             return {'success': False, 'message': response, 'status': 'Fail'}
 
     def get_available_orders(self, contactid=None):
