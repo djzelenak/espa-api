@@ -84,6 +84,9 @@ etm7:
         sr_nbr:
             - "< 2016151 | > 2016164"
             - "< 2017071 | > 2017076"
+        sr_savi:
+            - "< 2016151 | > 2016164"
+            - "< 2017071 | > 2017076"
         sr_nbr2:
             - "< 2016151 | > 2016164"
             - "< 2017071 | > 2017076"
@@ -107,18 +110,6 @@ tm4:
         - reanalsrc_merra2
         - reanalsrc_fp
         - reanalsrc_fpit
-
-mod09ga:
-    role:
-        - modis_ndvi
-
-myd09ga:
-    role:
-        - modis_ndvi
-
-vnp09ga:
-    role:
-        - viirs_ndvi
 
 # These are orders which should go through alternative channels
 source:
