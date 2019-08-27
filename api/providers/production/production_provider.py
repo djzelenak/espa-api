@@ -579,14 +579,14 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                         # Find or create the user
                         user = User(username, email_addr, 'from', 'earthexplorer', contactid)
                         cache.set(cache_key, user, 43200) # 12 hours -> 60 * 60 * 12
-                        logger.debug("load_ee_orders - found user and set cache key, username: {}".format(username))
+                        logger.debug("load_ee_orders - found user and set cache key, username: {}".format(user.username))
                     except inventory.LTAError as e:
                         logger.error("load_ee_orders - LTAError: Unable to retrieve user name for contactid {}. exception: {}".format(contactid, e))
 
                 if user:
                     # We have a user now.  Now build the new Order since it wasn't found
-                    logger.debug("load_ee_orders - we have a user, build the order. email_addr: {}  order_number: {}".format(email_addr, order_number))
-                    order_dict = {'orderid': Order.generate_ee_order_id(email_addr, order_number),
+                    logger.debug("load_ee_orders - we have a user, build the order. email: {}  order_number: {}".format(user.email, order_number))
+                    order_dict = {'orderid': Order.generate_ee_order_id(user.email, order_number),
                                   'user_id': user.id,
                                   'order_type': 'level2_ondemand',
                                   'status': 'ordered',
