@@ -308,11 +308,14 @@ class LTAService(object):
         data = response.get('data')
         orders = []
 
-        if 'orders' in data.keys():
+
+        if isinstance(data, dict) and 'orders' in data.keys():
             if contactid:
               orders = [o for o in data.get('orders') if o.get('contactId') == contactid] 
             else:
               orders = data.get('orders')
+        else:
+            logger.error("Problem retrieving available orders from M2M. response: {}".format(response))
 
         return orders
 
