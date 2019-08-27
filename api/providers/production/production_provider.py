@@ -557,7 +557,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         token     = inventory.get_cached_session()
         ee_orders = map(conv_dict, inventory.get_available_orders(token, contact_id))
 
-        logger.info('Number of ESPA orders in EE: {}'.format(len(ee_orders)))
+        logger.info('load_ee_orders - Number of ESPA orders in EE: {}'.format(len(ee_orders)))
 
         for ee_order in ee_orders:
             scene_info   = map(conv_dict, ee_order.get('units'))
@@ -569,19 +569,23 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             if espa_order: # EE order already exists in the system, update the associated scenes 
                 self.update_ee_orders(scene_info, order_number, espa_order.id)
             else:
+                logger.debug("load_ee_orders - new espa order from EE. scene: {}, contactid: {}, order_number: {}".format(scene_info, contactid, order_number))
                 user = cache.get(cache_key)
 
                 if user is None:
+                    logger.debug("load_ee_orders - unable to find cached user info, create it: ")
                     try:
                         username, email_addr = inventory.get_user_details(token, contactid, ipaddr)
                         # Find or create the user
                         user = User(username, email_addr, 'from', 'earthexplorer', contactid)
                         cache.set(cache_key, user, 43200) # 12 hours -> 60 * 60 * 12
+                        logger.debug("load_ee_orders - found user and set cache key, username: {}".format(username))
                     except inventory.LTAError as e:
-                        logger.error("LTAError: Unable to retrieve user name for contactid {}. exception: {}".format(contactid, e))
+                        logger.error("load_ee_orders - LTAError: Unable to retrieve user name for contactid {}. exception: {}".format(contactid, e))
 
                 if user:
                     # We have a user now.  Now build the new Order since it wasn't found
+                    logger.debug("load_ee_orders - we have a user, build the order. email_addr: {}  order_number: {}".format(email_addr, order_number))
                     order_dict = {'orderid': Order.generate_ee_order_id(email_addr, order_number),
                                   'user_id': user.id,
                                   'order_type': 'level2_ondemand',
@@ -598,7 +602,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     self.load_ee_scenes(scene_info, order.id)
                     self.update_ee_orders(scene_info, order_number, order.id)
                 else:
-                    logger.debug("unable to import EE order: eeorder {} email {} contactid {}".format(order_number, email_addr, contactid))
+                    logger.debug("unable to import EE order: eeorder {} contactid {}".format(order_number, contactid))
 	
     @staticmethod
     def gen_ee_scene_list(ee_scenes, order_id):
