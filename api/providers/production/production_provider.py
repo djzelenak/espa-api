@@ -564,22 +564,21 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             contactid    = str(ee_order.get('contactId'))
             order_number = ee_order.get('orderNumber')
             espa_order   = find_espa_order(order_number)
-            cache_key    = '-'.join(['load_ee_orders', contactid])
 
             if espa_order: # EE order already exists in the system, update the associated scenes 
                 self.update_ee_orders(scene_info, order_number, espa_order.id)
             else:
                 logger.debug("load_ee_orders - new espa order from EE. scene: {}, contactid: {}, order_number: {}".format(scene_info, contactid, order_number))
-                user = cache.get(cache_key)
+                user = User.by_contactid(contactid)
 
                 if user is None:
-                    logger.debug("load_ee_orders - unable to find cached user info, create it: ")
+                    logger.debug("load_ee_orders - unable to find user in espa, create them: ")
                     try:
                         username, email_addr = inventory.get_user_details(token, contactid, ipaddr)
                         # Find or create the user
                         user = User(username, email_addr, 'from', 'earthexplorer', contactid)
-                        cache.set(cache_key, user, 43200) # 12 hours -> 60 * 60 * 12
-                        logger.debug("load_ee_orders - found user and set cache key, username: {}".format(user.username))
+                        #cache.set(cache_key, user, 43200) # 12 hours -> 60 * 60 * 12
+                        logger.debug("load_ee_orders - created user, username: {}".format(user.username))
                     except inventory.LTAError as e:
                         logger.error("load_ee_orders - LTAError: Unable to retrieve user name for contactid {}. exception: {}".format(contactid, e))
 
