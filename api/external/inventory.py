@@ -245,14 +245,18 @@ class LTAService(object):
         resp = self._post('download', payload)
         results = resp.get('data')
 
-        # Use the URL taken directly from the M2M JSON API if VIIRS
-        if 'VNP' in dataset:
-            return {i['entityId']: i['url'] for i in results}
-        # Otherwise use our internal network conversion
+        if results:
+            # Use the URL taken directly from the M2M JSON API if VIIRS
+            if 'VNP' in dataset:
+                return {i['entityId']: i['url'] for i in results}
+            # Otherwise use our internal network conversion
+            else:
+                return self.network_urls(
+                    self.network_urls({i['entityId']: i['url'] for i in results},
+                                      'landsat'), 'modis')
         else:
-            return self.network_urls(
-                self.network_urls({i['entityId']: i['url'] for i in results},
-                                  'landsat'), 'modis')
+            logger.warn("inventory.get_download_urls - no data in POST response returned for entity_ids: {}, dataset: {}".format(entity_ids, dataset))
+            
 
     def get_order_status(self, order_number):
         """
