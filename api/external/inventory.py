@@ -292,10 +292,11 @@ class LTAService(object):
         payload  = dict(apiKey=self.token, orderNumber=order_number, unitStatus=status, 
                         firstUnitNumber=unit_number, lastUnitNumber=unit_number)
         response = self._post(endpoint, payload)
-        
+        error    = response.get('error')
+
         # according to v1.4.1 api docs, 
         # "This request does not have a response. Successful execution is assumed if no errors are thrown."
-        if not response:
+        if not error:
             return {'success': True, 'message': None, 'status': None}
         else:
             # throw exception if non 200 response?
