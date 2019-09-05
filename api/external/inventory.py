@@ -294,8 +294,6 @@ class LTAService(object):
         response = self._post(endpoint, payload)
         error    = response.get('error')
 
-        # according to v1.4.1 api docs, 
-        # "This request does not have a response. Successful execution is assumed if no errors are thrown."
         if not error:
             return {'success': True, 'message': None, 'status': None}
         else:
