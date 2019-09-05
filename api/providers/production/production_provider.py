@@ -5,7 +5,7 @@ from api.providers.configuration.configuration_provider import ConfigurationProv
 from api.util.dbconnect import DBConnectException, db_instance
 from api.providers.production import ProductionProviderInterfaceV0
 from api.providers.caching.caching_provider import CachingProvider
-from api.external import lpdaac, lta, inventory, onlinecache, hadoop
+from api.external import lpdaac, inventory, onlinecache, hadoop
 from api.system import errors
 from api.notification import emails
 from api.domain.user import User
@@ -134,11 +134,12 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             scene.download_size = 0
 
         if order_source == 'ee':
+            token = inventory.get_cached_session()
             # update EE
             ee_order_id = Scene.get('ee_order_id', name, orderid)
             ee_unit_id = Scene.get('ee_unit_id', name, orderid)
             try:
-                lta.update_order_status(ee_order_id, ee_unit_id, 'C')
+                inventory.update_order_status(token, ee_order_id, ee_unit_id, 'C')
             except Exception, e:
                 cache_key = 'lta.cannot.update'
                 lta_conn_failed_10mins = cache.get(cache_key)
@@ -184,7 +185,8 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             ee_order_id = Scene.get('ee_order_id', name, orderid)
             ee_unit_id = Scene.get('ee_unit_id', name, orderid)
             try:
-                lta.update_order_status(ee_order_id, ee_unit_id, 'R')
+                token = inventory.get_cached_session()
+                inventory.update_order_status(token, ee_order_id, ee_unit_id, 'R')
             except Exception, e:
                 cache_key = 'lta.cannot.update'
                 lta_conn_failed_10mins = cache.get(cache_key)
@@ -212,6 +214,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         :return: True
         """
         try:
+            token = inventory.get_cached_session()
             Scene.bulk_update([p.id for p in products],
                               {'status': 'unavailable',
                                'completion_date': datetime.datetime.now(),
@@ -219,7 +222,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             for p in products:
                 if p.order_attr('order_source') == 'ee':
                     try:
-                        lta.update_order_status(p.order_attr('ee_order_id'), p.ee_unit_id, 'R')
+                        inventory.update_order_status(token, p.order_attr('ee_order_id'), p.ee_unit_id, 'R')
                     except Exception, e:
                         # perhaps this doesn't need to be elevated to 'debug' status
                         # as its a fairly regular occurrence
@@ -542,70 +545,65 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         Loads all the available orders from lta into
         our database and updates their status
         """
-        # Check to make sure this operation is enabled.  Bail if not
-        enabled = config.get('system.load_ee_orders_enabled')
-        if enabled.lower() == 'false':
-            logger.info('system.load_ee_orders_enabled is disabled,'
-                        'skipping load_ee_orders()')
+        if config.get('system.load_ee_orders_enabled').lower() == 'false':
+            logger.info('system.load_ee_orders_enabled is disabled, skipping load_ee_orders()')
             return
 
-        orders = lta.get_available_orders()
-        if contact_id:
-            orders = [(o, e, c) for (o, e, c) in orders if c == contact_id]
-        logger.info('# Orders available from EE: {}'.format(len(orders)))
+        def find_espa_order(ordernumber):
+            _orders = Order.where({'ee_order_id': ordernumber})
+            return _orders[0] if _orders else []
 
-        token = inventory.get_session()
-        ipaddr =  socket.gethostbyaddr(socket.gethostname())[2][0]
+        cond_str  = lambda i: str(i) if isinstance(i, unicode) else i
+        conv_dict = lambda i: dict([(cond_str(k), cond_str(v)) for k, v in i.items()])
+        ipaddr    = socket.gethostbyaddr(socket.gethostname())[2][0]
+        token     = inventory.get_cached_session()
+        ee_orders = map(conv_dict, inventory.get_available_orders(token, contact_id))
 
-        # {(order_num, email, contactid): [{sceneid: ,
-        #                                   unit_num:}]}
-        for eeorder, email_addr, contactid in orders:
-            # create the orderid based on the info from the eeorder
-            order_id = Order.generate_ee_order_id(email_addr, eeorder)
+        logger.info('load_ee_orders - Number of ESPA orders in EE: {}'.format(len(ee_orders)))
 
-            order = Order.where({'ee_order_id': eeorder})
-            scene_info = orders[eeorder, email_addr, contactid]
+        for ee_order in ee_orders:
+            scene_info   = map(conv_dict, ee_order.get('units'))
+            contactid    = str(ee_order.get('contactId'))
+            order_number = ee_order.get('orderNumber')
+            espa_order   = find_espa_order(order_number)
 
-            if len(order) >= 1:
-                # EE order already exists in the system
-                # update the associated scenes
-                self.update_ee_orders(scene_info, eeorder, order[0].id)
-                #continue
-
+            if espa_order: # EE order already exists in the system, update the associated scenes 
+                self.update_ee_orders(scene_info, order_number, espa_order.id)
             else:
-                cache_key = '-'.join(['load_ee_orders', str(contactid)])
-                user = cache.get(cache_key)
+                logger.debug("load_ee_orders - new espa order from EE. scene: {}, contactid: {}, order_number: {}".format(scene_info, contactid, order_number))
+                user = User.by_contactid(contactid)
 
                 if user is None:
+                    logger.debug("load_ee_orders - unable to find user in espa, create them: ")
                     try:
-                        username = str(inventory.get_user_name(token, contactid, ipaddr))
+                        username, email_addr = inventory.get_user_details(token, contactid, ipaddr)
                         # Find or create the user
-                        user = User(username, email_addr, 'from', 'earthexplorer',
-                                    contactid)
-                        cache.set(cache_key, user, 60)
+                        user = User(username, email_addr, 'from', 'earthexplorer', contactid)
+                        #cache.set(cache_key, user, 43200) # 12 hours -> 60 * 60 * 12
+                        logger.debug("load_ee_orders - created user, username: {}".format(user.username))
                     except inventory.LTAError as e:
-                        logger.error("LTAError: Unable to retrieve user name for contactid {}. exception: {}".format(contactid, e))
+                        logger.error("load_ee_orders - LTAError: Unable to retrieve user name for contactid {}. exception: {}".format(contactid, e))
 
                 if user:
                     # We have a user now.  Now build the new Order since it wasn't found
-                    ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-                    order_dict = {'orderid': order_id,
+                    logger.debug("load_ee_orders - we have a user, build the order. email: {}  order_number: {}".format(user.email, order_number))
+                    order_dict = {'orderid': Order.generate_ee_order_id(user.email, order_number),
                                   'user_id': user.id,
                                   'order_type': 'level2_ondemand',
                                   'status': 'ordered',
-                                  'note': 'EarthExplorer order id: {}'.format(eeorder),
-                                  'ee_order_id': eeorder,
+                                  'note': 'EarthExplorer order id: {}'.format(order_number),
+                                  'ee_order_id': order_number,
                                   'order_source': 'ee',
-                                  'order_date': ts,
+                                  'order_date': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'),
                                   'priority': 'normal',
                                   'email': user.email,
                                   'product_options': 'include_sr: true',
                                   'product_opts': Order.get_default_ee_options(scene_info)}
                     order = Order.create(order_dict)
                     self.load_ee_scenes(scene_info, order.id)
-                    self.update_ee_orders(scene_info, eeorder, order.id)
+                    self.update_ee_orders(scene_info, order_number, order.id)
                 else:
-                    logger.debug("unable to import EE order: eeorder {} email {} contactid {}".format(eeorder, email_addr, contactid))
+                    logger.debug("unable to import EE order: eeorder {} contactid {}".format(order_number, contactid))
 	
     @staticmethod
     def gen_ee_scene_list(ee_scenes, order_id):
@@ -621,7 +619,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         """
         bulk_ls = []
         for s in ee_scenes:
-            product = sensor.instance(s['sceneid'])
+            product = sensor.instance(s['orderingId'])
 
             sensor_type = ''
             if isinstance(product, sensor.Landsat):
@@ -642,7 +640,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                           'order_id': order_id,
                           'status': status,
                           'note': note,
-                          'ee_unit_id': s['unit_num']}
+                          'ee_unit_id': s['unitNumber']}
             logger.info('check ee processing: {}'.format(scene_dict))
 
             bulk_ls.append(scene_dict)
@@ -688,7 +686,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
             raise ProductionProviderException(e)
 
-    def update_ee_orders(self, ee_scenes, eeorder, order_id):
+    def update_ee_orders(self, ee_scenes, eeorder_num, order_id):
         """
         Update the LTA tracking system with the current status of
         a product in the system
@@ -697,17 +695,19 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                               'unit_num': }]
 
         :param ee_scenes: list of dicts
-        :param eeorder: associated EE order id
+        :param eeorder_num: associated EE order id
         :param order_id: order id used in the system
         """
         missing_scenes = []
         scenes = Scene.where({'order_id': order_id,
-                              'ee_unit_id': tuple([s['unit_num'] for s in ee_scenes])})
+                              'ee_unit_id': tuple([s['unitNumber'] for s in ee_scenes])})
+        token = inventory.get_cached_session()
         for s in ee_scenes:
-            scene = [so for so in scenes if so.ee_unit_id == s['unit_num']]
+            unit_number = s['unitNumber']
+            unit_scenes = [so for so in scenes if so.ee_unit_id == unit_number]
 
-            if scene:
-                scene = scene[0]
+            if unit_scenes:
+                scene = unit_scenes[0]
                 if scene.status == 'complete':
                     status = 'C'
                 elif scene.status in ('unavailable', 'cancelled'):
@@ -716,7 +716,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     status = 'I'
                     continue  # No need to update scenes in progress
                 try:
-                    lta.update_order_status(eeorder, s['unit_num'], status)
+                    inventory.update_order_status(token, eeorder_num, unit_number, status)
                 except Exception, e:
                     cache_key = 'lta.cannot.update'
                     lta_conn_failed_10mins = cache.get(cache_key)
@@ -781,9 +781,11 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         rejected = []
         available = []
 
+        token = inventory.get_cached_session()
+
         # converting to a set eliminates duplicate calls to lta
         for tid in sorted_tram_ids:
-            order_status = lta.get_order_status(tid)
+            order_status = inventory.get_order_status(token, tid)
 
             # There are a variety of product statuses that come back from tram
             # on this call.  I is inprocess, Q is queued for the backend system,
@@ -792,10 +794,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             # In the case of D (duplicates), when the first product completes, all
             # duplicates will also be marked C
             for unit in order_status['units']:
-                if unit['unit_status'] == 'R':
-                    rejected.append(unit['sceneid'])
-                elif unit['unit_status'] == 'C':
-                    available.append(unit['sceneid'])
+                if unit['statusCode'] == 'R':
+                    rejected.append(unit['orderingId']) # or 'displayId', 'entityId'
+                elif unit['statusCode'] == 'C':
+                    available.append(unit['orderingId'])
 
         # Go find all the tram units that were rejected and mark them
         # unavailable in our database.  Note that we are not looking for
@@ -1148,12 +1150,13 @@ class ProductionProvider(ProductionProviderInterfaceV0):
     @staticmethod
     def handle_failed_ee_updates(scenes):
         n_failed = len(scenes)
+        token = inventory.get_cached_session()
         if n_failed:
             logger.critical('Failed LTA status count: {} scenes'.format(n_failed))
         for s in scenes:
             try:
-                lta.update_order_status(s.order_attr('ee_order_id'), s.ee_unit_id,
-                                        s.failed_lta_status_update)
+                inventory.update_order_status(token, s.order_attr('ee_order_id'), s.ee_unit_id,
+                                              s.failed_lta_status_update)
                 s.update('failed_lta_status_update', None)
             except DBConnectException, e:
                 raise ProductionProviderException('ordering_scene update failed for '

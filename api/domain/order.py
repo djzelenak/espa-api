@@ -433,27 +433,28 @@ class Order(object):
         """
         ee_order = {'format': 'gtiff'}
         for item in item_ls:
+            sceneid = item['orderingId']
             try:
-                scene_info = sensor.instance(item['sceneid'])
+                scene_info = sensor.instance(sceneid)
             except sensor.ProductNotImplemented:
                 log_msg = ('Received unsupported product via EE: {}'
-                           .format(item['sceneid']))
+                           .format(sceneid))
                 logger.critical(log_msg)
                 continue
 
             short = scene_info.shortname
 
             if short in ee_order:
-                ee_order[short]['inputs'].append(item['sceneid'])
+                ee_order[short]['inputs'].append(sceneid)
             else:
                 if isinstance(scene_info, sensor.Landsat):
-                    ee_order[short] = {'inputs': [item['sceneid']],
+                    ee_order[short] = {'inputs': [sceneid],
                                        'products': ['sr']}
                 elif isinstance(scene_info, sensor.Modis):
-                    ee_order[short] = {'inputs': [item['sceneid']],
+                    ee_order[short] = {'inputs': [sceneid],
                                        'products': ['l1']}
                 elif isinstance(scene_info, sensor.Viirs):
-                    ee_order[short] = {'inputs': [item['sceneid']],
+                    ee_order[short] = {'inputs': [sceneid],
                                        'products': ['l1']}
 
         return ee_order

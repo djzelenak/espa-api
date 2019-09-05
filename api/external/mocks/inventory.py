@@ -133,6 +133,12 @@ def check_valid_modis(token, prod_name_list):
     _names = [s.name for s in _scenes]
     return {_names[0]: True}
 
+def check_valid_modis_unavailable(token, prod_name_list):
+    _scenes = Scene.where({"status":"submitted", "sensor_type":"modis"})
+    _names = [s.name for s in _scenes]
+    return {_names[0]: False}
+
+
 def check_valid_viirs(token, prod_name_list):
     _scenes = Scene.where({"status":"submitted", "sensor_type":"viirs"})
     _names = [s.name for s in _scenes]
@@ -150,3 +156,64 @@ def check_valid_viirs_false(token, prod_name_list):
 
 def get_user_name(token, contactid, ipaddr):
     return 'klmsith@usgs.gov'
+
+def get_order_status(token, tramid):
+    response = None
+    if tramid == sample_tram_order_ids()[0]:
+        response = {'units': [{'orderingId':sample_scene_names()[0], 'statusCode': 'R'}]}
+    elif tramid == sample_tram_order_ids()[1]:
+        response = {'units': [{'orderingId':sample_scene_names()[1], 'statusCode': 'C'}]}
+    elif tramid == sample_tram_order_ids()[2]:
+        response = {'units': [{'orderingId':sample_scene_names()[2], 'statusCode': 'R'}]}
+    else:
+        response = {'units': [{'orderingId': sample_scene_names()[0], 'statusCode': 'C'}]}
+    return response
+
+def update_order_status(token, ee_order_id, ee_unit_id, something):
+    return True, True, True
+
+
+def update_order_status_fail(token, ee_order_id, ee_unit_id, something):
+    raise Exception('lta comms failed')
+
+def sample_tram_order_ids():
+    return '0611512239617', '0611512239618', '0611512239619'
+
+def sample_scene_names():
+    return 'LC81370432014073LGN00', 'LC81390422014071LGN00', 'LC81370422014073LGN00'
+
+def get_available_orders_partial(token, contactid, partial=False):
+    units = [{u'datasetName': None,
+              u'displayId': None,
+              u'entityId': None,
+              u'orderingId': u'LT05_L1GS_125061_19871229_20170210_01_T2',
+              u'productCode': u'SR05',
+              u'productDescription': u'LANDSAT TM COLLECTIONS LAND SURFACE REFLECTANCE ON-DEMAND',
+              u'statusCode': None,
+              u'statusText': None,
+              u'unitNumber': 1}]
+
+    ret = [{u'contactId': contactid,
+            u'orderNumber': u'0101905173361',
+            u'statusCode': u'Q',
+            u'statusText': u'Queued for Processing',
+            u'units': units}]
+
+    if partial:
+        units.append({u'datasetName': None,
+                      u'displayId': None,
+                      u'entityId': None,
+                      u'orderingId': u'LT05_L1TP_025027_20110913_20160830_01_T1',
+                      u'productCode': u'SR05',
+                      u'productDescription': u'LANDSAT TM COLLECTIONS LAND SURFACE REFLECTANCE ON-DEMAND',
+                      u'statusCode': None,
+                      u'statusText': None,
+                      u'unitNumber': 2})
+
+        ret = [{u'contactId': contactid,
+                u'orderNumber': u'0101905173361',
+                u'statusCode': u'Q',
+                u'statusText': u'Queued for Processing',
+                u'units': units}]
+
+    return ret
