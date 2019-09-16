@@ -891,7 +891,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             for p in prods:
                 need_check = p in products_need_check
                 if need_check:
-                    passed_all &= utils.connections.is_reachable(products_need_check[p], timeout=10)
+                    passed_all &= utils.connections.is_reachable(products_need_check[p], timeout=4)
             if passed_all:
                 passed_dep_check.append(s)
         return passed_dep_check
