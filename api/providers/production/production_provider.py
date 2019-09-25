@@ -356,6 +356,13 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         product = Scene.by_name_orderid(name, order.id)
         #attempt to determine the disposition of this error
         resolution = None
+
+        if product.status == 'complete':
+            # Mesos tasks occasionaly exit abnormally, even though processing completed successfully.
+            # When that happens, the ESPA framework will try to set the scene to error status
+            logger.error("Received set_product_error request for a complete product!\nOrder ID: {}\nProduct: {}".format(orderid, name))
+            return {"error": "attempted to set scene to error that was already marked complete"}
+
         if name != 'plot':
             resolution = errors.resolve(error, name)
 
