@@ -34,7 +34,6 @@ class Errors(object):
         self.conditions.append(self.http_errors)
         self.conditions.append(self.gzip_errors)
         self.conditions.append(self.gzip_errors_online_cache)
-        self.conditions.append(self.lta_soap_errors)
         self.conditions.append(self.missing_ncep_data)
         self.conditions.append(self.missing_aux_data)
         self.conditions.append(self.network_errors)
@@ -246,12 +245,13 @@ class Errors(object):
         reason = 'Brightness temperature is not available for OLI-only data'
         return self.__find_error(error_message, keys, status, reason)
 
-    def lta_soap_errors(self, error_message):
-        keys = ['Listener refused the connection with the following error']
-        status = 'retry'
-        reason = 'Could not complete order at this time'
-        extras = self.__add_retry('lta_soap_errors')
-        return self.__find_error(error_message, keys, status, reason, extras)
+    # probably not necessary after moving off LTA SOAP services - CA 9/30/19
+    # def lta_soap_errors(self, error_message):
+    #     keys = ['Listener refused the connection with the following error']
+    #     status = 'retry'
+    #     reason = 'Could not complete order at this time'
+    #     extras = self.__add_retry('lta_soap_errors')
+    #     return self.__find_error(error_message, keys, status, reason, extras)
 
     def warp_errors(self, error_message):
         keys = ['GDAL Warp failed to transform',

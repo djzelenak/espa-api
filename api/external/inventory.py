@@ -1,5 +1,5 @@
 """
-TODO: Replaces lta.py
+Replaced lta.py
 """
 import json
 import urllib
