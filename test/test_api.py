@@ -193,6 +193,7 @@ class TestValidation(unittest.TestCase):
         else:
             self.fail('Failed MODIS pixel resize test')
 
+    # this takes way too 
     def test_validate_bad_orders(self):
         """
         Build a series of invalid orders to try and catch any potential errors in a

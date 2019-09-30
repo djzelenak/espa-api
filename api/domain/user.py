@@ -273,7 +273,4 @@ class User(object):
                 "username": self.username,
                 "roles": self.role_list()}
 
-    def active_hadoop_job_names(self):
-        order_ids = tuple([o.id for o in Order.where({'status': 'ordered', 'user_id': self.id})])
-        return [s.job_name for s in Scene.where({'status': ('processing', 'queued'), 'order_id': order_ids})]
 

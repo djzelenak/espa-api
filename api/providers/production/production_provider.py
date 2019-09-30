@@ -5,7 +5,7 @@ from api.providers.configuration.configuration_provider import ConfigurationProv
 from api.util.dbconnect import DBConnectException, db_instance
 from api.providers.production import ProductionProviderInterfaceV0
 from api.providers.caching.caching_provider import CachingProvider
-from api.external import lpdaac, inventory, onlinecache, hadoop
+from api.external import lpdaac, inventory, onlinecache
 from api.system import errors
 from api.notification import emails
 from api.domain.user import User
@@ -28,7 +28,6 @@ from api.system.logger import ilogger as logger
 
 config = ConfigurationProvider()
 cache = CachingProvider()
-hadoop_handler = hadoop.HadoopHandler()
 
 
 class ProductionProviderException(Exception):
@@ -1174,29 +1173,6 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                             'scene {}\n{}'.format(s.id, e))
         return True
 
-    def handle_stuck_jobs(self, scenes):
-        """ Monitoring for long-overdue products, and auto-resubmission
-
-        Note: This problem arises from lack of job scheduler grace when e.g. running out of memory
-        """
-        if not len(scenes):
-            return
-
-        sids = [int(s.id) for s in scenes]
-        self.catch_orphaned_scenes()
-        scenes = Scene.where({'id': sids})
-
-        orphaned_scenes = [s for s in scenes if s.orphaned]
-        if len(orphaned_scenes):
-            logger.warning('Found {N} orphaned products, retrying...'.format(N=len(orphaned_scenes)))
-            Scene.bulk_update([s.id for s in orphaned_scenes], {'status': 'submitted',
-                                                                'orphaned': None,
-                                                                'reported_orphan': None,
-                                                                'log_file_contents': '',
-                                                                'note': '',
-                                                                'retry_count': 0})
-        return True
-
     def handle_orders(self, username=None):
         """
         Logic handler for how we accept orders + products into the system
@@ -1226,10 +1202,6 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         products = Scene.where({'status': 'onorder', 'tram_order_id IS NOT': None, 'order_id': pending_orders})
         self.handle_onorder_landsat_products(products)
-
-        time_jobs_stuck = datetime.datetime.now() - datetime.timedelta(hours=10) # not expected to change
-        products = Scene.where({'status': ('queued', 'processing'), 'status_modified <': time_jobs_stuck})
-        self.handle_stuck_jobs(products)
 
         now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
         products = Scene.where({'status': 'retry', 'retry_after <': now, 'order_id': pending_orders})
@@ -1327,65 +1299,6 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             cache.set(cache_key, prodlist, timeout)
 
         return prodlist
-
-    @staticmethod
-    def catch_orphaned_scenes():
-        o_time = datetime.datetime.now()
-
-        def find_orphans():
-            job_dict = hadoop_handler.job_names_ids()
-            queued_scenes = Scene.where({'status': ('queued', 'processing')})
-            return [scene for scene in queued_scenes if scene.job_name not in job_dict]
-
-        for scene in find_orphans():
-            if not scene.orphaned:
-                # scenes already marked orphaned can be ignored here
-                if scene.reported_orphan:
-                    # has enough time lapsed to confidently mark it orphaned?
-                    d_time = o_time - scene.reported_orphan
-                    if (d_time.seconds / 60) > 10:
-                        scene.orphaned = True
-                else:
-                    # the scenes been newly reported an orphan, note the time
-                    scene.reported_orphan = o_time
-
-                scene.save()
-
-        return True
-
-    def resubmit_orphaned_scenes(self):
-        """
-        WARNING: THIS WILL BE BLOCKING FOR 10.5 MINUTES TO COMPLETE
-
-        This will reset all orphaned states, re-check for new orphaned twice
-            (at least 10 minutes apart), and then re-submit any found orphaned
-
-        :return: bool
-        """
-        updates = {'reported_orphan': None, 'orphaned': None}
-        scenes = Scene.where({'reported_orphan is not': None,
-                              'status': ('processing', 'queued')})
-        if len(scenes):
-            Scene.bulk_update([s.id for s in scenes], updates)
-        scenes = Scene.where({'orphaned is not': None,
-                              'status': ('processing', 'queued')})
-        if len(scenes):
-            Scene.bulk_update([s.id for s in scenes], updates)
-
-        seconds = 630  # 10.5 minutes separation
-        assert(self.catch_orphaned_scenes())
-        logger.info('Will sleep for {} seconds'.format(seconds))
-        time.sleep(seconds)
-        assert(self.catch_orphaned_scenes())
-
-        scenes = Scene.where({'orphaned': True,
-                              'status': ('queued', 'processing')})
-        updates.update(status='submitted')
-        if len(scenes):
-            Scene.bulk_update([s.id for s in scenes], updates)
-        logger.info('Re-submitted {} orphaned scenes'.format(len(scenes)))
-
-        return True
 
     @staticmethod
     def reset_processing_status():
