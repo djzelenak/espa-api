@@ -8,7 +8,7 @@ from api.domain.mocks.user import MockUser
 from api.domain.order import Order, OptionsConversion
 from api.domain.scene import Scene
 from api.domain.user import User
-from api.external.mocks import lta, inventory, lpdaac, onlinecache
+from api.external.mocks import inventory, lpdaac, onlinecache
 from api.interfaces.production.version1 import API
 from api.notification import emails
 from api.providers.configuration.configuration_provider import ConfigurationProvider
