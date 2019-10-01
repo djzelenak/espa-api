@@ -1,4 +1,6 @@
 ## Change Notes
+###### September 2019
+* Transition to using M2M JSON API and off SOAP services
 ###### March-June 2019
 * Added support for ordering VIIRS daily NDVI and daily 500-m SR
 * Added support for ordering MODIS daily NDVI
