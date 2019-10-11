@@ -49,6 +49,7 @@ class Errors(object):
         self.conditions.append(self.lasrc_mystery_segfaults)
         self.conditions.append(self.reproject_errors)
         self.conditions.append(self.unable_to_locate_mtl)
+        self.conditions.append(self.task_errors)
 
         # construct the named tuple for the return value of this module
         self.resolution = collections.namedtuple('ErrorResolution',
@@ -312,6 +313,17 @@ class Errors(object):
         status = 'retry'
         reason = 'Tried processing without inputs'
         extras = self.__add_retry('missed_extraction')
+        return self.__find_error(error_message, keys, status, reason, extras)
+
+    def task_errors(self, error_message):
+        """
+        error resulting when a container/task fails
+        """
+        keys = ['TASK_FAILED',
+                'TASK_LOST']
+        status = 'retry'
+        reason = 'Container closed during processing or failed to launch'
+        extras = self.__add_retry('task_error')
         return self.__find_error(error_message, keys, status, reason, extras)
 
 
