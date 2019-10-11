@@ -73,6 +73,12 @@ def build_base_order():
                      'products': ['l1']},
             'olitirs8': {'inputs': 'LC82181092013069PFS00',
                          'products': ['l1']},
+
+            'sentinel': {'inputs': ['L1C_T14TPP_A022031_20190910T172721',
+                                   'S2A_OPER_MSI_L1C_TL_SGS__20160130T184417_20160130T203840_A003170_T13VCC_N02_01_01'],
+                         'products': ['l1', 'sr', 'sr_ndvi', 'sr_msavi', 'sr_evi',
+                                       'sr_savi', 'sr_ndmi', 'sr_nbr', 'sr_nbr2']
+
             'projection': {'lonlat': None},
             'image_extents': {'north': 0.0002695,
                               'south': 0,
@@ -126,6 +132,13 @@ def build_base_order():
     base['vnp09ga'] = {'inputs': ['VNP09GA.A2014245.h10v04.001.2017043103958',
                                   'VNP09GA.A2014245.h10v04.001.2015012103931'],
                        'products': ['l1']}
+
+    # add sentinel-2 scene IDs to the order
+    base['sentinel'] = {'inputs': ['L1C_T14TPP_A022031_20190910T172721',
+                                     'S2A_OPER_MSI_L1C_TL_SGS__20160130T184417_20160130T203840_A003170_T13VCC_N02_01_01'],
+                          'products': ['l1', 'sr', 'sr_ndvi', 'sr_msavi', 'sr_evi',
+                                       'sr_savi', 'sr_ndmi', 'sr_nbr', 'sr_nbr2']}
+
     return base
 
 

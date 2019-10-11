@@ -167,6 +167,8 @@ class Order(object):
                     sensor_type = 'modis'
                 elif isinstance(sensor.instance(item1), sensor.Viirs):
                     sensor_type = 'viirs'
+                elif isinstance(sensor.instance(item1), sensor.Sentinel2):
+                    sensor_type = 'sentinel'
 
                 for s in opts[key]['inputs']:
                     scene_dict = {'name': s,
@@ -456,6 +458,10 @@ class Order(object):
                 elif isinstance(scene_info, sensor.Viirs):
                     ee_order[short] = {'inputs': [sceneid],
                                        'products': ['l1']}
+                elif isinstance(scene_info, sensor.Sentinel2):
+                    ee_order[short] = {'inputs': [sceneid],
+                                       # TODO how do we handle the l1/toa for sentinel?
+                                       'products': ['toa']}
 
         return ee_order
 

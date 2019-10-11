@@ -249,6 +249,9 @@ class LTAService(object):
             # Use the URL taken directly from the M2M JSON API if VIIRS
             if 'VNP' in dataset:
                 return {i['entityId']: i['url'] for i in results}
+            # For now, let's keep the original M2M download url for sentinel
+            elif 'SENTINEL' in dataset:
+                return {i['entityId']: i['url'] for i in results}
             # Otherwise use our internal network conversion
             else:
                 return self.network_urls(

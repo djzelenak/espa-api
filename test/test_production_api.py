@@ -68,6 +68,21 @@ class TestProductionAPI(unittest.TestCase):
 
     @patch('api.external.inventory.available', lambda: True)
     @patch('api.providers.production.production_provider.ProductionProvider.parse_urls_m2m',
+           lambda x, y: y)
+    def test_fetch_production_products_sentinel(self):
+        order_id = self.mock_order.generate_testing_order(self.user_id)
+        # need scenes with statuses of 'processing'
+        scenes = Scene.where({'order_id': order_id, 'sensor_type': 'sentinel'})
+        print('SCENES', scenes)
+        self.mock_order.update_scenes(order_id, 'sentinel', 'status', ['processing', 'oncache'])
+        user = User.find(self.user_id)
+        params = {'for_user': user.username, 'product_types': ['sentinel']}
+        response = api.fetch_production_products(params)
+        print('RESPONSE', response)
+        self.assertTrue('bilbo' in response[0]['orderid'])
+
+    @patch('api.external.inventory.available', lambda: True)
+    @patch('api.providers.production.production_provider.ProductionProvider.parse_urls_m2m',
             lambda x, y: y)
     def test_fetch_production_products_landsat(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
@@ -76,11 +91,12 @@ class TestProductionAPI(unittest.TestCase):
         user = User.find(self.user_id)
         params = {'for_user': user.username, 'product_types': ['landsat']}
         response = api.fetch_production_products(params)
+        print('RESPONSE', response)
         self.assertTrue('bilbo' in response[0]['orderid'])
 
     def test_fetch_production_products_plot(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
-        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs'), 'status', ['complete'])
+        self.mock_order.update_scenes(order_id, ('landsat', 'sentinel', 'modis', 'viirs'), 'status', ['complete'])
         order = Order.find(order_id)
         plot_scene = order.scenes({'name': 'plot'})[0]
         plot_scene.name = 'plot'
@@ -453,6 +469,15 @@ class TestProductionAPI(unittest.TestCase):
         orders = Order.find(self.mock_order.generate_testing_order(self.user_id))
         scenes = orders.scenes({'sensor_type': 'landsat'})
         self.assertTrue(production_provider.handle_submitted_landsat_products(scenes))
+
+    @patch('api.external.inventory.available', lambda: True)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.check_valid', inventory.check_valid_sentinel)
+    def test_production_handle_submitted_sentinel_products(self):
+        orders = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        scenes = orders.scenes({'sensor_type': 'sentinel'})
+        self.assertTrue(production_provider.handle_submitted_sentinel_products(scenes))
+
 
     @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
     @patch('api.external.inventory.update_order_status', inventory.update_order_status)

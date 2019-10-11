@@ -11,6 +11,7 @@ import yaml
 
 from api import ProductNotImplemented, __location__
 from api.util import julian_date_check, julian_from_date
+from api.system.logger import ilogger as logger
 
 # Grab details on product restrictions
 # Do it here, vs during object instantiation,
@@ -553,6 +554,105 @@ class Landsat8OLITIRS(LandsatOLITIRS, Landsat8):
         super(Landsat8OLITIRS, self).__init__(product_id)
 
 
+class Sentinel(SensorProduct):
+    """Superclass for all sentinel based products"""
+    path = None
+    row = None
+    station = None
+    lta_product_code = None
+    default_resolution_m = None
+    default_resolution_dd = None
+    default_rows = None
+    default_cols = None
+    input_filename_extension = '.zip'
+    l1_provider = 'dmid'
+
+    def __init__(self, product_id):
+        product_id = product_id.strip()
+        super(Sentinel, self).__init__(product_id)
+
+        id_len = self.check_id(product_id)
+
+        if id_len is 'short':
+            _idlist = product_id.split('_')
+            self.year = _idlist[3][:4]
+            self.doy = julian_from_date(self.year, _idlist[3][4:6], _idlist[3][6:8])
+            self.julian = self.year + self.doy
+            self.tile = _idlist[1]
+
+        elif id_len is 'long':
+            self.year = product_id[25:29]
+            self.doy = julian_from_date(self.year, product_id[29:31], product_id[31:33])
+            self.julian = self.year + self.doy
+            self.tile = product_id[66:71]
+
+        else:
+            msg = 'the Sentinel-2 product_id {} does not match any expected pattern'.format(product_id)
+            logger.exception(msg)
+            raise ProductNotImplemented(product_id)
+
+    def __repr__(self):
+        return 'Landsat: {}'.format(self.__dict__)
+
+    # SR based products are not available for those
+    # dates where we are missing auxiliary data
+    def sr_date_restricted(self):
+        if self.sensor_name in restricted:
+            if 'by_date' in restricted[self.sensor_name].keys():
+                if not julian_date_check(self.julian, restricted[self.sensor_name]['by_date']['sr']):
+                    return True
+        return False
+
+    def check_id(self, product_id):
+        """
+        Determine what the product_id looks like (long or short)
+        """
+        if len(product_id) == 34:
+            return 'short'
+        elif len(product_id) == 81:
+            return 'long'
+        else:
+            return None
+
+class Sentinel2(Sentinel):
+    """Superclass for all sentinel based products"""
+    sensor_name = 's2'  # used by restricted.yaml
+    path = None
+    row = None
+    station = None
+    lta_product_code = None
+    # default_resolution_m = 30
+    # default_resolution_dd = 0.0002695
+    # default_rows = 11000
+    # default_cols = 11000
+    input_filename_extension = '.zip'
+    l1_provider = 'dmid'
+
+    # Yes..this is used as the dataset name for both A and B platforms...
+    lta_json_name = 'SENTINEL_2A'
+
+    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.sr,
+                AllProducts.sr_ndvi, AllProducts.sr_evi, AllProducts.sr_savi, AllProducts.sr_msavi, AllProducts.sr_ndmi,
+                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats]
+
+    def __init__(self, product_id):
+        product_id = product_id.strip()
+
+        super(Sentinel2, self).__init__(product_id)
+
+    def __repr__(self):
+        return 'Sentinel: {}'.format(self.__dict__)
+
+    # SR based products are not available for those
+    # dates where we are missing auxiliary data
+    def sr_date_restricted(self):
+        if self.sensor_name in restricted:
+            if 'by_date' in restricted[self.sensor_name].keys():
+                if not julian_date_check(self.julian, restricted[self.sensor_name]['by_date']['sr']):
+                    return True
+        return False
+
+
 class SensorCONST(object):
     # shortname: regex, class object, sample product name)
     instances = {
@@ -570,6 +670,13 @@ class SensorCONST(object):
 
         'oli8_collection': (r'^lo08_{1}\w{4}_{1}[0-9]{6}_{1}[0-9]{8}_{1}[0-9]{8}_{1}[0-9]{2}_{1}\w{2}$',
                             Landsat8OLI, 'lo08_l1tp_042034_20011103_20160706_01_a1'),
+
+        'sentinel_2_new': (r'^l1c_{1}\w{1}\d{2}\w{3}_{1}\w{1}\d{6}_{1}\d{8}\w{1}\d{6}$',
+                           Sentinel2, 'l1c_T14TPP_A022031_20190910T172721'),
+
+        'sentinel_2_old': (r'^s2[a,b]{1}_{1}\w{4}_{1}\w{3}_{1}\w{1}\d{1}\w{1}_{1}\w{2}_{1}\w{3}_{2}\d{8}\w{1}\d{6}_{1}'
+                           r'\d{8}\w{1}\d{6}_{1}\w{1}\d{6}_{1}\w{1}\d{2}\w{3}_{1}\w{1}\d{2}_{1}\d{2}_{1}\d{2}$',
+                           Sentinel2, 's2a_OPER_MSI_L1C_TL_SGS__20160130T184417_20160130T203840_A003170_T13VCC_N02_01_01'),
 
         'mod09a1': (r'^mod09a1\.a\d{7}\.h\d{2}v\d{2}\.00[5-6]\.\d{13}$',
                     ModisTerra09A1, 'mod09a1.A2000072.h02v09.005.2008237032813'),
@@ -647,6 +754,9 @@ def instance(product_id):
     LT04 LT05 LE07 LC08 LO08
 
     LANDSAT FORMAT: LE07_L1TP_026027_20170912_20171008_01_T1
+
+    SENTINEL 2[A,B] FORMAT: L1C_T14TPP_A022031_20190910T172721
+
     """
 
     # remove known file extensions before comparison
@@ -655,6 +765,7 @@ def instance(product_id):
     __modis_ext = Modis.input_filename_extension
     __viirs_ext = Viirs.input_filename_extension
     __landsat_ext = Landsat.input_filename_extension
+    __sentinel_ext = Sentinel2.input_filename_extension
 
     if _id.endswith(__modis_ext):
         index = _id.index(__modis_ext)
@@ -673,12 +784,22 @@ def instance(product_id):
         product_id = product_id[0:index]
         _id = _id[0:index]
 
+    elif _id.endswith(__sentinel_ext):
+        index = _id.index(__sentinel_ext)
+        product_id = product_id[0:index]
+        _id = _id[0:index]
+
     instances = SensorCONST.instances
 
     for key in instances.iterkeys():
         if re.match(instances[key][0], _id):
             inst = instances[key][1](product_id.strip())
-            inst.shortname = key
+            if 'sentinel' in key:
+                # there are currently 2 different patterns to ID a sentinel-2 scene
+                # but we only want a single sensor identifier going forward with the order
+                inst.shortname = 'sentinel'
+            else:
+                inst.shortname = key
             return inst
 
     msg = u"[{0:s}] is not a supported sensor product".format(product_id)
