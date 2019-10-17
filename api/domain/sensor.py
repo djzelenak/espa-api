@@ -554,22 +554,23 @@ class Landsat8OLITIRS(LandsatOLITIRS, Landsat8):
         super(Landsat8OLITIRS, self).__init__(product_id)
 
 
-class Sentinel(SensorProduct):
+class Sentinel2(SensorProduct):
     """Superclass for all sentinel based products"""
-    path = None
-    row = None
+    tile = None
     station = None
     lta_product_code = None
-    default_resolution_m = None
-    default_resolution_dd = None
-    default_rows = None
-    default_cols = None
+    # These values are valid for the current LaSRC output for S2
+    # Used to validate image extents when requested
+    default_resolution_m = 10
+    default_resolution_dd = 0.0008983
+    default_rows = 10980
+    default_cols = 10980
     input_filename_extension = '.zip'
     l1_provider = 'dmid'
 
     def __init__(self, product_id):
         product_id = product_id.strip()
-        super(Sentinel, self).__init__(product_id)
+        super(Sentinel2, self).__init__(product_id)
 
         id_len = self.check_id(product_id)
 
@@ -592,9 +593,9 @@ class Sentinel(SensorProduct):
             raise ProductNotImplemented(product_id)
 
     def __repr__(self):
-        return 'Landsat: {}'.format(self.__dict__)
+        return 'Sentinel: {}'.format(self.__dict__)
 
-    # SR based products are not available for those
+    # LaSRC products are not available for those
     # dates where we are missing auxiliary data
     def sr_date_restricted(self):
         if self.sensor_name in restricted:
@@ -614,31 +615,27 @@ class Sentinel(SensorProduct):
         else:
             return None
 
-class Sentinel2(Sentinel):
-    """Superclass for all sentinel based products"""
-    sensor_name = 's2'  # used by restricted.yaml
-    path = None
-    row = None
-    station = None
-    lta_product_code = None
-    # default_resolution_m = 30
-    # default_resolution_dd = 0.0002695
-    # default_rows = 11000
-    # default_cols = 11000
-    input_filename_extension = '.zip'
-    l1_provider = 'dmid'
 
-    # Yes..this is used as the dataset name for both A and B platforms...
+class Sentinel2_AB(Sentinel2):
+    """Superclass for all sentinel 2-AB based products"""
+
+    # used by restricted.yaml
+    # current restrictions for Sentinel-2 are date
+    sensor_name = 'sentinel2'
+
+    # Yes..this is used as the dataset name for Sentinel-2 A and B platforms...
     lta_json_name = 'SENTINEL_2A'
 
-    products = [AllProducts.source_metadata, AllProducts.l1, AllProducts.sr,
-                AllProducts.sr_ndvi, AllProducts.sr_evi, AllProducts.sr_savi, AllProducts.sr_msavi, AllProducts.sr_ndmi,
-                AllProducts.sr_nbr, AllProducts.sr_nbr2, AllProducts.stats]
+    products = [AllProducts.s2_sr,
+                AllProducts.s2_ndvi, AllProducts.s2_evi,
+                AllProducts.s2_savi, AllProducts.s2_msavi,
+                AllProducts.s2_ndmi, AllProducts.s2_nbr,
+                AllProducts.s2_nbr2, AllProducts.stats]
 
     def __init__(self, product_id):
         product_id = product_id.strip()
 
-        super(Sentinel2, self).__init__(product_id)
+        super(Sentinel2_AB, self).__init__(product_id)
 
     def __repr__(self):
         return 'Sentinel: {}'.format(self.__dict__)
@@ -671,12 +668,11 @@ class SensorCONST(object):
         'oli8_collection': (r'^lo08_{1}\w{4}_{1}[0-9]{6}_{1}[0-9]{8}_{1}[0-9]{8}_{1}[0-9]{2}_{1}\w{2}$',
                             Landsat8OLI, 'lo08_l1tp_042034_20011103_20160706_01_a1'),
 
-        'sentinel_2_new': (r'^l1c_{1}\w{1}\d{2}\w{3}_{1}\w{1}\d{6}_{1}\d{8}\w{1}\d{6}$',
-                           Sentinel2, 'l1c_T14TPP_A022031_20190910T172721'),
-
-        'sentinel_2_old': (r'^s2[a,b]{1}_{1}\w{4}_{1}\w{3}_{1}\w{1}\d{1}\w{1}_{1}\w{2}_{1}\w{3}_{2}\d{8}\w{1}\d{6}_{1}'
-                           r'\d{8}\w{1}\d{6}_{1}\w{1}\d{6}_{1}\w{1}\d{2}\w{3}_{1}\w{1}\d{2}_{1}\d{2}_{1}\d{2}$',
-                           Sentinel2, 's2a_OPER_MSI_L1C_TL_SGS__20160130T184417_20160130T203840_A003170_T13VCC_N02_01_01'),
+        #  This allows us to identify both long (S2A only) and short (A and B) naming conventions used by ESA
+        'sentinel': (r'^l1c_{1}\w{1}\d{2}\w{3}_{1}\w{1}\d{6}_{1}\d{8}\w{1}\d{6}|s2[a,b]{1}_{1}\w{4}_{1}\w{3}_{1}\w{'
+                     r'1}\d{1}\w{1}_{1}\w{2}_{1}\w{3}_{2}\d{8}\w{1}\d{6}_{1}\d{8}\w{1}\d{6}_{1}\w{1}\d{6}_{1}\w{1}\d{'
+                     r'2}\w{3}_{1}\w{1}\d{2}_{1}\d{2}_{1}\d{2}$',
+                     Sentinel2_AB, 'l1c_T14TPP_A022031_20190910T172721'),
 
         'mod09a1': (r'^mod09a1\.a\d{7}\.h\d{2}v\d{2}\.00[5-6]\.\d{13}$',
                     ModisTerra09A1, 'mod09a1.A2000072.h02v09.005.2008237032813'),
@@ -765,7 +761,7 @@ def instance(product_id):
     __modis_ext = Modis.input_filename_extension
     __viirs_ext = Viirs.input_filename_extension
     __landsat_ext = Landsat.input_filename_extension
-    __sentinel_ext = Sentinel2.input_filename_extension
+    __sentinel_ext = Sentinel2_AB.input_filename_extension
 
     if _id.endswith(__modis_ext):
         index = _id.index(__modis_ext)
@@ -794,12 +790,7 @@ def instance(product_id):
     for key in instances.iterkeys():
         if re.match(instances[key][0], _id):
             inst = instances[key][1](product_id.strip())
-            if 'sentinel' in key:
-                # there are currently 2 different patterns to ID a sentinel-2 scene
-                # but we only want a single sensor identifier going forward with the order
-                inst.shortname = 'sentinel'
-            else:
-                inst.shortname = key
+            inst.shortname = key
             return inst
 
     msg = u"[{0:s}] is not a supported sensor product".format(product_id)

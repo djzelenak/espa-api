@@ -111,7 +111,7 @@ tm4:
         - reanalsrc_fp
         - reanalsrc_fpit
 
-s2:
+sentinel2:
     by_date:
         sr:
             - "< 2016050 | > 2016058"

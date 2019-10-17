@@ -966,9 +966,6 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         logger.warn("Found {0} submitted sentinel products".format(len(sentinel_products)))
 
         if len(sentinel_products) > 0:
-            lpdaac_ids = []
-            nonlp_ids = []
-
             prod_name_list = [p.name for p in sentinel_products]
             token = inventory.get_cached_session()
             results = inventory.check_valid(token, prod_name_list)

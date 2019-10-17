@@ -73,12 +73,10 @@ class TestProductionAPI(unittest.TestCase):
         order_id = self.mock_order.generate_testing_order(self.user_id)
         # need scenes with statuses of 'processing'
         scenes = Scene.where({'order_id': order_id, 'sensor_type': 'sentinel'})
-        print('SCENES', scenes)
         self.mock_order.update_scenes(order_id, 'sentinel', 'status', ['processing', 'oncache'])
         user = User.find(self.user_id)
         params = {'for_user': user.username, 'product_types': ['sentinel']}
         response = api.fetch_production_products(params)
-        print('RESPONSE', response)
         self.assertTrue('bilbo' in response[0]['orderid'])
 
     @patch('api.external.inventory.available', lambda: True)
@@ -91,7 +89,6 @@ class TestProductionAPI(unittest.TestCase):
         user = User.find(self.user_id)
         params = {'for_user': user.username, 'product_types': ['landsat']}
         response = api.fetch_production_products(params)
-        print('RESPONSE', response)
         self.assertTrue('bilbo' in response[0]['orderid'])
 
     def test_fetch_production_products_plot(self):
@@ -525,6 +522,21 @@ class TestProductionAPI(unittest.TestCase):
 
     @patch('api.external.inventory.available', lambda: True)
     @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.check_valid', inventory.check_valid_sentinel)
+    def test_production_handle_submitted_sentinel_products_input_exists(self):
+        # handle oncache scenario
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        for scene in order.scenes({'name !=': 'plot'}):
+            scene.status = 'submitted'
+            scene.sensor_type = 'sentinel'
+            scene.save()
+            sid = scene.id
+        scenes = order.scenes({'sensor_type': 'sentinel'})
+        self.assertTrue(production_provider.handle_submitted_sentinel_products(scenes))
+        #self.assertEquals(Scene.find(sid).status, "oncache")
+
+    @patch('api.external.inventory.available', lambda: True)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
     @patch('api.external.inventory.check_valid', inventory.check_valid_viirs)
     def test_production_handle_submitted_viirs_products_input_exists(self):
         # handle oncache scenario
@@ -658,7 +670,7 @@ class TestProductionAPI(unittest.TestCase):
     def test_catch_orphaned_scenes(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
         # need scenes with statuses of 'queued'
-        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs', 'plot'), 'status', ['queued'])
+        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs', 'sentinel', 'plot'), 'status', ['queued'])
         response = production_provider.catch_orphaned_scenes()
         self.assertTrue(response)
 
@@ -679,8 +691,8 @@ class TestProductionAPI(unittest.TestCase):
     def test_handle_stuck_jobs(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
         # Make some really old jobs
-        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs', 'plot'), 'status', ['processing'])
-        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs', 'plot'), 'status_modified', [datetime.datetime(1900, 1, 1)])
+        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs', 'sentinel', 'plot'), 'status', ['processing'])
+        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs', 'sentinel', 'plot'), 'status_modified', [datetime.datetime(1900, 1, 1)])
         scenes = Scene.where({'status': 'processing', 'order_id': order_id})
         n_scenes = len(scenes)
         response = production_provider.handle_stuck_jobs(scenes)
@@ -689,7 +701,7 @@ class TestProductionAPI(unittest.TestCase):
         scenes = Scene.where({'status': 'processing', 'order_id': order_id, 'reported_orphan is not': None})
         self.assertEqual(n_scenes, len(scenes))
 
-        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs', 'plot'), 'reported_orphan', [datetime.datetime(1900, 1, 1)])
+        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs', 'sentinel', 'plot'), 'reported_orphan', [datetime.datetime(1900, 1, 1)])
         response = production_provider.handle_stuck_jobs(scenes)
         self.assertTrue(response)
 
@@ -702,6 +714,7 @@ class TestProductionAPI(unittest.TestCase):
         Test the conversion procedure to make sure that the new format for orders converts
         to the old format
         """
+        self.maxDiff = None
         scenes = ['LE07_L1TP_026027_20170912_20171008_01_T1', 'LC08_L1TP_025027_20160521_20170223_01_T1',
                   'LT05_L1TP_025027_20110913_20160830_01_T1']
 
@@ -755,6 +768,14 @@ class TestProductionAPI(unittest.TestCase):
                    'include_sr_savi': False,
                    'include_sr_thermal': False,
                    'include_sr_toa': False,
+                   'include_s2_sr': False,
+                   'include_s2_ndvi': False,
+                   'include_s2_msavi': False,
+                   'include_s2_evi': False,
+                   'include_s2_savi': False,
+                   'include_s2_nbr': False,
+                   'include_s2_nbr2': False,
+                   'include_s2_ndmi': False,
                    'include_modis_ndvi': False,
                    'include_viirs_ndvi': False,
                    'include_statistics': False,
