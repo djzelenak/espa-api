@@ -23,7 +23,8 @@ class Order(object):
                 'WHERE ')
 
     valid_statuses = ('complete', 'queued', 'oncache', 'onorder', 'purged',
-                      'processing', 'error', 'unavailable', 'submitted')
+                      'processing', 'error', 'unavailable', 'submitted',
+                      'tasked', 'scheduled')
 
     def __init__(self, id=None, orderid=None, status=None, order_source=None,
                  order_type=None, product_options=None,
