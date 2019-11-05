@@ -1313,7 +1313,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         :return: bool
         """
-        scenes = Scene.where({'status': ('queued', 'processing')})
+        scenes = Scene.where({'status': ('tasked', 'scheduled', 'processing')})
         if scenes:
             Scene.bulk_update([s.id for s in scenes], {'status': 'submitted'})
             return True

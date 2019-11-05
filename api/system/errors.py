@@ -278,7 +278,8 @@ class Errors(object):
 
     def node_space_errors(self, error_message):
         keys = ['Error: write_raw_binary', 'Error writing the output', 'Failed to unpack data',
-                'No space left on device', 'Error encountered tar\'ing file']
+                'No space left on device', 'Error encountered tar\'ing file',
+                'Can not read TIFF directory count']
         status = 'retry'
         reason = 'Error writing to disk on processing node, retrying'
         extras = self.__add_retry('node_space_errors')
