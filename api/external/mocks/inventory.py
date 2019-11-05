@@ -24,6 +24,13 @@ RESOURCE_DEF = {
             "INVALID_ID": None
         }
     },
+    'downloadoptions': {
+        "errorCode": None,
+        "error": "",
+        "data": [{'entityId': 'LC81560632017038LGN00', 'downloadOptions': [{'downloadCode': "STANDARD", 'available': True}]},
+                 {'entityId': 'LE70280282013130EDC00', 'downloadOptions': [{'downloadCode': "STANDARD", 'available': True}]},
+                 {'entityId': 'LT50320282012116EDC00', 'downloadOptions': [{'downloadCode': "STANDARD", 'available': True}]}]
+    },
     'download': {
         "errorCode": None,
         "error": "",
