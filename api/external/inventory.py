@@ -230,7 +230,8 @@ class LTAService(object):
 
     def download_available(self, entity_ids, dataset):
         """
-
+        Iterates over a downloadoptions request for the provided
+        entity_ids, determining download url availability
         """
         status_dict = dict()
         m2m_ids = entity_ids.values()
