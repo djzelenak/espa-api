@@ -140,7 +140,7 @@ class API(object):
 
     def get_production_whitelist(self):
         """
-        Returns list of ip addresses in hadoop cluster
+        Returns list of ip addresses in mesos cluster
         :return: list of strings
         """
         try:
@@ -150,21 +150,9 @@ class API(object):
             response = default_error_message
         return response
 
-    def catch_orphaned_scenes(self):
-        """
-        Handler for marking queued scenes with no corresponding job in hadoop
-        :return: true
-        """
-        try:
-            response = self.production.catch_orphaned_scenes()
-        except:
-            logger.critical("ERR handling orphaned scenes\ntrace: {}".format(traceback.format_exc()))
-            response = default_error_message
-        return response
-
     def reset_processing_status(self):
         """
-        Handler for killing queued/processing scenes in hadoop
+        Handler for resetting queued/processing scenes status to a 'submitted' state
         :return: true
         """
         try:

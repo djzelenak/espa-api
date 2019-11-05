@@ -6,7 +6,6 @@ from api.util import chunkify
 from test.version0_testorders import build_base_order
 from api.providers.ordering.ordering_provider import OrderingProvider
 from api.providers.production.production_provider import ProductionProvider
-from api.external.mocks import lta as mock_lta
 from api.external.mocks import inventory as mock_inventory
 import os
 import random
