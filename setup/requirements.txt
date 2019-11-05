@@ -5,7 +5,7 @@ cffi==1.11.5
 cov-core==1.15.0
 coverage==4.5.1
 cryptography==2.3.1
-ecdsa==0.13
+ecdsa>=0.13.3
 enum34==1.1.6
 Flask==1.1.1
 Flask-HTTPAuth==3.3.0
