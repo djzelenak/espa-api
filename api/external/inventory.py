@@ -259,7 +259,11 @@ class LTAService(object):
 
         response = dict()
         for k, v in entity_ids.items():
-            response[k] = availability[v]
+            if v:
+                response[k] = availability[v]
+            else:
+                logger.info("id: {} is not available".format(k))
+                response[k] = False
 
         return response
 
