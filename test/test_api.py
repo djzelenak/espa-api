@@ -232,7 +232,7 @@ class TestValidation(unittest.TestCase):
                 'etm7_collection': {'inputs': ['le07_l1tp_029030_20171222_20180117_01_t2'], 'products': ['st']},
                 'resampling_method': 'nn',
                 'format': 'gtiff'}
-        err_msg_1 = "Missing surface temperature algorithm - check available products for options"
+        err_msg_1 = "Missing surface temperature algorithm"
 
         with self.assertRaisesRegexp(exc_type, err_msg_1):
             api.validation.validate(opts_1, self.staffuser.username)
@@ -243,8 +243,7 @@ class TestValidation(unittest.TestCase):
                                     'products': ['st', 'stalg_single_channel']},
                 'resampling_method': 'nn',
                 'format': 'gtiff'}
-        err_msg_2 = "Missing reanalysis data source for single channel algorithm - " \
-                  "check available products for options"
+        err_msg_2 = "Missing reanalysis data source for single channel algorithm"
 
         with self.assertRaisesRegexp(exc_type, err_msg_2):
             api.validation.validate(opts_2, self.staffuser.username)

@@ -488,12 +488,14 @@ class OrderValidatorV0(validictory.SchemaValidator):
         reanalysis_data = ['reanalsrc_narr', 'reanalsrc_merra2', 'reanalsrc_fp', 'reanalsrc_fpit']
         if st in req_prods:
             if stalg_single_channel not in req_prods and stalg_split_window not in req_prods:
-                msg = "Missing surface temperature algorithm - check available products for options"
+                msg = "Missing surface temperature algorithm - " \
+                      "please choose from ['{0}' (olitirs only), '{1}']".format(stalg_split_window,
+                                                                                stalg_single_channel)
                 if msg not in self._errors:
                     self._errors.append(msg)
             if stalg_single_channel in req_prods and not any([r for r in reanalysis_data if r in req_prods]):
                 msg = "Missing reanalysis data source for single channel algorithm - " \
-                      "check available products for options"
+                      "please choose from {}".format(reanalysis_data)
                 if msg not in self._errors:
                     self._errors.append(msg)
 
