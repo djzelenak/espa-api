@@ -20,7 +20,6 @@ from api.providers.configuration.configuration_provider import ConfigurationProv
 from api.providers.production.mocks.production_provider import MockProductionProvider
 from api.providers.production.production_provider import ProductionProvider
 from api.providers.ordering.ordering_provider import OrderingProviderException, OrderingProvider
-from api.external.mocks import lta as mocklta
 from api.external.mocks import inventory as mockinventory
 from api.system.logger import ilogger as logger
 from mock import patch
@@ -193,6 +192,7 @@ class TestValidation(unittest.TestCase):
         else:
             self.fail('Failed MODIS pixel resize test')
 
+    # this takes way too 
     def test_validate_bad_orders(self):
         """
         Build a series of invalid orders to try and catch any potential errors in a

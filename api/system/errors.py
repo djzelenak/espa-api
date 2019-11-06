@@ -34,7 +34,6 @@ class Errors(object):
         self.conditions.append(self.http_errors)
         self.conditions.append(self.gzip_errors)
         self.conditions.append(self.gzip_errors_online_cache)
-        self.conditions.append(self.lta_soap_errors)
         self.conditions.append(self.missing_ncep_data)
         self.conditions.append(self.missing_aux_data)
         self.conditions.append(self.network_errors)
@@ -50,6 +49,7 @@ class Errors(object):
         self.conditions.append(self.lasrc_mystery_segfaults)
         self.conditions.append(self.reproject_errors)
         self.conditions.append(self.unable_to_locate_mtl)
+        self.conditions.append(self.task_errors)
 
         # construct the named tuple for the return value of this module
         self.resolution = collections.namedtuple('ErrorResolution',
@@ -246,12 +246,13 @@ class Errors(object):
         reason = 'Brightness temperature is not available for OLI-only data'
         return self.__find_error(error_message, keys, status, reason)
 
-    def lta_soap_errors(self, error_message):
-        keys = ['Listener refused the connection with the following error']
-        status = 'retry'
-        reason = 'Could not complete order at this time'
-        extras = self.__add_retry('lta_soap_errors')
-        return self.__find_error(error_message, keys, status, reason, extras)
+    # probably not necessary after moving off LTA SOAP services - CA 9/30/19
+    # def lta_soap_errors(self, error_message):
+    #     keys = ['Listener refused the connection with the following error']
+    #     status = 'retry'
+    #     reason = 'Could not complete order at this time'
+    #     extras = self.__add_retry('lta_soap_errors')
+    #     return self.__find_error(error_message, keys, status, reason, extras)
 
     def warp_errors(self, error_message):
         keys = ['GDAL Warp failed to transform',
@@ -277,7 +278,8 @@ class Errors(object):
 
     def node_space_errors(self, error_message):
         keys = ['Error: write_raw_binary', 'Error writing the output', 'Failed to unpack data',
-                'No space left on device', 'Error encountered tar\'ing file']
+                'No space left on device', 'Error encountered tar\'ing file',
+                'Can not read TIFF directory count']
         status = 'retry'
         reason = 'Error writing to disk on processing node, retrying'
         extras = self.__add_retry('node_space_errors')
@@ -312,6 +314,17 @@ class Errors(object):
         status = 'retry'
         reason = 'Tried processing without inputs'
         extras = self.__add_retry('missed_extraction')
+        return self.__find_error(error_message, keys, status, reason, extras)
+
+    def task_errors(self, error_message):
+        """
+        error resulting when a container/task fails
+        """
+        keys = ['TASK_FAILED',
+                'TASK_LOST']
+        status = 'retry'
+        reason = 'Container closed during processing or failed to launch'
+        extras = self.__add_retry('task_error')
         return self.__find_error(error_message, keys, status, reason, extras)
 
 

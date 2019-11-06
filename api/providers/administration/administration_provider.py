@@ -4,7 +4,6 @@ from api.providers.administration import AdminProviderInterfaceV0
 from api.providers.administration import AdministrationProviderException
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.external.onlinecache import OnlineCache
-from api.external.hadoop import HadoopHandler
 from api.system.logger import ilogger as logger
 from api.util.dbconnect import db_instance
 from api.util.dbconnect import DBConnectException
@@ -55,14 +54,6 @@ class AdministrationProvider(AdminProviderInterfaceV0):
             return OnlineCache().list(orderid)
         else:
             return OnlineCache().capacity()
-
-    def jobs(self, jobid=None, stop=False):
-        if not jobid:
-            resp = HadoopHandler().list_jobs()
-        else:
-            resp = HadoopHandler().kill_job(jobid)
-
-        return resp
 
     def error_to(self, orderid, state):
         order = Order.find(orderid)

@@ -8,7 +8,7 @@ from api.domain.mocks.user import MockUser
 from api.domain.order import Order, OptionsConversion
 from api.domain.scene import Scene
 from api.domain.user import User
-from api.external.mocks import lta, inventory, lpdaac, onlinecache, hadoop
+from api.external.mocks import inventory, lpdaac, onlinecache
 from api.interfaces.production.version1 import API
 from api.notification import emails
 from api.providers.configuration.configuration_provider import ConfigurationProvider
@@ -514,7 +514,7 @@ class TestProductionAPI(unittest.TestCase):
 
     @patch('api.external.inventory.available', lambda: True)
     @patch('api.external.inventory.get_cached_session', inventory.get_cached_session) 
-    @patch('api.external.inventory.check_valid', inventory.check_valid_modis_unavailable)   
+    @patch('api.external.inventory.check_valid', inventory.check_valid_modis_false)   
     def test_production_handle_submitted_modis_products_input_missing(self):
         # handle unavailable scenario
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
@@ -529,7 +529,7 @@ class TestProductionAPI(unittest.TestCase):
 
     @patch('api.external.inventory.available', lambda: True)
     @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
-    @patch('api.external.inventory.check_valid', inventory.check_valid_viirs_missing)
+    @patch('api.external.inventory.check_valid', inventory.check_valid_viirs_false)
     def test_production_handle_submitted_viirs_products_input_missing(self):
         # handle unavailable scenario
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
@@ -627,50 +627,6 @@ class TestProductionAPI(unittest.TestCase):
         bad_key = 'foobar'
         response = api.get_production_key(bad_key)
         self.assertEqual(response.keys(), ['msg'])
-
-    @patch('api.external.hadoop.HadoopHandler.job_names_ids',
-           hadoop.jobs_names_ids)
-    def test_catch_orphaned_scenes(self):
-        order_id = self.mock_order.generate_testing_order(self.user_id)
-        # need scenes with statuses of 'queued'
-        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs', 'plot'), 'status', ['queued'])
-        response = production_provider.catch_orphaned_scenes()
-        self.assertTrue(response)
-
-        old_time = datetime.datetime.now() - datetime.timedelta(minutes=15)
-
-        for s in Scene.where({'order_id': order_id}):
-            self.assertTrue(s.reported_orphan is not None)
-            s.reported_orphan = old_time
-            s.save()
-
-        response = production_provider.catch_orphaned_scenes()
-        self.assertTrue(response)
-        for s in Scene.where({'order_id': order_id}):
-            self.assertTrue(s.orphaned)
-
-    @patch('api.external.hadoop.HadoopHandler.job_names_ids',
-           hadoop.jobs_names_ids)
-    def test_handle_stuck_jobs(self):
-        order_id = self.mock_order.generate_testing_order(self.user_id)
-        # Make some really old jobs
-        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs', 'plot'), 'status', ['processing'])
-        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs', 'plot'), 'status_modified', [datetime.datetime(1900, 1, 1)])
-        scenes = Scene.where({'status': 'processing', 'order_id': order_id})
-        n_scenes = len(scenes)
-        response = production_provider.handle_stuck_jobs(scenes)
-        self.assertTrue(response)
-
-        scenes = Scene.where({'status': 'processing', 'order_id': order_id, 'reported_orphan is not': None})
-        self.assertEqual(n_scenes, len(scenes))
-
-        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs', 'plot'), 'reported_orphan', [datetime.datetime(1900, 1, 1)])
-        response = production_provider.handle_stuck_jobs(scenes)
-        self.assertTrue(response)
-
-        scenes = Scene.where({'status': 'processing', 'order_id': order_id})
-        self.assertEqual(0, len(scenes))
-
 
     def test_convert_product_options(self):
         """
@@ -823,15 +779,6 @@ class TestProductionAPI(unittest.TestCase):
         new_time = scene.status_modified
         self.assertGreater(new_time, old_time)
 
-    @patch('api.external.hadoop.HadoopHandler.list_jobs', hadoop.jobs_names_ids)
-    @patch('api.external.hadoop.HadoopHandler.kill_job', lambda x,y: True)
-    def test_hadoop_reset_status(self):
-        order_id = self.mock_order.generate_testing_order(self.user_id)
-        scenes = Scene.where({'order_id': order_id})
-        Scene.bulk_update([s.id for s in scenes], {'status': 'processing'})
-        self.assertTrue(production_provider.reset_processing_status())
-        scenes = Scene.where({'order_id': order_id})
-        self.assertEqual({'submitted'}, set([s.status for s in scenes]))
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
