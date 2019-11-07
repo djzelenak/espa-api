@@ -481,6 +481,33 @@ class OrderValidatorV0(validictory.SchemaValidator):
                 if msg not in self._errors:
                     self._errors.append(msg)
 
+        # Make sure that all required st options are included
+        st = 'st'
+        stalg_single_channel = 'stalg_single_channel'
+        stalg_split_window = 'stalg_split_window'
+        reanalysis_data = ['reanalsrc_narr', 'reanalsrc_merra2', 'reanalsrc_fp', 'reanalsrc_fpit']
+        if st in req_prods:
+            if stalg_single_channel not in req_prods and stalg_split_window not in req_prods:
+                msg = "Missing surface temperature algorithm - " \
+                      "please choose from ['{0}' (olitirs only), '{1}']".format(stalg_split_window,
+                                                                                stalg_single_channel)
+                if msg not in self._errors:
+                    self._errors.append(msg)
+            if stalg_single_channel in req_prods and not any([r for r in reanalysis_data if r in req_prods]):
+                msg = "Missing reanalysis data source for single channel algorithm - " \
+                      "please choose from {}".format(reanalysis_data)
+                if msg not in self._errors:
+                    self._errors.append(msg)
+
+        all_st_options = list()
+        all_st_options.append(stalg_split_window)
+        all_st_options.append(stalg_single_channel)
+        all_st_options.extend(reanalysis_data)
+        if any([x for x in all_st_options if x in req_prods]) and st not in req_prods:
+            msg = "Must include 'st' in products if specifying surface temperature options"
+            if msg not in self._errors:
+                self._errors.append(msg)
+
     def validate_oneormoreobjects(self, x, fieldname, schema, path, key_list):
         """Validates that at least one value is present from the list"""
         val = x.get(fieldname)
