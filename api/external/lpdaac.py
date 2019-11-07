@@ -39,7 +39,7 @@ class LPDAACService(object):
         Simple wrapper to check if lpdacc is up
         :return: bool
         """
-        wait = 30  # seconds
+        wait = 3  # seconds
         return utils.connections.is_reachable(self.datapool[key], timeout=wait)
 
     def input_exists(self, product):
@@ -61,7 +61,7 @@ class LPDAACService(object):
             if 'download_url' in url[product.product_id]:
                 url = url[product.product_id]['download_url']
                 try:
-                    wait = 30  # seconds
+                    wait = 3  # seconds
                     result = utils.connections.is_reachable(url, timeout=wait)
                 except Exception, e:
                     logger.exception('Exception checking modis input {0}\n '
