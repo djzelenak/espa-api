@@ -237,7 +237,17 @@ class LTAService(object):
         m2m_ids = entity_ids.values()
         dload_options = self.download_options(m2m_ids, dataset) # list of dicts, keys 'entityId', 'downloadOptions'
         for option in dload_options:
-            entity_id = option['entityId']
+            # In some instances the entityId returned by downloadOptions is an integer
+            # so we want to convert it to a string to match with other instances of entityId.
+            # This prevents a KeyError from occurring in verify_scenes()
+            try:
+                entity_id = unicode(str(option['entityId']), "utf-8")
+            except Exception as e:
+                msg = 'Error converting entityID {0} to unicode string format - {1}'.format(option['entityId'],
+                                                                                            e.message)
+                logger.critical(msg)
+                raise LTAError(msg)
+
             standard_product = [p for p in option['downloadOptions'] if p['downloadCode'] == 'STANDARD'][0] 
             available = standard_product['available'] # True or False
             status_dict[entity_id] = available
