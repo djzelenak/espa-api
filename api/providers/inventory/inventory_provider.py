@@ -42,14 +42,23 @@ class InventoryProviderV0(InventoryInterfaceV0):
                 raise InventoryConnectionException(msg)
 
         if lpdaac_ls:
-            if inventory.available():
-                results.update(self.check_dmid(lpdaac_ls, contactid))
+            if lpdaac.check_lpdaac_available():
+                try:
+                    results.update(self.check_LPDAAC(lpdaac_ls))
 
-            elif lpdaac.check_lpdaac_available():
-                results.update(self.check_LPDAAC(lpdaac_ls))
+                except InventoryException:
+                    logger.warn("Unable to verify inventory with LPDAAC")
+
+            elif inventory.available():
+                logger.warn("Unable to connect to lpdaac service - trying dmid")
+                try:
+                    results.update(self.check_dmid(lpdaac_ls, contactid))
+
+                except InventoryException:
+                    logger.warn("Unable to verify inventory with DMID")
 
             else:
-                msg = 'Could not connect to LPDAAC data source'
+                msg = "Could not connect to any data source to verify LPDAAC products"
                 raise InventoryConnectionException(msg)
 
         not_avail = []

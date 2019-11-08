@@ -24,6 +24,13 @@ RESOURCE_DEF = {
             "INVALID_ID": None
         }
     },
+    'downloadoptions': {
+        "errorCode": None,
+        "error": "",
+        "data": [{'entityId': 'LC81560632017038LGN00', 'downloadOptions': [{'downloadCode': "STANDARD", 'available': True}]},
+                 {'entityId': 'LE70280282013130EDC00', 'downloadOptions': [{'downloadCode': "STANDARD", 'available': True}]},
+                 {'entityId': 'LT50320282012116EDC00', 'downloadOptions': [{'downloadCode': "STANDARD", 'available': True}]}]
+    },
     'download': {
         "errorCode": None,
         "error": "",
@@ -149,12 +156,17 @@ def check_valid_sentinel(token, prod_name_list):
     _names = [s.name for s in _scenes]
     return {_names[0]: True}
 
-def check_valid_viirs_missing(token, prod_name_list):
+def check_valid_modis_false(token, prod_name_list):
+    _scenes = Scene.where({"status":"submitted", "sensor_type":"modis"})
+    _names = [s.name for s in _scenes]
+    return {_names[0]: False}
+
+def check_valid_viirs_false(token, prod_name_list):
     _scenes = Scene.where({"status":"submitted", "sensor_type":"viirs"})
     _names = [s.name for s in _scenes]
     return {_names[0]: False}
 
-def check_valid_sentinel_missing(token, prod_name_list):
+def check_valid_sentinel_false(token, prod_name_list):
     _scenes = Scene.where({"status": "submitted", "sensor_type": "sentinel"})
     _names = [s.name for s in _scenes]
     return {_names[0]: False}

@@ -39,16 +39,6 @@ class AdminProviderInterfaceV0(object):
         """
 
     @abc.abstractmethod
-    def jobs(self, jobid=None, stop=False):
-        """
-        View current hadoop jobs or kill the job
-        Defaults to listing all the jobs
-
-        :param jobid: specific job to look at
-        :param stop: stop the specified job
-        """
-
-    @abc.abstractmethod
     def system(self, key=None, disposition='on'):
         """
         System related operation to switch on/off
