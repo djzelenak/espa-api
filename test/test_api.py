@@ -293,7 +293,9 @@ class TestValidation(unittest.TestCase):
                                                                       filters={'status': ('submitted',
                                                                                           'oncache',
                                                                                           'onorder',
-                                                                                          'queued',
+                                                                                          'tasked',
+                                                                                          'scheduled',
+                                                                                          'retry',
                                                                                           'processing')}))
 
     def test_get_scenes_for_new_user(self):
