@@ -43,13 +43,18 @@ class InventoryProviderV0(InventoryInterfaceV0):
 
         if lpdaac_ls:
             if inventory.available():
-                results.update(self.check_dmid(lpdaac_ls, contactid))
-
+                logger.warn('Checking M2M Inventory for LP DAAC granules')
+                try:
+                    results.update(self.check_dmid(lpdaac_ls, contactid))
+                except InventoryException:
+                    logger.warn("Unable to verify inventory with DMID")
             elif lpdaac.check_lpdaac_available():
-                results.update(self.check_LPDAAC(lpdaac_ls))
-
+                try:
+                    results.update(self.check_LPDAAC(lpdaac_ls))
+                except InventoryException:
+                    logger.warn("Unable to verify inventory with LPDAAC")
             else:
-                msg = 'Could not connect to LPDAAC data source'
+                msg = "Could not connect to any data source to verify LPDAAC products"
                 raise InventoryConnectionException(msg)
 
         not_avail = []

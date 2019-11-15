@@ -174,7 +174,9 @@ class OrderingProvider(ProviderInterfaceV0):
         if filters and not isinstance(filters, dict):
             raise OrderingProviderException('filters must be dict')
 
-        user_orders = Order.where({'user_id': user_id})
+        # See if the user has any open orders first
+        user_orders = Order.where({'user_id': user_id, 'status': 'ordered'})
+
         if len(user_orders) > 0:
             scenes = Order.get_user_scenes(user_id=user_id, params=filters)
 

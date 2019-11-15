@@ -1292,6 +1292,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         prodlist  = cache.get(cache_key)
         mesos_url = config.url_for('mesos_master') # url.<mode>.mesos_master
 
+        whitelist_additions = []
+        if 'prod_whitelist_additions' in config.__dict__.keys():
+            whitelist_additions = config.prod_whitelist_additions.replace("'","").split(",")
+
         if prodlist is None:
             logger.info("Regenerating production whitelist...")
             # timeout in 6 hours
@@ -1302,6 +1306,8 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 prodlist = list(map(getip, pids))
                 prodlist.append('127.0.0.1')
                 prodlist.append(socket.gethostbyname(socket.gethostname()))
+                if whitelist_additions:
+                    prodlist.extend(whitelist_additions)
             except BaseException, e:
                 logger.exception('Could not access Mesos!')
             cache.set(cache_key, prodlist, timeout)
@@ -1315,7 +1321,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         :return: bool
         """
-        scenes = Scene.where({'status': ('queued', 'processing')})
+        scenes = Scene.where({'status': ('tasked', 'scheduled', 'processing')})
         if scenes:
             Scene.bulk_update([s.id for s in scenes], {'status': 'submitted'})
             return True

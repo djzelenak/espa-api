@@ -22,7 +22,7 @@ class Order(object):
                 'FROM ordering_order '
                 'WHERE ')
 
-    valid_statuses = ('complete', 'queued', 'oncache', 'onorder', 'purged',
+    valid_statuses = ('complete', 'oncache', 'onorder', 'purged',
                       'processing', 'error', 'unavailable', 'submitted')
 
     def __init__(self, id=None, orderid=None, status=None, order_source=None,
