@@ -859,6 +859,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         product_list = sorted(product_list, key=lambda x: x.id)[:500]
         logger.info("Ordering {0} scenes for contact:{1}".format(len(product_list), contact_id))
 
+        # appears unnecessary, often blocks landsat scenes from making it to 'oncache' status. just commenting for now.
         # product_list = self.check_dependencies_for_products(product_list)
 
         prod_name_list = [p.name for p in product_list]
