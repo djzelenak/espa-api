@@ -157,7 +157,7 @@ REPORTS = {
                      u.first_name "First Name",
                      u.last_name "Last Name",
                      SUM(case when s.status = 'error' then 1 else 0 end) "Error",
-                     SUM(case when s.status = 'retry' then 1 else 0 end) "Retry",
+                     SUM(case when s.status = 'retry' then 1 else 0 end) "Retry"
                      FROM ordering_scene s, ordering_order o, auth_user u
                      WHERE s.order_id = o.id
                      AND o.user_id = u.id
