@@ -129,6 +129,7 @@ REPORTS = {
                      SUM(CASE when s.status = 'tasked' then 1 ELSE 0 END) "T",
                      SUM(CASE when s.status = 'scheduled' then 1 ELSE 0 END) "Sch",
                      SUM(CASE when s.status = 'oncache' then 1 ELSE 0 END) "OC",
+                     SUM(CASE when s.status = 'onorder' then 1 ELSE 0 END) "OO",
                      SUM(CASE when s.status = 'retry' then 1 ELSE 0 END) "R",
                      SUM(CASE when s.status = 'error' then 1 ELSE 0 END) "E",
                      SUM(CASE when s.status = 'submitted' then 1 ELSE 0 END) "S",
@@ -208,13 +209,13 @@ REPORTS = {
                      SUM(CASE WHEN s.status = 'processing'
                          THEN 1 ELSE 0 END) "Processing",
                      SUM(CASE WHEN s.status IN
-                         ('tasked', 'scheduled', 'oncache')
+                         ('tasked', 'scheduled')
                          THEN 1 ELSE 0 END) "Queued",
                      SUM(CASE WHEN s.status IN
-                         ('processing')
+                         ('processing', 'tasked', 'scheduled')
                          THEN 1 ELSE 0 END) "Total Running",
                      SUM(CASE WHEN s.status IN
-                         ('processing', 'submitted', 'error',
+                         ('processing', 'submitted', 'error', 'onorder',
                           'retry', 'oncache', 'tasked', 'scheduled')
                          THEN 1 ELSE 0 END) "Open Products",
                      u.email "Email",
@@ -295,6 +296,13 @@ STATS = {
                      FROM ordering_scene s
                      WHERE s.status = 'complete'
                      AND completion_date > now() - interval '24 hours' '''
+    },
+    'stat_onorder_depth': {
+        'display_name': 'Products \'onorder\'',
+        'description': 'Current count for products onorder',
+        'query': r'''SELECT COUNT(id) "statistic"
+                     FROM ordering_scene s
+                     WHERE s.status = 'onorder' '''
     }
 }
 
@@ -322,7 +330,7 @@ MULTISTATS = {
                      WHERE s.status = 'complete'
                      AND completion_date > now() - interval '1 hours'
                      GROUP BY "machine" '''
-    },
+    }
 }
 
 
