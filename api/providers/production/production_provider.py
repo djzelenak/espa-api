@@ -761,15 +761,17 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         :return: True
         """
         for order in orders:
-            if len(order.scenes({'status': ('cancelled', 'unavailable')})) != len(order.scenes()):
-                logger.warning('Cancelled order %s has outstanding scenes', order.orderid)
-                continue
-            if not order.completion_email_sent:
-                if onlinecache.exists(order.orderid):
-                    onlinecache.delete(order.orderid)
-                if order.order_source == 'espa':
-                    emails.Emails().send_order_cancelled_email(order.orderid)
-                    order.update('completion_email_sent', datetime.datetime.now())
+            scenes = order.scenes()
+            processing = [s for s in scenes if s.status in ['scheduled', 'tasked', 'processing']]
+            if processing:
+                logger.warn("Cancelled order %s has scenes processing, waiting to delete")
+            else:
+                if not order.completion_email_sent:
+                    if onlinecache.exists(order.orderid):
+                        onlinecache.delete(order.orderid)
+                    if order.order_source == 'espa':
+                        emails.Emails().send_order_cancelled_email(order.orderid)
+                        order.update('completion_email_sent', datetime.datetime.now())
         return True
 
     def handle_onorder_landsat_products(self, products):
@@ -1075,6 +1077,15 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 logger.critical("scene download size re-calcing failed, {}"
                                 .format(scene.product_distro_location))
 
+        return True
+
+    def finalize_orders(self, orders):
+        """
+        Checks all open orders in the system and marks them complete if all
+        required scene processing is done
+        :return: True
+        """
+        [self.update_order_if_complete(o) for o in orders]
         return True
 
     def purge_orders(self, send_email=False):

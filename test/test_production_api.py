@@ -445,8 +445,8 @@ class TestProductionAPI(unittest.TestCase):
         scenes = Scene.where({'failed_lta_status_update IS NOT': None})
         self.assertTrue(len(scenes) == 0)
 
-    @patch('api.providers.production.production_provider.ProductionProvider.update_landsat_product_status', mock_production_provider.respond_true)
     @patch('api.providers.production.production_provider.ProductionProvider.get_contactids_for_submitted_landsat_products', mock_production_provider.contact_ids_list)
+    @patch('api.external.inventory.check_valid', lambda token, scenes: dict.fromkeys(scenes, True))
     @patch('api.external.inventory.available', lambda: True)
     @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
     def test_production_handle_submitted_landsat_products(self):
@@ -460,17 +460,17 @@ class TestProductionAPI(unittest.TestCase):
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
         self.assertTrue(production_provider.set_products_unavailable(order.scenes(), "you want a reason?"))
 
-    @patch('api.providers.production.production_provider.ProductionProvider.check_dependencies_for_products', mock_production_provider.check_dependencies_for_products)
-    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
-    @patch('api.external.inventory.check_valid', inventory.check_valid_landsat)
-    def test_production_update_landsat_product_status(self):
-        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
-        for scene in order.scenes({'name !=': 'plot'}):
-            scene.status = 'submitted'
-            scene.sensor_type = 'landsat'
-            user = User.find(self.user_id)
-            scene.save()
-        self.assertTrue(production_provider.update_landsat_product_status(user.contactid))
+    # @patch('api.providers.production.production_provider.ProductionProvider.check_dependencies_for_products', mock_production_provider.check_dependencies_for_products)
+    # @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    # @patch('api.external.inventory.check_valid', inventory.check_valid_landsat)
+    # def test_production_update_landsat_product_status(self):
+    #     order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+    #     for scene in order.scenes({'name !=': 'plot'}):
+    #         scene.status = 'submitted'
+    #         scene.sensor_type = 'landsat'
+    #         user = User.find(self.user_id)
+    #         scene.save()
+    #     self.assertTrue(production_provider.update_landsat_product_status(user.contactid))
 
     def test_production_get_contactids_for_submitted_landsat_products(self):
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
@@ -573,8 +573,8 @@ class TestProductionAPI(unittest.TestCase):
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
         scenes = order.scenes()
         Scene.bulk_update([s.id for s in scenes], {'status': 'complete', 'download_size': 0})
-        scenes = Order.find(order.id).scenes({'status': 'complete', 'download_size': 0})
-        self.assertTrue(production_provider.calc_scene_download_sizes(scenes))
+        #scenes = Order.find(order.id).scenes({'status': 'complete', 'download_size': 0})
+        self.assertTrue(production_provider.calc_scene_download_sizes([order.id]))
         upscenes = Scene.where({'status': 'complete', 'download_size': 999})
         self.assertEqual(len(upscenes), len(scenes))
 
