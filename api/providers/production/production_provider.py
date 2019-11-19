@@ -781,6 +781,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         # every 7 (currently) minutes
         # tram_order_id is sequential (looks like a timestamp), so we can sort
         # by that, running with the 'oldest' orders assuming they process FIFO
+        # converting to a set eliminates duplicate calls to lta
         product_tram_ids = set([product.tram_order_id for product in products])
         sorted_tram_ids = sorted(product_tram_ids)[:500]
 
@@ -789,7 +790,6 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         token = inventory.get_cached_session()
 
-        # converting to a set eliminates duplicate calls to lta
         for tid in sorted_tram_ids:
             order_status = inventory.get_order_status(token, tid)
 
@@ -847,32 +847,6 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         else:
             return []
 
-    def update_landsat_product_status(self, scenes):
-        """
-        Updates the product status for all landsat products for the EE contact id
-        :param contact_id:
-        :return: True
-        """
-        logger.info("Updating landsat product status")
-
-        prod_name_list = [s.name for s in scenes]
-
-        token = inventory.get_cached_session()
-        valid = list(set(r for r, v in inventory.check_valid(token, prod_name_list).items() if v))
-        invalid = list(set(prod_name_list)-set(valid))
-
-        for scene in scenes:
-            if scene.name in valid:
-                scene.status = 'oncache'
-                scene.note = "''"
-                scene.save()
-            else:
-                scene.status = 'unavailable'
-                scene.note = 'No longer found in the archive, please search again'
-                scene.save()
-
-        return True
-
     @staticmethod
     def check_dependencies_for_products(scene_list):
         """
@@ -907,29 +881,32 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         if not inventory.available():
             logger.warning('M2M down. Skip handle_submitted_landsat_products...')
             return False
-        logger.info('Handling submitted landsat products...')
-        # Here's the real logic for this handling submitted landsat products
-
-        #contactids = self.get_contactids_for_submitted_landsat_products(scenes)
 
         try:
-            self.update_landsat_product_status(scenes)
+            logger.info('Handling submitted landsat products...')
+
+            token = inventory.get_cached_session()
+            prod_name_list, valid, invalid = set(), set(), set()
+
+            for s in scenes:
+                prod_name_list.add(s.name)
+
+            for r, v in inventory.check_valid(token, prod_name_list).items():
+                valid.add(r) if v else invalid.add(r)
+
+            for scene in scenes:
+                if scene.name in valid:
+                    scene.status = 'oncache'
+                    scene.note = "''"
+                    scene.save()
+                else:
+                    scene.status = 'unavailable'
+                    scene.note = 'No longer found in the archive, please search again'
+                    scene.save()
         except Exception, e:
             msg = ('Could not update_landsat_product_status for {0}\n'
                    'Exception:{1}'.format(contact_id, e))
             logger.critical(msg)
-
-        # for contact_id in contactids:
-        #     if contact_id:
-        #         try:
-        #             logger.info("Updating landsat_product_status for {0}"
-        #                         .format(contact_id))
-        #             self.update_landsat_product_status(contact_id)
-
-        #         except Exception, e:
-        #             msg = ('Could not update_landsat_product_status for {0}\n'
-        #                    'Exception:{1}'.format(contact_id, e))
-        #             logger.critical(msg)
 
         return True
 
@@ -1175,6 +1152,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         :return: True
         """
         filters = {'status': 'ordered'}
+
         user = None
         if username:
             user = User.by_username(username)
@@ -1221,7 +1199,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         submitted_scenes = Scene.where({'status': 'submitted', 'order_id': pending_order_ids})
 
         submitted_landsat = filter(lambda s: s.sensor_type == 'landsat', submitted_scenes)[:500]
-        self.handle_submitted_landsat_products(scenes)
+        self.handle_submitted_landsat_products(submitted_landsat)
         submitted_landsat = None
 
         submitted_modis = filter(lambda s: s.sensor_type == 'modis', submitted_scenes)
