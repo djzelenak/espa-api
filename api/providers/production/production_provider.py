@@ -764,7 +764,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             scenes = order.scenes()
             processing = [s for s in scenes if s.status in ['scheduled', 'tasked', 'processing']]
             if processing:
-                logger.warn("Cancelled order %s has scenes processing, waiting to delete")
+                logger.warn("Cancelled order %s has scenes processing, waiting to delete", order.orderid)
             else:
                 if not order.completion_email_sent:
                     if onlinecache.exists(order.orderid):
