@@ -457,7 +457,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
 
     def query_pending_products(self, record_limit=500, for_user=None,
-                               priority=None, product_types=('landsat', 'modis', 'viirs', 'sentinel')):
+                               priority=None, product_types=['landsat', 'modis', 'viirs', 'sentinel']):
         sql = [
             'WITH order_queue AS',
                 '(SELECT u.email "email", count(name) "running"',
@@ -518,7 +518,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
     def get_products_to_process(self, record_limit=500,
                                 for_user=None,
                                 priority=None,
-                                product_types=('landsat', 'modis', 'viirs', 'sentinel'),
+                                product_types=['landsat', 'modis', 'viirs', 'sentinel'],
                                 encode_urls=False):
         """
         Find scenes that are oncache and return them as properly formatted
