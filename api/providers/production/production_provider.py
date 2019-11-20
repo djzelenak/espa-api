@@ -633,7 +633,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             elif isinstance(product, sensor.Modis):
                 sensor_type = 'modis'
 
-            status = 'submitted'
+            status = 'oncache'
             note = ''
             # All EE orders are for SR, require auxiliary data
             if product.sr_date_restricted():
@@ -756,10 +756,11 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         return True
 
     @staticmethod
-    def handle_cancelled_orders(orders):
+    def handle_cancelled_orders(params):
         """ Find all orders without cancelled order email sent, and sends them
         :return: True
         """
+        orders = Order.where(params)
         for order in orders:
             scenes = order.scenes()
             processing = [s for s in scenes if s.status in ['scheduled', 'tasked', 'processing']]
@@ -1184,27 +1185,32 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             return False
         logger.info('# Pending orders to handle: {}'.format(len(pending_orders)))
 
+        # send confirmation emails for new orders
         orders_send_email = filter(lambda i: i.initial_email_sent is None, pending_orders)
         if len(orders_send_email):
             self.send_initial_emails(orders_send_email)
         orders_send_email = None
 
+        # handle landsat products still on order
         products = Scene.where({'status': 'onorder', 'tram_order_id IS NOT': None, 'order_id': pending_order_ids})
         self.handle_onorder_landsat_products(products)
 
+        # handle retry products
         now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
         retry_products = Scene.where({'status': 'retry', 'retry_after <': now, 'order_id': pending_order_ids})
         self.handle_retry_products(retry_products)
         retry_products = None
 
+        # handle failed EE order updates
         scenes = Scene.where({'failed_lta_status_update IS NOT': None, 'order_id': pending_order_ids})
         self.handle_failed_ee_updates(scenes)
+        scenes = None
 
+        # handle cancelled orders
         search = {'status': 'cancelled',  'completion_email_sent IS': None}
         if user:
                 search.update(user_id=user.id)
-        orders = Order.where(search)
-        self.handle_cancelled_orders(orders)
+        self.handle_cancelled_orders(search)
 
         # retrieve all scenes in submitted state
         submitted_scenes = Scene.where({'status': 'submitted', 'order_id': pending_order_ids})
