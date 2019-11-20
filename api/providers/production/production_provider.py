@@ -1235,7 +1235,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         # finalize orders
         for order in pending_orders:
-            update_order_if_complete(order)
+            self.update_order_if_complete(order)
 
         cache_key = 'orders_last_purged'
         result = cache.get(cache_key)
