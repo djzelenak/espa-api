@@ -633,7 +633,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             elif isinstance(product, sensor.Modis):
                 sensor_type = 'modis'
 
-            status = 'submitted'
+            status = 'oncache'
             note = ''
             # All EE orders are for SR, require auxiliary data
             if product.sr_date_restricted():
@@ -756,20 +756,23 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         return True
 
     @staticmethod
-    def handle_cancelled_orders(orders):
+    def handle_cancelled_orders(params):
         """ Find all orders without cancelled order email sent, and sends them
         :return: True
         """
+        orders = Order.where(params)
         for order in orders:
-            if len(order.scenes({'status': ('cancelled', 'unavailable')})) != len(order.scenes()):
-                logger.warning('Cancelled order %s has outstanding scenes', order.orderid)
-                continue
-            if not order.completion_email_sent:
-                if onlinecache.exists(order.orderid):
-                    onlinecache.delete(order.orderid)
-                if order.order_source == 'espa':
-                    emails.Emails().send_order_cancelled_email(order.orderid)
-                    order.update('completion_email_sent', datetime.datetime.now())
+            scenes = order.scenes()
+            processing = [s for s in scenes if s.status in ['scheduled', 'tasked', 'processing']]
+            if processing:
+                logger.warn("Cancelled order %s has scenes processing, waiting to delete" % order.orderid)
+            else:
+                if not order.completion_email_sent:
+                    if onlinecache.exists(order.orderid):
+                        onlinecache.delete(order.orderid)
+                    if order.order_source == 'espa':
+                        emails.Emails().send_order_cancelled_email(order.orderid)
+                        order.update('completion_email_sent', datetime.datetime.now())
         return True
 
     def handle_onorder_landsat_products(self, products):
@@ -781,6 +784,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         # every 7 (currently) minutes
         # tram_order_id is sequential (looks like a timestamp), so we can sort
         # by that, running with the 'oldest' orders assuming they process FIFO
+        # converting to a set eliminates duplicate calls to lta
         product_tram_ids = set([product.tram_order_id for product in products])
         sorted_tram_ids = sorted(product_tram_ids)[:500]
 
@@ -789,7 +793,6 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         token = inventory.get_cached_session()
 
-        # converting to a set eliminates duplicate calls to lta
         for tid in sorted_tram_ids:
             order_status = inventory.get_order_status(token, tid)
 
@@ -817,7 +820,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 self.set_products_unavailable(rejected_products, 'Level 1 product could not be produced')
 
         if len(available) > 0:
-            products = Scene.where({'status': 'onorder', 'name': tuple(available)})
+            products = filter(lambda a: a.name in available, products)
             # scene may not be rejected or complete
             if products:
                 Scene.bulk_update([p.id for p in products], {'status': 'oncache', 'note': ''})
@@ -846,36 +849,6 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             return contact_ids
         else:
             return []
-
-    def update_landsat_product_status(self, contact_id):
-        """
-        Updates the product status for all landsat products for the EE contact id
-        :param contact_id:
-        :return: True
-        """
-        logger.info("Updating landsat product status")
-        user = User.by_contactid(contact_id)
-        product_list = Order.get_user_scenes(user.id, {'sensor_type': 'landsat','status': 'submitted'})
-        product_list = sorted(product_list, key=lambda x: x.id)[:500]
-        logger.info("Ordering {0} scenes for contact:{1}".format(len(product_list), contact_id))
-
-        # appears unnecessary, often blocks landsat scenes from making it to 'oncache' status. just commenting for now. 
-        # product_list = self.check_dependencies_for_products(product_list)
-
-        prod_name_list = [p.name for p in product_list]
-
-        token = inventory.get_cached_session()
-        valid = list(set(r for r, v in inventory.check_valid(token, prod_name_list).items() if v))
-        invalid = list(set(prod_name_list)-set(valid))
-
-        available_ids = [p.id for p in product_list if p.name in valid]
-        if len(available_ids):
-            Scene.bulk_update(available_ids, {'status': 'oncache', 'note': "''"})
-
-        invalids = [p for p in product_list if p.name in invalid]
-        if len(invalids):
-            self.set_products_unavailable(invalids, 'No longer found in the archive, please search again')
-        return True
 
     @staticmethod
     def check_dependencies_for_products(scene_list):
@@ -911,22 +884,32 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         if not inventory.available():
             logger.warning('M2M down. Skip handle_submitted_landsat_products...')
             return False
-        logger.info('Handling submitted landsat products...')
-        # Here's the real logic for this handling submitted landsat products
 
-        contactids = self.get_contactids_for_submitted_landsat_products(scenes)
+        try:
+            logger.info('Handling submitted landsat products...')
 
-        for contact_id in contactids:
-            if contact_id:
-                try:
-                    logger.info("Updating landsat_product_status for {0}"
-                                .format(contact_id))
-                    self.update_landsat_product_status(contact_id)
+            token = inventory.get_cached_session()
+            prod_name_list, valid, invalid = set(), set(), set()
 
-                except Exception, e:
-                    msg = ('Could not update_landsat_product_status for {0}\n'
-                           'Exception:{1}'.format(contact_id, e))
-                    logger.critical(msg)
+            for s in scenes:
+                prod_name_list.add(s.name)
+
+            for r, v in inventory.check_valid(token, prod_name_list).items():
+                valid.add(r) if v else invalid.add(r)
+
+            for scene in scenes:
+                if scene.name in valid:
+                    scene.status = 'oncache'
+                    scene.note = "''"
+                    scene.save()
+                else:
+                    scene.status = 'unavailable'
+                    scene.note = 'No longer found in the archive, please search again'
+                    scene.save()
+        except Exception, e:
+            msg = ('Could not update_landsat_product_status for {0}\n'
+                   'Exception:{1}'.format(contact_id, e))
+            logger.critical(msg)
 
         return True
 
@@ -1078,12 +1061,13 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         return True
 
-    def calc_scene_download_sizes(self, scenes):
+    def calc_scene_download_sizes(self, order_ids):
         """
         Processing occasionally reports product completion before we're able to
         see the download and retrieve its size
         :return: True
         """
+        scenes = Scene.where({'status': 'complete', 'download_size': 0, 'order_id': order_ids})
         for scene in scenes:
             if os.path.exists(scene.product_distro_location):
                 scene.update('download_size', os.path.getsize(scene.product_distro_location))
@@ -1180,6 +1164,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         :return: True
         """
         filters = {'status': 'ordered'}
+
         user = None
         if username:
             user = User.by_username(username)
@@ -1192,48 +1177,65 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         except Exception as e:
             logger.debug("Unable to load_ee_orders: {}".format(e))
 
-        pending_orders = [o.id for o in Order.where(filters)]
+        pending_orders = Order.where(filters)
+        pending_order_ids = [o.id for o in pending_orders]
+
         if len(pending_orders) < 1:
             logger.error('No pending orders found: {}'.format(filters))
             return False
         logger.info('# Pending orders to handle: {}'.format(len(pending_orders)))
 
-        orders = Order.where({'id': pending_orders, 'initial_email_sent IS': None})
-        self.send_initial_emails(orders)
+        # send confirmation emails for new orders
+        orders_send_email = filter(lambda i: i.initial_email_sent is None, pending_orders)
+        if len(orders_send_email):
+            self.send_initial_emails(orders_send_email)
+        orders_send_email = None
 
-        products = Scene.where({'status': 'onorder', 'tram_order_id IS NOT': None, 'order_id': pending_orders})
+        # handle landsat products still on order
+        products = Scene.where({'status': 'onorder', 'tram_order_id IS NOT': None, 'order_id': pending_order_ids})
         self.handle_onorder_landsat_products(products)
 
+        # handle retry products
         now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-        products = Scene.where({'status': 'retry', 'retry_after <': now, 'order_id': pending_orders})
-        self.handle_retry_products(products)
+        retry_products = Scene.where({'status': 'retry', 'retry_after <': now, 'order_id': pending_order_ids})
+        self.handle_retry_products(retry_products)
+        retry_products = None
 
-        scenes = Scene.where({'failed_lta_status_update IS NOT': None, 'order_id': pending_orders})
+        # handle failed EE order updates
+        scenes = Scene.where({'failed_lta_status_update IS NOT': None, 'order_id': pending_order_ids})
         self.handle_failed_ee_updates(scenes)
+        scenes = None
 
+        # handle cancelled orders
         search = {'status': 'cancelled',  'completion_email_sent IS': None}
         if user:
                 search.update(user_id=user.id)
-        orders = Order.where(search)
-        self.handle_cancelled_orders(orders)
+        self.handle_cancelled_orders(search)
 
-        scenes = Scene.where({'status': 'submitted', 'sensor_type': 'landsat', 'order_id': pending_orders})[:500]
-        self.handle_submitted_landsat_products(scenes)
+        # retrieve all scenes in submitted state
+        submitted_scenes = Scene.where({'status': 'submitted', 'order_id': pending_order_ids})
 
-        scenes = Scene.where({'status': 'submitted', 'sensor_type': 'modis', 'order_id': pending_orders})
-        self.handle_submitted_modis_products(scenes)
+        submitted_landsat = filter(lambda s: s.sensor_type == 'landsat', submitted_scenes)[:500]
+        self.handle_submitted_landsat_products(submitted_landsat)
+        submitted_landsat = None
 
-        scenes = Scene.where({'status': 'submitted', 'sensor_type': 'viirs', 'order_id': pending_orders})
-        self.handle_submitted_viirs_products(scenes)
+        submitted_modis = filter(lambda s: s.sensor_type == 'modis', submitted_scenes)
+        self.handle_submitted_modis_products(submitted_modis)
+        submitted_modis = None
 
-        scenes = Scene.where({'status': 'submitted', 'sensor_type': 'plot', 'order_id': pending_orders})
-        self.handle_submitted_plot_products(scenes)
+        submitted_viirs = filter(lambda s: s.sensor_type == 'viirs', submitted_scenes)
+        self.handle_submitted_viirs_products(submitted_viirs)
+        submitted_viirs = None
 
-        scenes = Scene.where({'status': 'complete', 'download_size': 0, 'order_id': pending_orders})
-        self.calc_scene_download_sizes(scenes)
+        submitted_plot = filter(lambda s: s.sensor_type == 'plot', submitted_scenes)
+        self.handle_submitted_plot_products(submitted_plot)
+        submitted_plot = None
 
-        orders = Order.where({'status': 'ordered', 'id': pending_orders})
-        self.finalize_orders(orders)
+        self.calc_scene_download_sizes(pending_order_ids)
+
+        # finalize orders
+        for order in pending_orders:
+            update_order_if_complete(order)
 
         cache_key = 'orders_last_purged'
         result = cache.get(cache_key)
