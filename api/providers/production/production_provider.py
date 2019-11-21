@@ -907,8 +907,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     scene.note = 'No longer found in the archive, please search again'
                     scene.save()
         except Exception, e:
-            msg = ('Could not update_landsat_product_status for {0}\n'
-                   'Exception:{1}'.format(contact_id, e))
+            msg = ('Exception running handle_submitted_landsat_products: {}'.format(e))
             logger.critical(msg)
 
         return True
