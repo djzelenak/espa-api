@@ -1206,7 +1206,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         scenes = None
 
         # handle cancelled orders
-        search = {'status': 'cancelled',  'completion_email_sent IS': None}
+
+        days = config.get('policy.purge_orders_after')
+        cutoff = datetime.datetime.now() - datetime.timedelta(days=int(days))
+        search = {'status': 'cancelled',  'completion_email_sent IS': None, 'order_date >': cutoff}
         if user:
                 search.update(user_id=user.id)
         self.handle_cancelled_orders(search)
