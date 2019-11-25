@@ -628,7 +628,6 @@ class TestProductionAPI(unittest.TestCase):
         response = api.get_production_key(bad_key)
         self.assertEqual(response.keys(), ['msg'])
 
-    # @patch('api.external.hadoop.HadoopHandler.job_names_ids', hadoop.jobs_names_ids)
     def test_handle_stuck_jobs(self):
         time_jobs_stuck = datetime.datetime.now() - datetime.timedelta(hours=6)
         order_id = self.mock_order.generate_testing_order(self.user_id)
