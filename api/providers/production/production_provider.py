@@ -1338,7 +1338,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         """
         if not len(scenes):
-            return
+            return None
 
         logger.warning('Found {N} stuck tasks, retrying...'.format(N=len(scenes)))
         # Update scenes directly to oncache since they previously
@@ -1347,3 +1347,5 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                                                              'log_file_contents': '',
                                                              'note': '',
                                                              'retry_count': 0})
+
+        return True
