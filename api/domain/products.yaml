@@ -87,14 +87,46 @@ products:
     category: indices
     title: "NBR2"
     display_rank: 6
+  s2_sr:
+    category: l2p
+    title: "SENTINEL-2 SR"
+    display_rank: 0
+  s2_ndvi:
+    category: indices
+    title: "SENTINEL-2 NDVI"
+    display_rank: 7
+  s2_evi:
+    category: indices
+    title: "SENTINEL-2 EVI"
+    display_rank: 8
+  s2_savi:
+    category: indices
+    title: "SENTINEL-2 SAVI"
+    display_rank: 9
+  s2_msavi:
+    category: indices
+    title: "SENTINEL-2 MSAVI"
+    display_rank: 10
+  s2_ndmi:
+    category: indices
+    title: "SENTINEL-2 NDMI"
+    display_rank: 11
+  s2_nbr:
+    category: indices
+    title: "SENTINEL-2 NBR"
+    display_rank: 12
+  s2_nbr2:
+    category: indices
+    title: "SENTINEL-2 NBR2"
+    display_rank: 13
   modis_ndvi:
     category: indices
     title: "MODIS Daily NDVI"
-    display_rank: 7
+    display_rank: 14
   viirs_ndvi:
     category: indices
     title: "VIIRS Daily NDVI"
-    display_rank: 8
+    display_rank: 15
   stats:
     category: stats
     title: "Summary Statistics"

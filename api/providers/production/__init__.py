@@ -62,7 +62,7 @@ class ProductionProviderInterfaceV0(object):
     def get_products_to_process(self, record_limit=500,
                                 for_user=None,
                                 priority=None,
-                                product_types=['landsat', 'modis', 'viirs'],
+                                product_types=['landsat', 'modis', 'viirs', 'sentinel'],
                                 encode_urls=False):
         '''Find scenes that are oncache and return them as properly formatted
         json per the interface description between the web and processing tier'''

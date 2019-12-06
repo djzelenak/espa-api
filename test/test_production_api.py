@@ -68,6 +68,19 @@ class TestProductionAPI(unittest.TestCase):
 
     @patch('api.external.inventory.available', lambda: True)
     @patch('api.providers.production.production_provider.ProductionProvider.parse_urls_m2m',
+           lambda x, y: y)
+    def test_fetch_production_products_sentinel(self):
+        order_id = self.mock_order.generate_testing_order(self.user_id)
+        # need scenes with statuses of 'processing'
+        scenes = Scene.where({'order_id': order_id, 'sensor_type': 'sentinel'})
+        self.mock_order.update_scenes(order_id, 'sentinel', 'status', ['processing', 'oncache'])
+        user = User.find(self.user_id)
+        params = {'for_user': user.username, 'product_types': ['sentinel']}
+        response = api.fetch_production_products(params)
+        self.assertTrue('bilbo' in response[0]['orderid'])
+
+    @patch('api.external.inventory.available', lambda: True)
+    @patch('api.providers.production.production_provider.ProductionProvider.parse_urls_m2m',
             lambda x, y: y)
     def test_fetch_production_products_landsat(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
@@ -80,7 +93,7 @@ class TestProductionAPI(unittest.TestCase):
 
     def test_fetch_production_products_plot(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
-        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs'), 'status', ['complete'])
+        self.mock_order.update_scenes(order_id, ('landsat', 'sentinel', 'modis', 'viirs'), 'status', ['complete'])
         order = Order.find(order_id)
         plot_scene = order.scenes({'name': 'plot'})[0]
         plot_scene.name = 'plot'
@@ -454,6 +467,15 @@ class TestProductionAPI(unittest.TestCase):
         scenes = orders.scenes({'sensor_type': 'landsat'})
         self.assertTrue(production_provider.handle_submitted_landsat_products(scenes))
 
+    @patch('api.external.inventory.available', lambda: True)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.check_valid', inventory.check_valid_sentinel)
+    def test_production_handle_submitted_sentinel_products(self):
+        orders = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        scenes = orders.scenes({'sensor_type': 'sentinel'})
+        self.assertTrue(production_provider.handle_submitted_sentinel_products(scenes))
+
+
     @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
     @patch('api.external.inventory.update_order_status', inventory.update_order_status)
     def test_production_set_products_unavailable(self):
@@ -496,6 +518,21 @@ class TestProductionAPI(unittest.TestCase):
             sid = scene.id
         scenes = order.scenes({'sensor_type': 'modis'})
         self.assertTrue(production_provider.handle_submitted_modis_products(scenes))
+        #self.assertEquals(Scene.find(sid).status, "oncache")
+
+    @patch('api.external.inventory.available', lambda: True)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.check_valid', inventory.check_valid_sentinel)
+    def test_production_handle_submitted_sentinel_products_input_exists(self):
+        # handle oncache scenario
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        for scene in order.scenes({'name !=': 'plot'}):
+            scene.status = 'submitted'
+            scene.sensor_type = 'sentinel'
+            scene.save()
+            sid = scene.id
+        scenes = order.scenes({'sensor_type': 'sentinel'})
+        self.assertTrue(production_provider.handle_submitted_sentinel_products(scenes))
         #self.assertEquals(Scene.find(sid).status, "oncache")
 
     @patch('api.external.inventory.available', lambda: True)
@@ -656,6 +693,7 @@ class TestProductionAPI(unittest.TestCase):
         Test the conversion procedure to make sure that the new format for orders converts
         to the old format
         """
+        self.maxDiff = None
         scenes = ['LE07_L1TP_026027_20170912_20171008_01_T1', 'LC08_L1TP_025027_20160521_20170223_01_T1',
                   'LT05_L1TP_025027_20110913_20160830_01_T1']
 
@@ -709,6 +747,14 @@ class TestProductionAPI(unittest.TestCase):
                    'include_sr_savi': False,
                    'include_sr_thermal': False,
                    'include_sr_toa': False,
+                   'include_s2_sr': False,
+                   'include_s2_ndvi': False,
+                   'include_s2_msavi': False,
+                   'include_s2_evi': False,
+                   'include_s2_savi': False,
+                   'include_s2_nbr': False,
+                   'include_s2_nbr2': False,
+                   'include_s2_ndmi': False,
                    'include_modis_ndvi': False,
                    'include_viirs_ndvi': False,
                    'include_statistics': False,

@@ -1,4 +1,7 @@
 ## Change Notes
+###### October 2019
+* Transition from Hadoop to Mesos computer cluster
+* Added support for Sentinel-2 level-2 products
 ###### September 2019
 * Transition to using M2M JSON API and off SOAP services
 ###### March-June 2019

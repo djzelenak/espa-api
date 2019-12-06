@@ -321,7 +321,8 @@ class Errors(object):
         error resulting when a container/task fails
         """
         keys = ['TASK_FAILED',
-                'TASK_LOST']
+                'TASK_LOST',
+                'TASK_ERROR']
         status = 'retry'
         reason = 'Container closed during processing or failed to launch'
         extras = self.__add_retry('task_error')
