@@ -665,6 +665,29 @@ class TestProductionAPI(unittest.TestCase):
         response = api.get_production_key(bad_key)
         self.assertEqual(response.keys(), ['msg'])
 
+    def test_handle_stuck_jobs(self):
+        time_jobs_stuck = datetime.datetime.now() - datetime.timedelta(hours=6)
+        order_id = self.mock_order.generate_testing_order(self.user_id)
+        # Make some really old jobs
+        self.mock_order.update_scenes(order_id,
+                                      ('landsat', 'modis', 'viirs', 'sentinel', 'plot'),
+                                      'status', ['scheduled'])
+        self.mock_order.update_scenes(order_id,
+                                      ('landsat', 'modis', 'viirs', 'sentinel', 'plot'),
+                                      'status_modified', [datetime.datetime(1900, 1, 1)])
+
+        scenes = Scene.where({'status': ('tasked', 'scheduled', 'processing'), 'order_id': order_id})
+        n_scenes = len(scenes)
+
+        response = production_provider.handle_stuck_jobs(scenes)
+        self.assertTrue(response)
+
+        scenes = Scene.where({'status': ('tasked', 'scheduled', 'processing'), 'order_id': order_id})
+        self.assertEqual(0, len(scenes))
+
+        scenes = Scene.where({'status': 'oncache', 'order_id': order_id})
+        self.assertEqual(n_scenes, len(scenes))
+
     def test_convert_product_options(self):
         """
         Test the conversion procedure to make sure that the new format for orders converts

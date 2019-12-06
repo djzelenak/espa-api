@@ -1224,6 +1224,11 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         products = Scene.where({'status': 'onorder', 'tram_order_id IS NOT': None, 'order_id': pending_order_ids})
         self.handle_onorder_landsat_products(products)
 
+        # handle orphaned Mesos tasks
+        time_jobs_stuck = datetime.datetime.now() - datetime.timedelta(hours=6)
+        products = Scene.where({'status': ('tasked', 'scheduled', 'processing'), 'status_modified <': time_jobs_stuck})
+        self.handle_stuck_jobs(products)
+
         # handle retry products
         now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
         retry_products = Scene.where({'status': 'retry', 'retry_after <': now, 'order_id': pending_order_ids})
@@ -1236,7 +1241,6 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         scenes = None
 
         # handle cancelled orders
-
         days = config.get('policy.purge_orders_after')
         cutoff = datetime.datetime.now() - datetime.timedelta(days=int(days))
         search = {'status': 'cancelled',  'completion_email_sent IS': None, 'order_date >': cutoff}
@@ -1359,3 +1363,23 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         else:
             return False
 
+    def handle_stuck_jobs(self, scenes):
+        """
+        Monitoring for long-overdue products, and auto-resubmission
+
+        Note: This problem arises from lack of job scheduler grace when
+              Mesos framework is closed.
+
+        """
+        if not len(scenes):
+            return None
+
+        logger.warning('Found {N} stuck tasks, retrying...'.format(N=len(scenes)))
+        # Update scenes directly to oncache since they previously
+        # went through the inventory check
+        Scene.bulk_update([s.id for s in scenes], {'status': 'oncache',
+                                                             'log_file_contents': '',
+                                                             'note': '',
+                                                             'retry_count': 0})
+
+        return True
