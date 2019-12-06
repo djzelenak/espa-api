@@ -466,10 +466,6 @@ class Order(object):
                 elif isinstance(scene_info, sensor.Viirs):
                     ee_order[short] = {'inputs': [sceneid],
                                        'products': ['l1']}
-                elif isinstance(scene_info, sensor.Sentinel2_AB):
-                    ee_order[short] = {'inputs': [sceneid],
-                                       # TODO how do we handle the l1/toa for sentinel?
-                                       'products': ['l1']}
 
         return ee_order
 
