@@ -809,7 +809,6 @@ class ValidationProvider(ValidationInterfaceV0):
                 item1 = order[key]['inputs'][0]
 
                 prod = sn.instance(item1)
-
                 if isinstance(prod, sn.Landsat):
                     order[key]['inputs'] = [s.upper() for s in order[key]['inputs']]
                 elif isinstance(prod, sn.Modis):
@@ -825,6 +824,9 @@ class ValidationProvider(ValidationInterfaceV0):
                                                       p[2].lower(),
                                                       p[3],
                                                       p[4]]) for p in [s.split('.') for s in order[key]['inputs']]]
+
+                elif isinstance(prod, sn.Sentinel2_AB):
+                    order[key]['inputs'] = [s.upper() for s in order[key]['inputs']]
 
                 if stats:
                     if 'stats' not in order[key]['products']:
@@ -866,6 +868,5 @@ class ValidationProvider(ValidationInterfaceV0):
         :return: dict
         """
         return sn.ProductNames().groups()
-
 
     __call__ = validate

@@ -457,7 +457,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
 
     def query_pending_products(self, record_limit=500, for_user=None,
-                               priority=None, product_types=['landsat', 'modis', 'viirs']):
+                               priority=None, product_types=['landsat', 'modis', 'viirs', 'sentinel']):
         sql = [
             'WITH order_queue AS',
                 '(SELECT u.email "email", count(name) "running"',
@@ -484,7 +484,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         }
 
         if not isinstance(product_types, list):
-            # unicode values of either: u"['plot']" or u"['landsat', 'modis', 'viirs']"
+            # unicode values of either: u"['plot']" or u"['landsat', 'modis', 'viirs', 'sentinel']"
             product_types = json.loads(str(product_types).replace("'", '"'))
 
         if isinstance(product_types, list) and len(product_types) > 0:
@@ -518,7 +518,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
     def get_products_to_process(self, record_limit=500,
                                 for_user=None,
                                 priority=None,
-                                product_types=['landsat', 'modis', 'viirs'],
+                                product_types=['landsat', 'modis', 'viirs', 'sentinel'],
                                 encode_urls=False):
         """
         Find scenes that are oncache and return them as properly formatted
@@ -944,6 +944,36 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         return True
 
+    def handle_submitted_sentinel_products(self, sentinel_products):
+        """
+        Moves all submitted sentinel products to oncache if true
+        :return: True
+        """
+        if not inventory.available():
+            logger.warning('M2M down. Skip handle_submitted_sentinel_orders...')
+            return False
+        logger.info("Handling submitted sentinel products...")
+
+        logger.warn("Found {0} submitted sentinel products".format(len(sentinel_products)))
+
+        if len(sentinel_products) > 0:
+            prod_name_list = [p.name for p in sentinel_products]
+            token = inventory.get_cached_session()
+            results = inventory.check_valid(token, prod_name_list)
+            valid = list(set(r for r, v in results.items() if v))
+            invalid = list(set(prod_name_list) - set(valid))
+
+            available_ids = [p.id for p in sentinel_products if p.name in valid]
+            if len(available_ids):
+                Scene.bulk_update(available_ids, {'status': 'oncache', 'note': "''"})
+
+            invalids = [p for p in sentinel_products if p.name in invalid]
+            if len(invalids):
+                self.set_products_unavailable(invalids, 'No longer found in the archive, please search again')
+
+        return True
+
+
     def handle_submitted_viirs_products(self, viirs_products):
         """
         Moves all submitted viirs products to oncache if true
@@ -1194,6 +1224,11 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         products = Scene.where({'status': 'onorder', 'tram_order_id IS NOT': None, 'order_id': pending_order_ids})
         self.handle_onorder_landsat_products(products)
 
+        # handle orphaned Mesos tasks
+        time_jobs_stuck = datetime.datetime.now() - datetime.timedelta(hours=6)
+        products = Scene.where({'status': ('tasked', 'scheduled', 'processing'), 'status_modified <': time_jobs_stuck})
+        self.handle_stuck_jobs(products)
+
         # handle retry products
         now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
         retry_products = Scene.where({'status': 'retry', 'retry_after <': now, 'order_id': pending_order_ids})
@@ -1206,7 +1241,6 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         scenes = None
 
         # handle cancelled orders
-
         days = config.get('policy.purge_orders_after')
         cutoff = datetime.datetime.now() - datetime.timedelta(days=int(days))
         search = {'status': 'cancelled',  'completion_email_sent IS': None, 'order_date >': cutoff}
@@ -1228,6 +1262,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         submitted_viirs = filter(lambda s: s.sensor_type == 'viirs', submitted_scenes)
         self.handle_submitted_viirs_products(submitted_viirs)
         submitted_viirs = None
+
+        submitted_sentinel = filter(lambda s: s.sensor_type == 'sentinel', submitted_scenes)
+        self.handle_submitted_sentinel_products(submitted_sentinel)
+        submitted_sentinel = None
 
         submitted_plot = filter(lambda s: s.sensor_type == 'plot', submitted_scenes)
         self.handle_submitted_plot_products(submitted_plot)
@@ -1325,3 +1363,23 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         else:
             return False
 
+    def handle_stuck_jobs(self, scenes):
+        """
+        Monitoring for long-overdue products, and auto-resubmission
+
+        Note: This problem arises from lack of job scheduler grace when
+              Mesos framework is closed.
+
+        """
+        if not len(scenes):
+            return None
+
+        logger.warning('Found {N} stuck tasks, retrying...'.format(N=len(scenes)))
+        # Update scenes directly to oncache since they previously
+        # went through the inventory check
+        Scene.bulk_update([s.id for s in scenes], {'status': 'oncache',
+                                                             'log_file_contents': '',
+                                                             'note': '',
+                                                             'retry_count': 0})
+
+        return True
