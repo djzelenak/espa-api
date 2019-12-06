@@ -124,3 +124,8 @@ class ProductionProviderInterfaceV0(object):
     def handle_orders(self):
         '''Logic handler for how we accept orders + products into the system'''
         return
+
+    @abc.abstractmethod
+    def handle_stuck_jobs(self, scenes):
+        '''Method to handle orphaned Mesos tasks'''
+        return
