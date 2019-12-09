@@ -121,6 +121,7 @@ class Errors(object):
                 '502 Server Error: Proxy Error',
                 '404 Client Error: Not Found',
                 '403 Client Error: Forbidden',
+                '401 Client Error: Unauthorized',
                 'Transfer Failed - HTTP - exceeded retry limit']
         status = 'retry'
         reason = 'HTTP connection error'
