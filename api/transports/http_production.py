@@ -64,7 +64,7 @@ class ProductionVersion(Resource):
             if version in info_dict:
                 resp = info_dict[version]
             else:
-                ver_str = ", ".join(info_dict.keys())
+                ver_str = ", ".join(list(info_dict.keys()))
                 err_msg = "%s is not a valid api version, these are: %s" % (version, ver_str)
                 response = {"errmsg": err_msg}
                 return response, 404

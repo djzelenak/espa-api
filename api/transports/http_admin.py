@@ -182,7 +182,7 @@ class SystemStatus(Resource):
             if response is not True:
                 resp = MessagesResponse(errors=['internal server error'],
                                         code=500)
-            elif isinstance(response, dict) and response.keys() == ['msg']:
+            elif isinstance(response, dict) and list(response.keys()) == ['msg']:
                 resp = MessagesResponse(errors=response['msg'],
                                         code=400)
             else:

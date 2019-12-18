@@ -71,7 +71,7 @@ def backup_cron():
     Make a backup of the current user's crontab
     to /home/~/backups/
     """
-    bk_path = os.path.join(os.environ['ESPA_CONFIG_PATH'], backups)
+    bk_path = os.path.join(os.environ['ESPA_CONFIG_PATH'], 'backups')
     if not os.path.exists(bk_path):
         os.makedirs(bk_path)
 
@@ -85,7 +85,7 @@ def backup_cron():
 def lowercase_all(indata):
     if hasattr(indata, 'iteritems'):
         ret = {}
-        for key, val in indata.iteritems():
+        for key, val in indata.items():
             if key.lower() == 'note':
                 ret[lowercase_all(key)] = val
             else:

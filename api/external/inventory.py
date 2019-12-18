@@ -230,7 +230,7 @@ class LTAService(object):
         entity_ids, determining download url availability
         """
         status_dict = dict()
-        m2m_ids = entity_ids.values()
+        m2m_ids = list(entity_ids.values())
         dload_options = self.download_options(m2m_ids, dataset) # list of dicts, keys 'entityId', 'downloadOptions'
         for option in dload_options:
             # In some instances the entityId returned by downloadOptions is an integer
@@ -509,7 +509,7 @@ def convert(token, product_ids, dataset):
 
 def download_urls(token, product_ids, dataset, usage='[espa]'):
     entities = convert(token, product_ids, dataset)
-    urls = get_download_urls(token, entities.values(), dataset, usage=usage)
+    urls = get_download_urls(token, list(entities.values()), dataset, usage=usage)
     return {p: urls.get(e) for p, e in entities.items() if e in urls}
 
 def get_available_orders(token, contactid=None):

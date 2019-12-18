@@ -162,7 +162,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
             if self.data_source['resize']['pixel_size_units'] != valid_units:
                 msg = ('resize units must be in "{}" for projection "{}"'
                        .format(valid_units,
-                               self.data_source['projection'].keys()[0]))
+                               list(self.data_source['projection'].keys())[0]))
                 self._errors.append(msg)
 
         if 'image_extents' in self.data_source and 'projection' in self.data_source:
@@ -382,7 +382,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
                                 .format(not_implemented))
 
         if date_restricted:
-            restr_prods = date_restricted.keys()
+            restr_prods = list(date_restricted.keys())
 
             for key in restr_prods:
                 if key not in req_prods:
@@ -752,7 +752,7 @@ class BaseValidationSchema(object):
                                                                             _sensor_reg[key][2]).products}}}}
 
     request_schema['properties'].update(sensor_schema)
-    request_schema['oneormoreobjects'] = sensor_schema.keys()
+    request_schema['oneormoreobjects'] = list(sensor_schema.keys())
 
     valid_params = {'formats': {'formats': formats},
                     'resampling_methods': {'resampling_methods': resampling_methods},

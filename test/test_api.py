@@ -72,7 +72,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(set(api.api_versions().keys()), set(['v0', 'v1']))
 
     def test_get_available_products_key_val(self):
-        self.assertEqual(api.available_products(self.product_id, self.user.username).keys()[0], self.sensor_id)
+        self.assertEqual(list(api.available_products(self.product_id, self.user.username).keys())[0], self.sensor_id)
 
     def test_get_available_products_by_staff(self):
         # staff should see all available products

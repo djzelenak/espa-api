@@ -662,7 +662,7 @@ class TestProductionAPI(unittest.TestCase):
     def test_get_production_key_invalid(self):
         bad_key = 'foobar'
         response = api.get_production_key(bad_key)
-        self.assertEqual(response.keys(), ['msg'])
+        self.assertEqual(list(response.keys()), ['msg'])
 
     def test_handle_stuck_jobs(self):
         time_jobs_stuck = datetime.datetime.now() - datetime.timedelta(hours=6)

@@ -311,7 +311,7 @@ class Scene(object):
 
         sql = 'UPDATE ordering_scene SET %s = %s WHERE id in %s'
 
-        fields = '({})'.format(','.join(updates.keys()))
+        fields = '({})'.format(','.join(list(updates.keys())))
         vals = tuple(updates.values())
         ids = tuple(ids)
 

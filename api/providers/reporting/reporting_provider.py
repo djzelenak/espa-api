@@ -23,7 +23,7 @@ class ReportingProvider(ReportingProviderInterfaceV0):
         # make a copy of this as we dont want to modify the
         # actual dict in this module
         _reports = copy.deepcopy(REPORTS)
-        for key, value in _reports.iteritems():
+        for key, value in _reports.items():
             if show_query is False:
                 value['query'] = ''
             result[key] = value
@@ -47,7 +47,7 @@ class ReportingProvider(ReportingProviderInterfaceV0):
         # actual dict in this module
         _stats = copy.deepcopy(STATS)
 
-        for key, value in _stats.iteritems():
+        for key, value in _stats.items():
             if show_query is False:
                 value.pop('query')
         return _stats
@@ -109,9 +109,9 @@ class ReportingProvider(ReportingProviderInterfaceV0):
         return_dict = {}
 
         if sensor_group not in _sensor_groups:
-            return {"msg": "sensor_group must be either %s" % " or ".join(_sensor_groups.keys())}
+            return {"msg": "sensor_group must be either %s" % " or ".join(list(_sensor_groups.keys()))}
 
-        _syear = _sensor_groups[sensor_group].keys()[0]
+        _syear = list(_sensor_groups[sensor_group].keys())[0]
         if year and int(year) not in range(_syear, _cur_year + 1):
             return {"msg": "auxiliary data is only available from %s to %s" %
                            (_syear, _cur_year)}

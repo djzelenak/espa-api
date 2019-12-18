@@ -189,7 +189,7 @@ class VersionInfo(Resource):
                 response = info_dict[version]
                 return_code = 200
             else:
-                ver_str = ", ".join(info_dict.keys())
+                ver_str = ", ".join(list(info_dict.keys()))
                 msg = "Invalid api version {0}. Options: {1}".format(version, ver_str)
                 response = MessagesResponse(errors=[msg], code=404)
                 return response()

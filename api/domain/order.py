@@ -153,7 +153,7 @@ class Order(object):
         if params['ee_order_id']:
             return order
 
-        sensor_keys = sensor.SensorCONST.instances.keys()
+        sensor_keys = list(sensor.SensorCONST.instances.keys())
 
         bulk_ls = []
         for key in opts:
@@ -609,13 +609,13 @@ class Order(object):
         po = self.product_opts
         _out_list = []
         prod_out = {}
-        for k, v in po.iteritems():
+        for k, v in po.items():
             if isinstance(po[k], dict) and 'products' in po[k].keys():
                 _out_list.append(po[k])
 
         for item in _out_list:
-            for input in item['inputs']:
-                prod_out[input] = item['products']
+            for __input__ in item['inputs']:
+                prod_out[__input__] = item['products']
 
         return prod_out
 
@@ -821,7 +821,7 @@ class OptionsConversion(object):
                     prod_ls.append(key)
                 opts.pop(key)  # Reduce further iterations
 
-        prods = cls._translate(cls.prod_map, prod_ls).keys()
+        prods = list(cls._translate(cls.prod_map, prod_ls).keys())
 
         if len(prods) < 1:
             prods.append('sr')

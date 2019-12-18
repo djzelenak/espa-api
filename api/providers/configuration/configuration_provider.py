@@ -15,7 +15,7 @@ class ConfigurationProvider(ConfigurationProviderInterfaceV0):
 
     def __init__(self):
         # fetch vars set in api_cfg['config']
-        for k, v in api_cfg().iteritems():
+        for k, v in api_cfg().items():
             self.__setattr__(k, v)
 
     @property

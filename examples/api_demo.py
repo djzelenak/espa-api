@@ -139,7 +139,7 @@ print(json.dumps(resp, indent=4))
 
 print('GET /api/v1/projections')
 projs = espa_api('projections')
-print json.dumps(projs.keys())
+print(json.dumps(list(projs.keys())))
 
 
 # This is a Schema Definition, useful for building a valid order

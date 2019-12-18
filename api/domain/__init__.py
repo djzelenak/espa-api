@@ -344,11 +344,11 @@ def format_sql_params(base_sql, params):
 
     # params coming in as lists from espa-web (json)
     # need to be converted to a tuple
-    for key, val in params.iteritems():
+    for key, val in params.items:
         if isinstance(val, list):
             params[key] = tuple(val)
 
-    fields, values = zip(*params.items())
+    fields, values = zip(*list(params.items()))
 
     for index, value in enumerate(fields):
         if isinstance(values[index], tuple):
