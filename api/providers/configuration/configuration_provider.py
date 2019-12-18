@@ -136,16 +136,16 @@ class ConfigurationProvider(ConfigurationProviderInterfaceV0):
         if environment not in ('dev', 'tst', 'ops'):
             raise ConfigurationProviderException('invalid argument value for switch_ee_environment')
 
-        print "****\nWARNING:\nSwitching backend EE/LTA service environments " \
-              "from {} to {}\n****\n".format(self.mode, environment)
+        print("****\nWARNING:\nSwitching backend EE/LTA service environments "
+              "from {} to {}\n****\n".format(self.mode, environment))
 
         def up_vals(key, val):
-            print key + ' to: ' + val
+            print(key + ' to: ' + val)
             resp = self.put(key, val)
             if resp == {_up_key: _up_val}:
-                print 'update successful'
+                print('update successful')
             else:
-                print 'there was a problem, return value was: {}'.format(_resp)
+                print('there was a problem, return value was: {}'.format(resp))
 
         try:
             with open(self.explorer_yaml) as f:
