@@ -126,7 +126,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         scene.cksum_download_url = cksum_download_url
         try:
             scene.download_size = os.path.getsize(completed_file_location)
-        except OSError, e:
+        except OSError as e:
             # seeing occasional delays in file availability after processing notifies the api of completion
             # raise ProductionProviderException('Could not find completed file location')
             logger.info("mark_product_complete could not find completed file location {}, marking it zero for now...".format(completed_file_location))
@@ -139,7 +139,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             ee_unit_id = Scene.get('ee_unit_id', name, orderid)
             try:
                 inventory.update_order_status(token, ee_order_id, ee_unit_id, 'C')
-            except Exception, e:
+            except Exception as e:
                 cache_key = 'lta.cannot.update'
                 lta_conn_failed_10mins = cache.get(cache_key)
                 if lta_conn_failed_10mins:
@@ -149,7 +149,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         try:
             scene.save()
-        except DBConnectException, e:
+        except DBConnectException as e:
             message = "DBConnect Exception ordering_provider mark_product_complete scene: {0}"\
                         "\nmessage: {1}".format(scene, e.message)
             raise OrderException(message)
@@ -186,7 +186,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             try:
                 token = inventory.get_cached_session()
                 inventory.update_order_status(token, ee_order_id, ee_unit_id, 'R')
-            except Exception, e:
+            except Exception as e:
                 cache_key = 'lta.cannot.update'
                 lta_conn_failed_10mins = cache.get(cache_key)
                 if lta_conn_failed_10mins:
@@ -196,7 +196,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         try:
             scene.save()
-        except DBConnectException, e:
+        except DBConnectException as e:
             message = "DBConnect Exception ordering_provider set_product_unavailable " \
                       "scene: {0}\nmessage: {1}".format(scene, e.message)
             raise ProductionProviderException(message)
@@ -222,12 +222,12 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 if p.order_attr('order_source') == 'ee':
                     try:
                         inventory.update_order_status(token, p.order_attr('ee_order_id'), p.ee_unit_id, 'R')
-                    except Exception, e:
+                    except Exception as e:
                         # perhaps this doesn't need to be elevated to 'debug' status
                         # as its a fairly regular occurrence
                         logger.warn('Problem updating LTA order: {}'.format(e))
                         p.update('failed_lta_status_update', 'R')
-        except Exception, e:
+        except Exception as e:
             raise ProductionProviderException(e)
 
         return True
@@ -723,7 +723,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     continue  # No need to update scenes in progress
                 try:
                     inventory.update_order_status(token, eeorder_num, unit_number, status)
-                except Exception, e:
+                except Exception as e:
                     cache_key = 'lta.cannot.update'
                     lta_conn_failed_10mins = cache.get(cache_key)
                     if lta_conn_failed_10mins:
@@ -906,7 +906,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     scene.status = 'unavailable'
                     scene.note = 'No longer found in the archive, please search again'
                     scene.save()
-        except Exception, e:
+        except Exception as e:
             msg = ('Exception running handle_submitted_landsat_products: {}'.format(e))
             logger.critical(msg)
 
@@ -1081,7 +1081,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     order.completion_date = datetime.datetime.now()
                     order.status = 'complete'
                     order.save()
-                except Exception, e:
+                except Exception as e:
                     logger.critical('Error calling send_completion_email\nexception: {}'.format(e))
             else:
                 order.completion_date = datetime.datetime.now()
@@ -1178,10 +1178,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 inventory.update_order_status(token, s.order_attr('ee_order_id'), s.ee_unit_id,
                                               s.failed_lta_status_update)
                 s.update('failed_lta_status_update', None)
-            except DBConnectException, e:
+            except DBConnectException as e:
                 raise ProductionProviderException('ordering_scene update failed for '
                                                   'handle_failed_ee_updates: {}'.format(e))
-            except Exception, e:
+            except Exception as e:
                 # LTA could still be unavailable, log and it'll be tried again later
                 logger.warn('Failed EE update retry failed again for '
                             'scene {}\n{}'.format(s.id, e))
@@ -1343,7 +1343,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 prodlist.append(socket.gethostbyname(socket.gethostname()))
                 if whitelist_additions:
                     prodlist.extend(whitelist_additions)
-            except BaseException, e:
+            except BaseException as e:
                 logger.exception('Could not access Mesos!')
             cache.set(cache_key, prodlist, timeout)
 

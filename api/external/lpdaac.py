@@ -63,7 +63,7 @@ class LPDAACService(object):
                 try:
                     wait = 3  # seconds
                     result = utils.connections.is_reachable(url, timeout=wait)
-                except Exception, e:
+                except Exception as e:
                     logger.exception('Exception checking modis input {0}\n '
                                      'Exception:{1}'
                                      .format(url, e))

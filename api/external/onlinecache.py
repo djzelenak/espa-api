@@ -145,7 +145,7 @@ class OnlineCache(object):
         """
         try:
             result = self.client.execute(cmd)
-        except Exception, exception:
+        except Exception as exception:
             if not silent:
                 logger.critical('Error executing command: {} '
                                 'Raised exception: {}'.format(cmd, exception))
