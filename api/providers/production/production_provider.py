@@ -13,7 +13,7 @@ from api import util as utils
 
 import copy
 import datetime
-import urllib
+import urllib.parse
 import json
 import socket
 import os
@@ -445,7 +445,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 except Exception as e:
                     logger.error('Problem getting URLs: {}'.format(e), exc_info=True)
             if encode_urls:
-                urls = {k: urllib.quote(u, '') for k, u in urls.items()}
+                urls = {k: urllib.parse.quote(u, '') for k, u in urls.items()}
 
             results = [dict(r, download_url=urls.get(r['scene']))
                             if r['scene'] in non_plot_ids else r for r in results]
