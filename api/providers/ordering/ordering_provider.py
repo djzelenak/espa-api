@@ -1,6 +1,8 @@
 import datetime
 import os
-
+import copy
+import yaml
+from api import __location__
 from api.domain import sensor
 from api.domain.order import Order
 from api.domain.scene import Scene
@@ -14,12 +16,8 @@ from api.providers.caching.caching_provider import CachingProvider
 # ----------------------------------------------------------------------------------
 from api.system.logger import ilogger as logger  # TODO: is this the best place for these?
 
-import copy
-import yaml
-
 cache = CachingProvider()
 config = ConfigurationProvider()
-from api import __location__
 
 
 class OrderingProviderException(Exception):
@@ -50,7 +48,7 @@ class OrderingProvider(ProviderInterfaceV0):
         pub_prods = copy.deepcopy(OrderingProvider.sensor_products(product_id))
 
         with open(os.path.join(__location__, 'domain/restricted.yaml')) as f:
-                restricted = yaml.safe_load(f.read())
+            restricted = yaml.safe_load(f.read())
 
         role = False if user.is_staff() else True
 
@@ -76,9 +74,9 @@ class OrderingProvider(ProviderInterfaceV0):
             outs = pub_prods[sensor_type]['products']
             ins = pub_prods[sensor_type]['inputs']
 
-            ### Leaving this here as it could be a useful template
-            ### if we introduce new sensors in the future which are
-            ### role restricted.
+            # Leaving this here as it could be a useful template
+            # if we introduce new sensors in the future which are
+            # role restricted.
             # Restrict ordering VIIRS to staff
             # if role and sensor_type.startswith('vnp'):
             #     for sc_id in ins:
@@ -140,7 +138,8 @@ class OrderingProvider(ProviderInterfaceV0):
                 pub_prods.update(not_implemented=upd['not_implemented'])
             elif 'not_implemented' in pub_prods.keys():
                 pub_prods['not_implemented'].extend(upd['not_implemented'])
-            else: pass
+            else:
+                pass
 
         return pub_prods
 
@@ -155,6 +154,8 @@ class OrderingProvider(ProviderInterfaceV0):
             usearch = {'email': email}
         elif user_id:
             usearch = {'id': user_id}
+        else:
+            raise OrderingProviderException("Must specify one of username, email, or user_id")
 
         user = User.where(usearch)
         if len(user) != 1:
@@ -244,7 +245,7 @@ class OrderingProvider(ProviderInterfaceV0):
 
         logger.info('Received request to cancel {} from {}'
                     .format(orderid, request_ip_address))
-        killable_scene_states = ('submitted', 'oncache', 'onorder', 'retry', 
+        killable_scene_states = ('submitted', 'oncache', 'onorder', 'retry',
                                  'error', 'unavailable', 'complete')
         scenes = order.scenes(sql_dict={'status': killable_scene_states})
         if len(scenes) > 0:
@@ -287,7 +288,8 @@ class OrderingProvider(ProviderInterfaceV0):
             response[order.orderid] = order.scenes(search)
         return response
 
-    def get_system_status(self):
+    @staticmethod
+    def get_system_status():
         sql = "select key, value from ordering_configuration where " \
               "key in ('msg.system_message_body', 'msg.system_message_title', 'system.display_system_message');"
         with db_instance() as db:

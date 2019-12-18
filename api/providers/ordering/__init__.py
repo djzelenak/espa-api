@@ -1,8 +1,8 @@
 import abc
 
-class ProviderInterfaceV0(object):
-    __metaclass__ = abc.ABCMeta
 
+class ProviderInterfaceV0(object, metaclass=abc.ABCMeta):
+    @staticmethod
     @abc.abstractmethod
     def sensor_products(product_id):
         """Returns list of all available products for a given scene id"""
@@ -44,9 +44,7 @@ class ProviderInterfaceV0(object):
         return
 
 
-class MockOrderingProvider(object):
-    __metaclass__ = abc.ABCMeta
-
+class MockOrderingProvider(object, metaclass=abc.ABCMeta):
     def place_order(self, username):
         pass
 
