@@ -7,7 +7,7 @@ import os
 import math
 
 import validictory
-from validictory.validator import RequiredFieldValidationError, SchemaError, DependencyValidationError
+from validictory.validator import SchemaError
 
 from api.providers.validation import ValidationInterfaceV0
 from api import ValidationException
@@ -283,7 +283,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
         """Validates that the absolute value of a field falls within a given range"""
         value = x.get(fieldname)
 
-        if isinstance(value, (int, long, float, Decimal)):
+        if isinstance(value, (int, float, Decimal)):
             if not val_range[0] <= abs(value) <= val_range[1]:
                 msg = ('Absolute value of {} must fall between {} and {}'
                        .format(path, val_range[0], val_range[1]))
@@ -293,7 +293,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
         """Validates the pixel size given for Decimal Degrees is within a given range"""
         value = x.get(fieldname)
 
-        if isinstance(value, (int, long, float, Decimal)):
+        if isinstance(value, (int, float, Decimal)):
             if 'pixel_size_units' in x:
                 if x['pixel_size_units'] == 'dd':
                     if not val_range[0] <= value <= val_range[1]:
@@ -305,7 +305,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
         """Validates the pixel size given for Meters is within a given range"""
         value = x.get(fieldname)
 
-        if isinstance(value, (int, long, float, Decimal)):
+        if isinstance(value, (int, float, Decimal)):
             if 'pixel_size_units' in x:
                 if x['pixel_size_units'] == 'meters':
                     if not val_range[0] <= value <= val_range[1]:
