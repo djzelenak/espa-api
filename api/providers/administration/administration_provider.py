@@ -76,7 +76,8 @@ class AdministrationProvider(AdminProviderInterfaceV0):
 
             return True
         except SceneException as e:
-            logger.critical('ERR admin provider error_to\ntrace: {}'.format(e.message))
+            num, message = e.args
+            logger.critical('ERR admin provider error_to\ntrace: {}'.format(message))
             raise AdministrationProviderException('ERR updating with error_to')
 
     @staticmethod
@@ -111,8 +112,9 @@ class AdministrationProvider(AdminProviderInterfaceV0):
                 db.execute(sql, sql_vals)
                 db.commit()
         except DBConnectException as e:
+            num, message = e.args
             logger.critical("error updating system status: {}".format(e))
-            return {'msg': "error updating database: {}".format(e.message)}
+            return {'msg': "error updating database: {}".format(message)}
 
         return True
 

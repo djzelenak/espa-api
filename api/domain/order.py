@@ -142,8 +142,9 @@ class Order(object):
                 db.execute(sql, params)
                 db.commit()
         except DBConnectException as e:
+            num, message = e.args
             logger.critical('Error creating new order: {}\n'
-                            'sql: {}'.format(e.message, log_sql))
+                            'sql: {}'.format(message, log_sql))
             raise OrderException(e)
 
         order = Order.find(params['orderid'])
@@ -191,9 +192,10 @@ class Order(object):
         try:
             Scene.create(bulk_ls)
         except SceneException as e:
+            num, message = e.args
             logger.critical('Order creation failed on scene injection, '
                             'order: {}\nexception: {}'
-                            .format(order.orderid, e.message))
+                            .format(order.orderid, message))
 
             with db_instance() as db:
                 db.execute('delete ordering_order where id = %s',
@@ -232,8 +234,9 @@ class Order(object):
                     obj = Order(**od)
                     ret.append(obj)
         except DBConnectException as e:
+            num, message = e.args
             logger.critical('Error order where: {}\n'
-                            'sql: {}'.format(e.message, log_sql))
+                            'sql: {}'.format(message, log_sql))
             raise OrderException(e)
 
         return ret
@@ -532,8 +535,9 @@ class Order(object):
                             .format(self.orderid, self.id, log_sql,
                                     zip(attr_tup, vals)))
         except DBConnectException as e:
+            num, message = e.args
             logger.critical('Error saving order: {}\nsql: {}'
-                            .format(e.message, log_sql))
+                            .format(message, log_sql))
 
             raise OrderException(e)
 
@@ -561,8 +565,9 @@ class Order(object):
                 db.execute(sql, (db_extns.AsIs(att), val, self.id))
                 db.commit()
         except DBConnectException as e:
+            num, message = e.args
             logger.critical('Error updating order: {}\nSQL: {}'
-                            .format(e.message, log_sql))
+                            .format(message, log_sql))
 
         self.__setattr__(att, val)
 

@@ -780,10 +780,12 @@ class ValidationProvider(ValidationInterfaceV0):
             # validictory.validate(order, self.schema.request_schema, fail_fast=False, disallow_unknown_properties=True,
             #                      validator_cls=OrderValidatorV0, required_by_default=False)
         except validictory.MultipleValidationError as e:
-            raise ValidationException(e.message)
-        except validictory.SchemaError as e:
-            message = 'Schema errors:\n' + e.message
+            num, message = e.args
             raise ValidationException(message)
+        except validictory.SchemaError as e:
+            num, message = e.args
+            msg = 'Schema errors:\n' + message
+            raise ValidationException(msg)
 
         return self.massage_formatting(order)
 

@@ -167,7 +167,8 @@ class TestValidation(unittest.TestCase):
             try:
                 good = api.validation(valid_order, self.staffuser.username)
             except ValidationException as e:
-                self.fail('Raised ValidationException: {}'.format(e.message))
+                num, message = e.args
+                self.fail('Raised ValidationException: {}'.format(message))
 
     def test_modis_resize(self):
         """
@@ -186,7 +187,8 @@ class TestValidation(unittest.TestCase):
         try:
             api.validation(modis_order, self.staffuser.username)
         except Exception as e:
-            self.assertIn(exc_key, e.response)
+            num, message = e.args
+            self.assertIn(exc_key, message)
             self.assertIsInstance(e.response[exc_key], list)
             self.assertIn(exc, str(e.response[exc_key]))
         else:

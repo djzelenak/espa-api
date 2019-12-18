@@ -243,8 +243,9 @@ class LTAService(object):
             try:
                 entity_id = unicode(str(option['entityId']), "utf-8")
             except Exception as e:
+                num, message = e.args
                 msg = 'Error converting entityID {0} to unicode string format - {1}'.format(option['entityId'],
-                                                                                            e.message)
+                                                                                            message)
                 logger.critical(msg)
                 raise LTAError(msg)
             standard_product = [p for p in option['downloadOptions'] if p['downloadCode'] == 'STANDARD'][0] 

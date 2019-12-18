@@ -172,8 +172,9 @@ class User(object):
                                i["last_name"], i["contactid"])
                     ret.append(obj)
         except DBConnectException as e:
+                num, message = e.args
                 logger.critical('Error querying for users: {}\n'
-                                'sql: {}'.format(e.message, log_sql))
+                                'sql: {}'.format(message, log_sql))
                 raise UserException(e)
         return ret
 

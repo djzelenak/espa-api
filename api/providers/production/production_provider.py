@@ -150,8 +150,9 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         try:
             scene.save()
         except DBConnectException as e:
+            num, message = e.args
             message = "DBConnect Exception ordering_provider mark_product_complete scene: {0}"\
-                        "\nmessage: {1}".format(scene, e.message)
+                        "\nmessage: {1}".format(scene, message)
             raise OrderException(message)
 
         return True
@@ -197,9 +198,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         try:
             scene.save()
         except DBConnectException as e:
-            message = "DBConnect Exception ordering_provider set_product_unavailable " \
-                      "scene: {0}\nmessage: {1}".format(scene, e.message)
-            raise ProductionProviderException(message)
+            num, message = e.args
+            msg = "DBConnect Exception ordering_provider set_product_unavailable " \
+                      "scene: {0}\nmessage: {1}".format(scene, message)
+            raise ProductionProviderException(msg)
 
         return True
 
@@ -673,17 +675,18 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 scene.note = params['note']
                 scene.save()
         except (SceneException, sensor.ProductNotImplemented) as e:
+            num, message = e.args
             if missed:
                 # we failed to load scenes missed on initial EE order import
                 # we do not want to delete the order, as we would on initial
                 # creation
                 logger.critical('EE Scene creation failed on scene injection, '
                                 'for missing EE scenes on existing order '
-                                'order: {}\nexception: {}'.format(order_id, e.message))
+                                'order: {}\nexception: {}'.format(order_id, message))
             else:
                 logger.critical('EE Order creation failed on scene injection, '
                                 'order: {}\nexception: {}'
-                                .format(order_id, e.message))
+                                .format(order_id, message))
 
                 with db_instance() as db:
                     db.execute('delete ordering_order where id = %s',

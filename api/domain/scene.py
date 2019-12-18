@@ -153,18 +153,20 @@ class Scene(object):
                 ret = db[0][col]
 
         except DBConnectException as e:
+            num, message = e.args
             logger.critical('Error scene get\n'
                             'msg: {0}\n'
-                            'sql: {1}'.format(e.message, log_sql))
+                            'sql: {1}'.format(message, log_sql))
 
-            raise SceneException(e.message)
+            raise SceneException(message)
 
         except KeyError as e:
+            num, message = e.args
             logger.critical('Scene.get returned no results\n'
                             'sql: {}'.format(log_sql))
 
             raise SceneException('Key Error: {}'
-                                 .format(e.message))
+                                 .format(message))
 
         return ret
 
@@ -211,10 +213,11 @@ class Scene(object):
                 db.commit()
 
         except DBConnectException as e:
+            num, message = e.args
             logger.critical('error creating new scene(s): {}\n'
                             'sql: {}\n'
-                            .format(e.message, log_sql))
-            raise SceneException(e.message)
+                            .format(message, log_sql))
+            raise SceneException(message)
 
     @classmethod
     def where(cls, params):
@@ -242,8 +245,9 @@ class Scene(object):
                     obj = Scene(**sd)
                     ret.append(obj)
         except DBConnectException as e:
+            num, message = e.args
             logger.critical('Error retrieving scenes: {}\n'
-                            'sql: {}'.format(e.message, log_sql))
+                            'sql: {}'.format(message, log_sql))
             raise SceneException(e)
 
         return ret
@@ -324,8 +328,9 @@ class Scene(object):
                 db.execute(sql, (db_extns.AsIs(fields), vals, ids))
                 db.commit()
         except DBConnectException as e:
+            num, message = e.args
             logger.critical('Error scene bulk_update: {}\nSQL: {}'
-                            .format(e.message, log_sql))
+                            .format(message, log_sql))
             raise SceneException(e)
 
         return True
@@ -350,8 +355,9 @@ class Scene(object):
                 db.execute(sql, (db_extns.AsIs(att), val, self.id))
                 db.commit()
         except DBConnectException as e:
+            num, message = e.args
             raise SceneException('Error updating scene: {}\nSQL: {}'
-                                 .format(e.message, log_sql))
+                                 .format(message, log_sql))
 
         self.__setattr__(att, val)
 
@@ -388,8 +394,9 @@ class Scene(object):
                             .format(self.id, self.name,
                                     log_sql, zip(attr_tup, vals)))
         except DBConnectException as e:
+            num, message = e.args
             logger.critical("Error saving scene: {}\n"
-                            "sql: {}".format(e.message, log_sql))
+                            "sql: {}".format(message, log_sql))
             raise SceneException(e)
 
         new = Scene.where({'id': self.id})[0]
@@ -419,16 +426,18 @@ class Scene(object):
                 ret = db[0][col]
 
         except DBConnectException as e:
+            num, message = e.args
             logger.critical('Error retrieving order_attr: {}\n'
-                            'sql: {} \n'.format(e.message, log_sql))
+                            'sql: {} \n'.format(message, log_sql))
             raise SceneException(e)
 
         except KeyError as e:
+            num, message = e.args
             logger.critical('Error order_attr returned no results\n'
                             'sql: {}'.format(log_sql))
 
             raise SceneException('Key Error: {}'
-                                 .format(e.message))
+                                 .format(message))
 
         return ret
 
