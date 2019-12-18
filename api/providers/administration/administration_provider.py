@@ -11,7 +11,7 @@ from api.domain.scene import SceneException, Scene
 from api.util import api_cfg
 
 
-class AdministrationProvider(AdminProviderInterfaceV0, metaclass=AdminProviderInterfaceV0):
+class AdministrationProvider(AdminProviderInterfaceV0):
     config = ConfigurationProvider()
     db = db_instance()
 
