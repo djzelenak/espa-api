@@ -82,7 +82,7 @@ class User(object):
     @email.setter
     def email(self, value):
         if not validate_email(value):
-            raise StandardError('user email value invalid')
+            raise Exception('user email value invalid')
         self._email = value.strip()
 
     @property
