@@ -4,7 +4,6 @@ from api.util.dbconnect import DBConnectException, db_instance
 import psycopg2.extensions as db_extns
 from api.system.logger import ilogger as logger
 from api.domain import format_sql_params
-import datetime
 
 
 class SceneException(Exception):

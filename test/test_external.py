@@ -2,14 +2,10 @@ import os
 import unittest
 from mock import patch, MagicMock
 
-from test.version0_testorders import build_base_order
 from api.external import onlinecache
 from api.external.mocks import onlinecache as mockonlinecache
 from api.external.mocks import inventory as mockinventory
-
-from api.external import lpdaac
 from api.external import inventory
-from api import ProductNotImplemented
 
 class TestLPDAAC(unittest.TestCase):
     def setUp(self):

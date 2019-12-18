@@ -4,7 +4,6 @@ import logging
 
 from logging import StreamHandler, FileHandler
 from logging import Formatter
-from logging import Filter
 from logging.handlers import SMTPHandler
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 

@@ -1,5 +1,4 @@
 
-from api.util.sshcmd import RemoteHost
 from api.providers.administration import AdminProviderInterfaceV0
 from api.providers.administration import AdministrationProviderException
 from api.providers.configuration.configuration_provider import ConfigurationProvider

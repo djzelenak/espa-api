@@ -7,8 +7,6 @@ from passlib.hash import pbkdf2_sha256
 from validate_email import validate_email
 
 from api.domain import format_sql_params
-from api.domain.order import Order
-from api.domain.scene import Scene
 from api.external.ers import ERSApi
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.system.logger import ilogger as logger

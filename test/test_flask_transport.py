@@ -5,7 +5,7 @@ import json
 import unittest
 import base64
 
-import version0_testorders as testorders
+from test import version0_testorders as testorders
 
 from mock import patch
 

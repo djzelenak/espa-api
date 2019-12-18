@@ -3,7 +3,7 @@
 import json
 import os
 import unittest
-import version0_testorders as testorders
+from test import version0_testorders as testorders
 
 from api.domain.mocks.order import MockOrder
 from api.domain.mocks.user import MockUser

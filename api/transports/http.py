@@ -2,20 +2,20 @@
 
 import os
 
-from flask import Flask, request, make_response, jsonify
-from flask_restful import Api, Resource, reqparse, fields, marshal
+from flask import Flask, request
+from flask_restful import Api
 
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.util import api_cfg
 from api.system.logger import ilogger as logger
 
-from http_user import Index, VersionInfo, AvailableProducts, ValidationInfo,\
+from api.transports.http_user import Index, VersionInfo, AvailableProducts, ValidationInfo,\
     ListOrders, Ordering, UserInfo, ItemStatus, BacklogStats, PublicSystemStatus
 
-from http_production import ProductionVersion, ProductionConfiguration, ProductionOperations, ProductionManagement
+from api.transports.http_production import ProductionVersion, ProductionConfiguration, ProductionOperations, ProductionManagement
 
-from http_admin import Reports, SystemStatus, OrderResets, ProductionStats
-from http_json import MessagesResponse, BadRequestResponse, SystemErrorResponse
+from api.transports.http_admin import Reports, SystemStatus, OrderResets, ProductionStats
+from api.transports.http_json import MessagesResponse, SystemErrorResponse
 
 config = ConfigurationProvider()
 

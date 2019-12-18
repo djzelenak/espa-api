@@ -5,7 +5,7 @@ from api.providers.configuration.configuration_provider import ConfigurationProv
 from api.util.dbconnect import DBConnectException, db_instance
 from api.providers.production import ProductionProviderInterfaceV0
 from api.providers.caching.caching_provider import CachingProvider
-from api.external import lpdaac, inventory, onlinecache
+from api.external import inventory, onlinecache
 from api.system import errors
 from api.notification import emails
 from api.domain.user import User
@@ -17,12 +17,9 @@ import urllib
 import json
 import socket
 import os
-import time
-import yaml
 import re
 import requests
 
-from cStringIO import StringIO
 
 from api.system.logger import ilogger as logger
 

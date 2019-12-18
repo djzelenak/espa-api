@@ -2,15 +2,11 @@
 Replaced lta.py
 """
 import json
-import urllib
 import traceback
-import datetime
 import socket
 import re
 from itertools import groupby
-
 import requests
-import memcache
 
 from api.domain import sensor
 from api.providers.configuration.configuration_provider import ConfigurationProvider

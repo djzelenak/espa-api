@@ -1,10 +1,7 @@
-import os
 import json
-import pprint
 
 from api.util.dbconnect import db_instance, DBConnectException, DBConnect
 from api.domain.order import OptionsConversion
-from api.util import api_cfg
 
 
 class ConvertProductOptions(object):

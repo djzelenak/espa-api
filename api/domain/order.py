@@ -8,7 +8,6 @@ import psycopg2.extensions as db_extns
 from api.domain.scene import Scene, SceneException
 from api.domain import sensor, format_sql_params
 from api.system.logger import ilogger as logger
-from psycopg2.extras import Json
 
 
 class OrderException(Exception):

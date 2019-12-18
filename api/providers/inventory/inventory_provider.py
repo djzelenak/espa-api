@@ -1,4 +1,3 @@
-import os
 
 from api.providers.inventory import InventoryInterfaceV0
 from api.external import inventory, lpdaac

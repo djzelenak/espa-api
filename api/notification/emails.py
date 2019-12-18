@@ -4,21 +4,14 @@ Author: David V. Hill
 '''
 
 import datetime
-import re
-
-from api.notification import contact_footer
-
-from cStringIO import StringIO
-
+from io import StringIO
 from email.mime.text import MIMEText
 from smtplib import SMTP, SMTPServerDisconnected
-
 from validate_email import validate_email
 
+from api.notification import contact_footer
 from api.domain.order import Order
-from api.domain.scene import Scene
 from api.providers.configuration.configuration_provider import ConfigurationProvider
-
 from api.system.logger import ilogger as logger
 
 config = ConfigurationProvider()

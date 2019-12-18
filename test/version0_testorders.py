@@ -2,7 +2,6 @@ import copy
 import collections
 
 import api.domain.sensor as sn
-import validictory
 from validictory import validator
 
 good_test_projections = {'aea': {'standard_parallel_1': 29.5,

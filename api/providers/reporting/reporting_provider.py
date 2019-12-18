@@ -1,4 +1,4 @@
-from api.util.dbconnect import DBConnectException, db_instance
+from api.util.dbconnect import db_instance
 from api.providers.reporting import ReportingProviderInterfaceV0
 from api.system.logger import ilogger as logger
 from api.providers.reporting import REPORTS

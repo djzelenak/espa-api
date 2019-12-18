@@ -1,11 +1,11 @@
 import smtplib
 from email.mime.text import MIMEText
-import ConfigParser
+import configparser
 import os
 import subprocess
 import datetime
 
-import connections
+from . import connections
 
 
 def get_cfg(cfgfile=None):
@@ -21,7 +21,7 @@ def get_cfg(cfgfile=None):
         cfg_path = cfgfile
 
     cfg_info = {}
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(cfg_path)
 
     for sect in config.sections():

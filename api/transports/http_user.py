@@ -1,8 +1,6 @@
 # Contains user facing REST functionality
-import traceback
 
 import flask
-import memcache
 
 from api.interfaces.ordering.version1 import API as APIv1
 from api.domain import user_api_operations
@@ -20,13 +18,9 @@ from api.transports.http_json import (
 from api.util.dbconnect import DBConnectException
 from api.providers.caching.caching_provider import CachingProvider
 
-from flask import jsonify
-from flask import make_response
 from flask import request
 from flask_httpauth import HTTPBasicAuth
 from flask_restful import Resource
-from werkzeug.exceptions import BadRequest
-
 
 from functools import wraps
 

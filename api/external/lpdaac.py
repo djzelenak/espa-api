@@ -3,12 +3,10 @@ Purpose: lpdaac services client module
 Author: David V. Hill
 '''
 
-import requests
 import os
 
 from api.domain import sensor
 from api import util as utils
-
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.system.logger import ilogger as logger
 

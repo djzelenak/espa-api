@@ -6,8 +6,7 @@ import random
 
 from api.interfaces.ordering.version1 import API as APIv1
 from api.util import lowercase_all
-from api.util.dbconnect import db_instance
-import version0_testorders as testorders
+from test import version0_testorders as testorders
 from api.providers.validation.validictory import BaseValidationSchema
 from api import ValidationException, InventoryException, OpenSceneLimitException, __location__
 
@@ -19,8 +18,7 @@ from api.domain.user import User
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.providers.production.mocks.production_provider import MockProductionProvider
 from api.providers.production.production_provider import ProductionProvider
-from api.providers.ordering.ordering_provider import OrderingProviderException, OrderingProvider
-from api.external.mocks import inventory as mockinventory
+from api.providers.ordering.ordering_provider import OrderingProvider
 from api.system.logger import ilogger as logger
 from mock import patch
 
