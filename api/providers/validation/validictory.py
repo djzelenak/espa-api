@@ -520,8 +520,9 @@ class OrderValidatorV0(validictory.SchemaValidator):
             msg = 'No requests for products were submitted'
             self._errors.append(msg)
 
-    def validate_set_ItemCount(self, x, fieldname, schema, path, (key, val)):
+    def validate_set_ItemCount(self, x, fieldname, schema, path, keyval):
         """Sets item count limits for multiple arrays across a potential order"""
+        (key, val) = keyval
         if key in self._itemcount:
             raise SchemaError('ItemCount {} set multiple times'.format(key))
         if not self.validate_type_integer(val):

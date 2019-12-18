@@ -622,10 +622,11 @@ class InvalidOrders(object):
 
         return results
 
-    def invalidate_set_ItemCount(self, (count_key, max_val), mapping):
+    def invalidate_set_ItemCount(self, key_count, mapping):
         """
         Used internally for setting max number of items on arrays, not touched by users
         """
+        (count_key, max_val) = key_count
         order = copy.deepcopy(self.valid_order)
         results = []
 
