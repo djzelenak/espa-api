@@ -11,7 +11,7 @@ from api.domain.scene import SceneException, Scene
 from api.util import api_cfg
 
 
-class AdministrationProvider(AdminProviderInterfaceV0):
+class AdministrationProvider(AdminProviderInterfaceV0, metaclass=AdminProviderInterfaceV0):
     config = ConfigurationProvider()
     db = db_instance()
 
@@ -54,7 +54,8 @@ class AdministrationProvider(AdminProviderInterfaceV0):
         else:
             return OnlineCache().capacity()
 
-    def error_to(self, orderid, state):
+    @staticmethod
+    def error_to(orderid, state):
         order = Order.find(orderid)
         err_scenes = order.scenes({'status': 'error'})
         try:
@@ -119,7 +120,7 @@ class AdministrationProvider(AdminProviderInterfaceV0):
 
     @staticmethod
     def get_system_config():
-        return ConfigurationProvider()._retrieve_config()
+        return ConfigurationProvider().retrieve_config()
 
     @staticmethod
     def admin_whitelist():

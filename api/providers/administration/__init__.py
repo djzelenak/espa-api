@@ -5,9 +5,7 @@ class AdministrationProviderException(Exception):
     pass
 
 
-class AdminProviderInterfaceV0(object):
-    __metaclass__ = abc.ABCMeta
-
+class AdminProviderInterfaceV0(object, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def access_configuration(self, key=None, value=None, delete=False):
         """
@@ -20,13 +18,11 @@ class AdminProviderInterfaceV0(object):
         """
 
     @abc.abstractmethod
-    # def restore_configuration(self, filepath, clear=False):
     def restore_configuration(self, filepath):
         """
         Update the configuration table from a file
 
         :param filepath: path to sql file
-        :param clear: truncate the configuration table first
         """
 
     @abc.abstractmethod
