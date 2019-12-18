@@ -13,6 +13,7 @@ from api.external.ers import ERSApi
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.system.logger import ilogger as logger
 from api.util.dbconnect import db_instance, DBConnectException
+import six
 
 ers = ERSApi()
 
@@ -142,7 +143,7 @@ class User(object):
                 logger.critical("ERR user find_or_create args {0} {1} " \
                                 "{2} {3}\n trace: {4}".format(username, email, first_name,
                                                               last_name, traceback.format_exc()))
-                raise exc_type, exc_val, exc_trace
+                six.reraise(exc_type, exc_val, exc_trace)
 
         return user_id
 
@@ -241,7 +242,7 @@ class User(object):
         except:
             exc_type, exc_val, exc_trace = sys.exc_info()
             logger.critical("ERR retrieving roles for user. msg{0} trace{1}".format(exc_val, traceback.format_exc()))
-            raise exc_type, exc_val, exc_trace
+            six.reraise(exc_type, exc_val, exc_trace)
 
         return result
 
