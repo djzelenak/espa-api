@@ -610,7 +610,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     self.update_ee_orders(scene_info, order_number, order.id)
                 else:
                     logger.debug("unable to import EE order: eeorder {} contactid {}".format(order_number, contactid))
-	
+        
     @staticmethod
     def gen_ee_scene_list(ee_scenes, order_id):
         """
