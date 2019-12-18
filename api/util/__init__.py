@@ -130,7 +130,7 @@ def chunkify(lst, n):
     :param n: the number of parts to divide list into
     :return: list of lists for pieces of original list
     """
-    return [lst[i::n] for i in xrange(n)]
+    return [lst[i::n] for i in range(n)]
 
 
 def julian_date_check(julian_date, restrictions):
