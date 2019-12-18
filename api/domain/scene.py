@@ -388,10 +388,12 @@ class Scene(object):
 
                 db.execute(sql, (db_extns.AsIs(cols), vals, self.id))
                 db.commit()
-                logger.info('\n*** Saved updates to scene id: {}, name:{}\n'
-                            'sql: {}\n args: {}\n***'
-                            .format(self.id, self.name,
-                                    log_sql, zip(attr_tup, vals)))
+                msg = f"\n*** Saved updates to scene id: {self.id}\n" \
+                      f"name: {self.name}\n" \
+                      f"sql: {log_sql}\n" \
+                      f"args: {list(zip(attr_tup, vals))}\n***"
+                logger.info(msg)
+
         except DBConnectException as e:
             num, message = e.args
             logger.critical("Error saving scene: {}\n"

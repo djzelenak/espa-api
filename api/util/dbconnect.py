@@ -11,7 +11,7 @@ from api.util import api_cfg
 def dictfetchall(cursor, fetcharr):
     ''' Returns all rows from a cursor as a dict '''
     desc = cursor.description
-    return [OrderedDict(zip([col[0] for col in desc], row))
+    return [OrderedDict(list(zip([col[0] for col in desc], row)))
             for row in fetcharr]
 
 class DBConnectException(Exception):

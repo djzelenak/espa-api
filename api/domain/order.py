@@ -529,10 +529,12 @@ class Order(object):
                                  db_extns.AsIs(cols), vals))
                 db.commit()
 
-                logger.info('Saved updates to order id: {}\n'
-                            'order.id: {}\nsql: {}\nargs: {}'
-                            .format(self.orderid, self.id, log_sql,
-                                    zip(attr_tup, vals)))
+                msg = f"\n*** Saved updates to order id: {self.orderid}\n" \
+                      f"order.id: {self.id}\n" \
+                      f"sql: {log_sql}\n" \
+                      f"args: {list(zip(attr_tup, vals))}\n***"
+                logger.info(msg)
+
         except DBConnectException as e:
             num, message = e.args
             logger.critical('Error saving order: {}\nsql: {}'
@@ -851,7 +853,7 @@ class OptionsConversion(object):
 
         old_attrs, new_attrs, conv_attrs = zip(*attr_map)
         # Reverse the old and new lists to reuse the _translate method
-        conv_map = zip(new_attrs, old_attrs, conv_attrs)
+        conv_map = list(zip(new_attrs, old_attrs, conv_attrs))
 
         prod_ls = []
         for key, val in opts.items():
@@ -878,7 +880,7 @@ class OptionsConversion(object):
                 raise ValueError('Unrecognized key: {}'.format(key))
 
         old_prods, new_prods, conv_prods = zip(*cls.prod_map)
-        conv_map = zip(new_prods, old_prods, conv_prods)
+        conv_map = list((zip(new_prods, old_prods, conv_prods)))
         ret.update(cls._translate(conv_map, prod_ls))
 
         return ret
