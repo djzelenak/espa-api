@@ -25,7 +25,7 @@ class LPDAACService(object):
             products = [products]
 
         for product in products:
-            if isinstance(product, basestring):
+            if isinstance(product, str):
                 product = sensor.instance(product)
 
             response[product.product_id] = self.input_exists(product)

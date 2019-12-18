@@ -42,7 +42,7 @@ class Emails(object):
             for r in recipient:
                 _validate(r)
             to_header = ','.join(recipient)
-        elif isinstance(recipient, basestring):
+        elif isinstance(recipient, str):
             _validate(recipient)
             recipient = [recipient]
         else:

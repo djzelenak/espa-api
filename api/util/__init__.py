@@ -6,6 +6,7 @@ import subprocess
 import datetime
 
 from . import connections
+import six
 
 
 def get_cfg(cfgfile=None):
@@ -91,7 +92,7 @@ def lowercase_all(indata):
                 ret[lowercase_all(key)] = lowercase_all(val)
         return ret
 
-    elif isinstance(indata, basestring):
+    elif isinstance(indata, six.string_types):
         return indata.lower()
 
     elif hasattr(indata, '__iter__'):
@@ -159,7 +160,7 @@ def julian_date_check(julian_date, restrictions):
     if not isinstance(restrictions, tuple):
         if isinstance(restrictions, list):
             restrictions = tuple(restrictions)
-        elif isinstance(restrictions, basestring):
+        elif isinstance(restrictions, six.string_types):
             restrictions = restrictions,
 
     for r in restrictions:

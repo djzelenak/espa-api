@@ -39,7 +39,7 @@ class User(object):
 
     @username.setter
     def username(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected a string')
         self._username = value
 
@@ -49,7 +49,7 @@ class User(object):
 
     @first_name.setter
     def first_name(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected a string')
         self._first_name = value
 
@@ -59,7 +59,7 @@ class User(object):
 
     @last_name.setter
     def last_name(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected a string')
         self._last_name = value
 
@@ -69,7 +69,7 @@ class User(object):
 
     @contactid.setter
     def contactid(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected a string')
         self._contactid = value
 

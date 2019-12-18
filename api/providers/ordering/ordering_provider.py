@@ -30,7 +30,7 @@ class OrderingProvider(ProviderInterfaceV0):
     @staticmethod
     def sensor_products(product_id):
         # coming from uwsgi, product_id is unicode
-        if isinstance(product_id, basestring):
+        if isinstance(product_id, str):
             prod_list = product_id.split(",")
         else:
             prod_list = product_id

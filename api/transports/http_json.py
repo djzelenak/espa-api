@@ -5,6 +5,7 @@ import json
 import datetime
 
 from flask import make_response, jsonify
+import six
 
 
 class SchemaDefinitionResponse(object):
@@ -39,7 +40,7 @@ class UserResponse(object):
 
     @email.setter
     def email(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Email must be a string')
         self._email = value
 
@@ -49,7 +50,7 @@ class UserResponse(object):
 
     @first_name.setter
     def first_name(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('First Name must be a string')
         self._first_name = value
 
@@ -59,7 +60,7 @@ class UserResponse(object):
 
     @last_name.setter
     def last_name(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Last Name must be a string')
         self._last_name = value
 
@@ -72,7 +73,7 @@ class UserResponse(object):
         if not isinstance(value, list):
             raise TypeError('Roles are always a list')
         if len(value):
-            if not all(isinstance(v, basestring) for v in value):
+            if not all(isinstance(v, str) for v in value):
                 raise TypeError('Roles must all be strings')
         self._roles = value
 
@@ -82,7 +83,7 @@ class UserResponse(object):
 
     @username.setter
     def username(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Username must be a string')
         self._username = value
 
@@ -134,7 +135,7 @@ class SceneResponse(object):
 
     @name.setter
     def name(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected String')
         self._name = value
 
@@ -156,7 +157,7 @@ class SceneResponse(object):
     def note(self, value):
         if value is None:
             value = ''
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected String')
         self._note = value
 
@@ -166,7 +167,7 @@ class SceneResponse(object):
 
     @status.setter
     def status(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected String')
         self._status = value
 
@@ -180,7 +181,7 @@ class SceneResponse(object):
                 value = str(value)
         if value is None:
             value = ''
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected String')
         self._completion_date = value
 
@@ -192,7 +193,7 @@ class SceneResponse(object):
     def cksum_download_url(self, value):
         if value is None:
             value = ''
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected String')
         self._cksum_download_url = value
 
@@ -204,7 +205,7 @@ class SceneResponse(object):
     def product_dload_url(self, value):
         if value is None:
             value = ''
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected String')
         self._product_dload_url = value
 
@@ -216,7 +217,7 @@ class SceneResponse(object):
     def log_file_contents(self, value):
         if value is None:
             value = ''
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected String')
         self._log_file_contents = value
 
@@ -327,7 +328,7 @@ class OrderResponse(object):
 
     @orderid.setter
     def orderid(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected String')
         self._orderid = value
 
@@ -337,7 +338,7 @@ class OrderResponse(object):
 
     @status.setter
     def status(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected String')
         self._status = value
 
@@ -351,7 +352,7 @@ class OrderResponse(object):
                 value = str(value)
         if value is None:
             value = ''
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected String')
         self._completion_date = value
 
@@ -363,7 +364,7 @@ class OrderResponse(object):
     def note(self, value):
         if value is None:
             value = ''
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected String')
         self._note = value
 
@@ -375,7 +376,7 @@ class OrderResponse(object):
     def order_date(self, value):
         if isinstance(value, datetime.datetime):
                 value = str(value)
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected String')
         self._order_date = value
 
@@ -385,7 +386,7 @@ class OrderResponse(object):
 
     @order_source.setter
     def order_source(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected String')
         self._order_source = value
 
@@ -395,7 +396,7 @@ class OrderResponse(object):
 
     @order_type.setter
     def order_type(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected String')
         self._order_type = value
 
@@ -405,7 +406,7 @@ class OrderResponse(object):
 
     @priority.setter
     def priority(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected String')
         self._priority = value
 
@@ -415,7 +416,7 @@ class OrderResponse(object):
 
     @product_options.setter
     def product_options(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected String')
         self._product_options = value
 
@@ -599,7 +600,7 @@ class MessagesResponse(object):
         if not isinstance(value, list):
             raise TypeError('Errors is always a list')
         if len(value):
-            if not all(isinstance(v, (basestring, dict)) for v in value):
+            if not all(isinstance(v, (str, dict)) for v in value):
                 raise TypeError('Errors must all be strings or dictionaries')
         self._errors = value
 
@@ -612,7 +613,7 @@ class MessagesResponse(object):
         if not isinstance(value, list):
             raise TypeError('Warnings is always a list')
         if len(value):
-            if not all(isinstance(v, basestring) for v in value):
+            if not all(isinstance(v, str) for v in value):
                 raise TypeError('Warnings must all be strings')
         self._warnings = value
 

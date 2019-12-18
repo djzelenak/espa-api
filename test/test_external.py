@@ -35,7 +35,7 @@ class TestInventory(unittest.TestCase):
     @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
     def test_api_login(self):
         token = inventory.get_session()
-        self.assertIsInstance(token, basestring)
+        self.assertIsInstance(token, str)
         self.assertTrue(inventory.logout(token))
 
     @patch('api.external.inventory.requests.head', mockinventory.RequestsSpoof)
@@ -97,7 +97,7 @@ class TestCachedInventory(unittest.TestCase):
     @patch('api.external.inventory.requests.post', mockinventory.CachedRequestPreventionSpoof)
     def test_cached_login(self):
         token = inventory.get_cached_session()
-        self.assertIsInstance(token, basestring)
+        self.assertIsInstance(token, str)
 
 
 class TestOnlineCache(unittest.TestCase):

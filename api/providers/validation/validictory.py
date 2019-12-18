@@ -258,9 +258,9 @@ class OrderValidatorV0(validictory.SchemaValidator):
         Validates that the given field, if a string, matches the given regular expression.
         '''
         value = x.get(fieldname)
-        if (isinstance(value, basestring) and
-            (isinstance(pattern, basestring) and not re.match(pattern, value)
-             or not isinstance(pattern, basestring) and not pattern.match(value))):
+        if (isinstance(value, str) and
+            (isinstance(pattern, str) and not re.match(pattern, value)
+             or not isinstance(pattern, str) and not pattern.match(value))):
                 self._errors.append("Remove unrecognized input ID: {} ({} must match regex {})"
                                     .format(value.upper(), path.split('.inputs')[0], pattern))
 

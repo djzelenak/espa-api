@@ -68,7 +68,7 @@ class LTAService(object):
 
     @base_url.setter
     def base_url(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('LTAService base_url must be string')
         self._base_url = value
 
