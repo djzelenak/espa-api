@@ -558,16 +558,14 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             _orders = Order.where({'ee_order_id': ordernumber})
             return _orders[0] if _orders else []
 
-        cond_str  = lambda i: str(i) if not isinstance(i, str) else i
-        conv_dict = lambda i: dict([(cond_str(k), cond_str(v)) for k, v in i.items()])
         ipaddr    = socket.gethostbyaddr(socket.gethostname())[2][0]
         token     = inventory.get_cached_session()
-        ee_orders = list(map(conv_dict, inventory.get_available_orders(token, contact_id)))
+        ee_orders = [utils.conv_dict(i) for i in inventory.get_available_orders(token, contact_id)]
 
         logger.info('load_ee_orders - Number of ESPA orders in EE: {}'.format(len(ee_orders)))
 
         for ee_order in ee_orders:
-            scene_info   = map(conv_dict, ee_order.get('units'))
+            scene_info = [utils.conv_dict(i) for i in ee_order.get('units')]
             contactid    = str(ee_order.get('contactId'))
             order_number = ee_order.get('orderNumber')
             espa_order   = find_espa_order(order_number)
@@ -1337,8 +1335,8 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             timeout = 60 * 60 * 6
             try:
                 slaves   = requests.get(mesos_url + "/slaves", verify=False)
-                pids     = list(map(getpid, slaves.json()['slaves']))
-                prodlist = list(map(getip, pids))
+                pids = (getpid(s) for s in slaves.json()['slaves'])
+                prodlist = [getip(pid) for pid in pids]
                 prodlist.append('127.0.0.1')
                 prodlist.append(socket.gethostbyname(socket.gethostname()))
                 if whitelist_additions:

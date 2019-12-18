@@ -5,7 +5,6 @@ import json
 import datetime
 
 from flask import make_response, jsonify
-import six
 
 
 class SchemaDefinitionResponse(object):
@@ -532,7 +531,7 @@ class OrdersResponse(object):
         if not isinstance(value, list):
             raise TypeError('Expected List')
         if not all([isinstance(i, OrderResponse) for i in value]):
-            value = map(lambda x: OrderResponse(**x.as_dict()), value)
+            value = [OrderResponse(**x.as_dict()) for x in value]
         self._orders = value
 
     @property
@@ -561,10 +560,12 @@ class OrdersResponse(object):
         self._code = value
 
     def as_list(self):
-        mapper = lambda x: {"order_note": x.note,
-                            "order_status": x.status,
-                            "orderid": x.orderid}
-        resp = map(mapper, self.orders)
+        def mapper(x):
+            return {"order_note": x.note,
+                    "order_status": x.status,
+                    "orderid": x.orderid}
+
+        resp = (mapper(o) for o in self.orders)
 
         if self.limit:
             if len(self.limit) > 1:

@@ -196,3 +196,14 @@ def julian_date_check(julian_date, restrictions):
                 return False
 
     return True
+
+
+def cond_str(i):
+    if not isinstance(i, str):
+        return str(i)
+    else:
+        return i
+
+
+def conv_dict(i):
+    return dict([(cond_str(k), cond_str(v)) for k, v in i.items()])

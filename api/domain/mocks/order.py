@@ -2,7 +2,7 @@ from api.util.dbconnect import db_instance
 from api.domain.order import Order
 from api.domain.scene import Scene
 from api.domain.user import User
-from api.util import chunkify
+from api.util import chunkify, conv_dict
 from test.version0_testorders import build_base_order
 from api.providers.ordering.ordering_provider import OrderingProvider
 from api.providers.production.production_provider import ProductionProvider
@@ -56,14 +56,13 @@ class MockOrder(object):
 
     def generate_ee_testing_order(self, user_id, partial=False):
         # Have to emulate a bunch of load_ee_orders
-        cond_str  = lambda i: str(i) if not isinstance(i, str) else i
-        conv_dict = lambda i: dict([(cond_str(k), cond_str(v)) for k, v in i.items()])
-        ee_orders = map(conv_dict, mock_inventory.get_available_orders_partial('fauxtoken', partial))
+
+        ee_orders = (conv_dict(m) for m in mock_inventory.get_available_orders_partial('fauxtoken', partial))
         email_addr = 'klsmith@usgs.gov'
 
         for eeorder in ee_orders:
             order_id = Order.generate_ee_order_id(email_addr, eeorder.get('orderNumber'))
-            scene_info = map(conv_dict, eeorder.get('units'))
+            scene_info = [conv_dict(m) for m in eeorder.get('units')]
             user = User.find(user_id)
             ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
 

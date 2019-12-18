@@ -15,6 +15,7 @@ import api.providers.ordering.ordering_provider as ordering
 import api.domain.sensor as sn
 
 from api import __location__
+from six.moves import map
 
 
 class OrderValidatorV0(validictory.SchemaValidator):
@@ -181,8 +182,8 @@ class OrderValidatorV0(validictory.SchemaValidator):
 
     def verify_extents_dd_and_utm(self, order):
         errors = []
-        if max(map(abs, [order['image_extents']['north'],
-                            order['image_extents']['south']])) < 80:
+        north_south = [abs(o) for o in [order['image_extents']['north'], order['image_extents']['south']]]
+        if max(north_south) < 80:
             cdict = dict(inzone=order['projection']['utm']['zone'],
                         east=order['image_extents']['east'],
                         west=order['image_extents']['west'],
