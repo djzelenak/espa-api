@@ -20,9 +20,7 @@ import os
 import re
 import requests
 
-
 from api.system.logger import ilogger as logger
-from six.moves import filter
 
 config = ConfigurationProvider()
 cache = CachingProvider()
