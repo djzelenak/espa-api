@@ -88,7 +88,8 @@ class TransportTestCase(unittest.TestCase):
     @patch('api.domain.user.User.get', MockUser.get)
     @patch('api.providers.ordering.ordering_provider.OrderingProvider.available_products', mock_api.available_products)
     def test_get_available_prods(self):
-        url = '/api/v1/available-products/' + ",".join(self.sceneids)
+        ids = ','.join(self.sceneids)
+        url = '/api/v1/available-products/{}'.format(ids)
         response = self.app.get(url, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
         self.assertIn("etm", resp_json.keys())
@@ -115,8 +116,7 @@ class TransportTestCase(unittest.TestCase):
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_available_orders_email(self):
-        # email param comes in as unicode
-        url = "/api/v1/list-orders/" + str(self.user.email)
+        url = "/api/v1/list-orders/{}".format(self.user.email)
         response = self.app.get(url, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
         self.assertIsInstance(resp_json, list)
@@ -125,7 +125,7 @@ class TransportTestCase(unittest.TestCase):
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_order_by_ordernum(self):
-        url = "/api/v1/order/" + str(self.orderid)
+        url = "/api/v1/order/{}".format(self.orderid)
         response = self.app.get(url, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
         items = {'orderid', 'note', 'order_source', 'order_type', 'product_opts',
@@ -135,7 +135,7 @@ class TransportTestCase(unittest.TestCase):
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_order_status_by_ordernum(self):
-        url = "/api/v1/order-status/" + str(self.orderid)
+        url = "/api/v1/order-status/{}".format(self.orderid)
         response = self.app.get(url, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
         self.assertEqual({'orderid', 'status'}, set(resp_json))
@@ -145,7 +145,7 @@ class TransportTestCase(unittest.TestCase):
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_item_status_by_ordernum(self):
-        url = "/api/v1/item-status/%s" % self.itemorderid
+        url = "/api/v1/item-status/{}".format(self.itemorderid)
         response = self.app.get(url, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
         all_names = set([s['name'].lower() for s in resp_json[self.orderid]])
@@ -155,7 +155,7 @@ class TransportTestCase(unittest.TestCase):
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_get_item_status_by_ordernum_itemnum(self):
-        url = "/api/v1/item-status/%s/%s" % (self.itemorderid, self.itemid)
+        url = "/api/v1/item-status/{}/{}".format(self.itemorderid, self.itemid)
         response = self.app.get(url, headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         resp_json = json.loads(response.get_data())
         all_names = set([s['name'].lower() for s in resp_json[self.orderid]])

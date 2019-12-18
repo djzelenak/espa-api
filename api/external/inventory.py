@@ -237,10 +237,10 @@ class LTAService(object):
             # so we want to convert it to a string to match with other instances of entityId.
             # This prevents a KeyError from occurring in verify_scenes()
             try:
-                entity_id = unicode(str(option['entityId']), "utf-8")
+                entity_id = str(option['entityId'])
             except Exception as e:
                 num, message = e.args
-                msg = 'Error converting entityID {0} to unicode string format - {1}'.format(option['entityId'],
+                msg = 'Error converting entityID {0} to text-string format - {1}'.format(option['entityId'],
                                                                                             message)
                 logger.critical(msg)
                 raise LTAError(msg)

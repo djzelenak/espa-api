@@ -558,11 +558,11 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             _orders = Order.where({'ee_order_id': ordernumber})
             return _orders[0] if _orders else []
 
-        cond_str  = lambda i: str(i) if isinstance(i, unicode) else i
+        cond_str  = lambda i: str(i) if not isinstance(i, str) else i
         conv_dict = lambda i: dict([(cond_str(k), cond_str(v)) for k, v in i.items()])
         ipaddr    = socket.gethostbyaddr(socket.gethostname())[2][0]
         token     = inventory.get_cached_session()
-        ee_orders = map(conv_dict, inventory.get_available_orders(token, contact_id))
+        ee_orders = list(map(conv_dict, inventory.get_available_orders(token, contact_id)))
 
         logger.info('load_ee_orders - Number of ESPA orders in EE: {}'.format(len(ee_orders)))
 

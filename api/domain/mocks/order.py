@@ -56,7 +56,7 @@ class MockOrder(object):
 
     def generate_ee_testing_order(self, user_id, partial=False):
         # Have to emulate a bunch of load_ee_orders
-        cond_str  = lambda i: str(i) if isinstance(i, unicode) else i
+        cond_str  = lambda i: str(i) if not isinstance(i, str) else i
         conv_dict = lambda i: dict([(cond_str(k), cond_str(v)) for k, v in i.items()])
         ee_orders = map(conv_dict, mock_inventory.get_available_orders_partial('fauxtoken', partial))
         email_addr = 'klsmith@usgs.gov'
