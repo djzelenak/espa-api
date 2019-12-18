@@ -22,6 +22,7 @@ import requests
 
 
 from api.system.logger import ilogger as logger
+from six.moves import filter
 
 config = ConfigurationProvider()
 cache = CachingProvider()
@@ -818,7 +819,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 self.set_products_unavailable(rejected_products, 'Level 1 product could not be produced')
 
         if len(available) > 0:
-            products = filter(lambda a: a.name in available, products)
+            products = [a for a in products if a.name in available]
             # scene may not be rejected or complete
             if products:
                 Scene.bulk_update([p.id for p in products], {'status': 'oncache', 'note': ''})
@@ -1213,7 +1214,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         logger.info('# Pending orders to handle: {}'.format(len(pending_orders)))
 
         # send confirmation emails for new orders
-        orders_send_email = filter(lambda i: i.initial_email_sent is None, pending_orders)
+        orders_send_email = [i for i in pending_orders if i.initial_email_sent is None]
         if len(orders_send_email):
             self.send_initial_emails(orders_send_email)
         orders_send_email = None
@@ -1249,23 +1250,23 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         # retrieve all scenes in submitted state
         submitted_scenes = Scene.where({'status': 'submitted', 'order_id': pending_order_ids})
 
-        submitted_landsat = filter(lambda s: s.sensor_type == 'landsat', submitted_scenes)[:500]
+        submitted_landsat = [s for s in submitted_scenes if s.sensor_type == 'landsat'][:500]
         self.handle_submitted_landsat_products(submitted_landsat)
         submitted_landsat = None
 
-        submitted_modis = filter(lambda s: s.sensor_type == 'modis', submitted_scenes)
+        submitted_modis = [s for s in submitted_scenes if s.sensor_type == 'modis']
         self.handle_submitted_modis_products(submitted_modis)
         submitted_modis = None
 
-        submitted_viirs = filter(lambda s: s.sensor_type == 'viirs', submitted_scenes)
+        submitted_viirs = [s for s in submitted_scenes if s.sensor_type == 'viirs']
         self.handle_submitted_viirs_products(submitted_viirs)
         submitted_viirs = None
 
-        submitted_sentinel = filter(lambda s: s.sensor_type == 'sentinel', submitted_scenes)
+        submitted_sentinel = [s for s in submitted_scenes if s.sensor_type == 'sentinel']
         self.handle_submitted_sentinel_products(submitted_sentinel)
         submitted_sentinel = None
 
-        submitted_plot = filter(lambda s: s.sensor_type == 'plot', submitted_scenes)
+        submitted_plot = [s for s in submitted_scenes if s.sensor_type == 'plot']
         self.handle_submitted_plot_products(submitted_plot)
         submitted_plot = None
 
