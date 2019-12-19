@@ -344,7 +344,7 @@ def format_sql_params(base_sql, params):
 
     # params coming in as lists from espa-web (json)
     # need to be converted to a tuple
-    for key, val in params.items:
+    for key, val in params.items():
         if isinstance(val, list):
             params[key] = tuple(val)
 
