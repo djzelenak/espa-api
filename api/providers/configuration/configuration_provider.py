@@ -14,8 +14,6 @@ class ConfigurationProviderException(Exception):
 class ConfigurationProvider(ConfigurationProviderInterfaceV0):
 
     def __init__(self):
-        self.explorer_yaml = None
-        self.prod_whitelist_additions = None
 
         # fetch vars set in api_cfg['config']
         for k, v in api_cfg().items():
@@ -178,6 +176,4 @@ class ConfigurationProvider(ConfigurationProviderInterfaceV0):
             db.select(con_query)
             for i in db:
                 config[i['key']] = i['value']
-        print('*&***&*&*&*&*&*&')
-        print(config)
         return config

@@ -656,8 +656,6 @@ class TestProductionAPI(unittest.TestCase):
     def test_production_get_key(self):
         key = 'system_message_title'
         response = api.get_production_key(key)
-        print('****')
-        print(response)
         val = response[key]
         self.assertIsInstance(val, str)
 
