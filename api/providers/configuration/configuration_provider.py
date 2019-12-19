@@ -15,6 +15,7 @@ class ConfigurationProvider(ConfigurationProviderInterfaceV0):
 
     def __init__(self):
         self.explorer_yaml = None
+        self.prod_whitelist_additions = None
 
         # fetch vars set in api_cfg['config']
         for k, v in api_cfg().items():
