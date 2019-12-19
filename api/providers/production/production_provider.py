@@ -31,8 +31,8 @@ class ProductionProviderException(Exception):
 
 
 class ProductionProvider(ProductionProviderInterfaceV0):
-
-    def queue_products(self, order_name_tuple_list, processing_location, job_name):
+    @staticmethod
+    def queue_products(order_name_tuple_list, processing_location, job_name):
         """
         Allows the caller to place products into queued status in bulk
         :param order_name_tuple_list: list of tuples, ie [(orderid, scene_name), ...]
@@ -51,7 +51,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         orders = {}
 
         for order, product_name in order_name_tuple_list:
-            if not order in orders:
+            if order not in orders:
                 orders[order] = list()
             orders[order].append(product_name)
 
@@ -107,8 +107,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 onlinecache.delete(orderid, filename=product_file)
                 onlinecache.delete(orderid, filename=cksum_file)
             else:
-                logger.warning('ERR file was not found: {}'
-                                .format(completed_file_location))
+                logger.warning(f"ERR file was not found: {completed_file_location}")
             Scene.bulk_update([scene.id], Scene.cancel_opts())
             return False
 
@@ -122,10 +121,12 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         scene.cksum_download_url = cksum_download_url
         try:
             scene.download_size = os.path.getsize(completed_file_location)
-        except OSError as e:
+        except OSError:
             # seeing occasional delays in file availability after processing notifies the api of completion
             # raise ProductionProviderException('Could not find completed file location')
-            logger.info("mark_product_complete could not find completed file location {}, marking it zero for now...".format(completed_file_location))
+            logger.info(
+                "mark_product_complete could not find completed file location {}, marking it zero for now...".format(
+                    completed_file_location))
             scene.download_size = 0
 
         if order_source == 'ee':
@@ -147,8 +148,8 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             scene.save()
         except DBConnectException as e:
             num, message = e.args
-            message = "DBConnect Exception ordering_provider mark_product_complete scene: {0}"\
-                        "\nmessage: {1}".format(scene, message)
+            message = "DBConnect Exception ordering_provider mark_product_complete scene: {0}" \
+                      "\nmessage: {1}".format(scene, message)
             raise OrderException(message)
 
         return True
@@ -196,7 +197,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         except DBConnectException as e:
             num, message = e.args
             msg = "DBConnect Exception ordering_provider set_product_unavailable " \
-                      "scene: {0}\nmessage: {1}".format(scene, message)
+                  "scene: {0}\nmessage: {1}".format(scene, message)
             raise ProductionProviderException(msg)
 
         return True
@@ -351,13 +352,15 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         """
         order = Order.find(orderid)
         product = Scene.by_name_orderid(name, order.id)
-        #attempt to determine the disposition of this error
+        # attempt to determine the disposition of this error
         resolution = None
 
         if product.status == 'complete':
             # Mesos tasks occasionaly exit abnormally, even though processing completed successfully.
             # When that happens, the ESPA framework will try to set the scene to error status
-            logger.error("Received set_product_error request for a complete product!\nOrder ID: {}\nProduct: {}".format(orderid, name))
+            logger.error(
+                "Received set_product_error request for a complete product!\nOrder ID: {}\nProduct: {}".format(orderid,
+                                                                                                               name))
             return {"error": "attempted to set scene to error that was already marked complete"}
 
         if name != 'plot':
@@ -391,8 +394,8 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                                            resolution.extra['retry_limit'])
                 except Exception as e:
                     logger.info('Exception setting product.id {} {} '
-                                 'to retry: {}'
-                                 .format(product.id, name, e))
+                                'to retry: {}'
+                                .format(product.id, name, e))
                     product.status = 'error'
                     product.processing_location = processing_loc
                     product.log_file_contents = error
@@ -433,11 +436,14 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             for dataset, ids in inventory.split_by_dataset(non_plot_ids).items():
                 try:
                     verified = inventory.verify_scenes(token, ids, dataset)
-                    # {'LT04_L1TP_007057_19871226_20170210_01_T1': True, 'LT04_L1TP_007057_19880111_20170210_01_T1': False, ...}
+                    # {'LT04_L1TP_007057_19871226_20170210_01_T1': True,
+                    # 'LT04_L1TP_007057_19880111_20170210_01_T1': False, ...}
                     for _id, _availability in verified.items():
                         available.append(_id) if _availability else unavailable.append(_id)
                     if unavailable:
-                        logger.warn('Unavailable Scenes found in request for download urls. Marking unavailable ids: {0}\n'.format(unavailable))
+                        msg = "Unavailable scenes found in request for download URLs. " \
+                              "Marking unavailable ids: {}\n".format(unavailable)
+                        logger.warn(msg)
                         unavailable_scenes = Scene.where({'name': unavailable})
                         self.set_products_unavailable(unavailable_scenes, "Scene no longer available")
                     urls.update(inventory.download_urls(token, available, dataset))
@@ -447,39 +453,42 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 urls = {k: urllib.parse.quote(u, '') for k, u in urls.items()}
 
             results = [dict(r, download_url=urls.get(r['scene']))
-                            if r['scene'] in non_plot_ids else r for r in results]
+                       if r['scene'] in non_plot_ids else r for r in results]
 
             results = [r for r in results if 'download_url' in r and r.get('download_url')]
 
         return results
 
-
-    def query_pending_products(self, record_limit=500, for_user=None,
-                               priority=None, product_types=['landsat', 'modis', 'viirs', 'sentinel']):
+    @staticmethod
+    def query_pending_products(record_limit=500, for_user=None,
+                               priority=None, product_types=None):
         sql = [
             'WITH order_queue AS',
-                '(SELECT u.email "email", count(name) "running"',
-                'FROM ordering_scene s',
-                'JOIN ordering_order o ON o.id = s.order_id',
-                'JOIN auth_user u ON u.id = o.user_id',
-                'WHERE s.status in %(running_s_status)s',
-                'GROUP BY u.email)',
+            '(SELECT u.email "email", count(name) "running"',
+            'FROM ordering_scene s',
+            'JOIN ordering_order o ON o.id = s.order_id',
+            'JOIN auth_user u ON u.id = o.user_id',
+            'WHERE s.status in %(running_s_status)s',
+            'GROUP BY u.email)',
             'SELECT u.contactid, s.name, s.sensor_type,',
-                'o.orderid, o.product_opts, o.priority,',
-                'o.order_date, q.running',
+            'o.orderid, o.product_opts, o.priority,',
+            'o.order_date, q.running',
             'FROM ordering_scene s',
             'JOIN ordering_order o ON o.id = s.order_id',
             'JOIN auth_user u ON u.id = o.user_id',
             'LEFT JOIN order_queue q ON q.email = u.email',
             'WHERE',
-                'o.status = %(order_status)s',
-                'AND s.status = %(s_status)s',
+            'o.status = %(order_status)s',
+            'AND s.status = %(s_status)s',
         ]
         params = {
             'running_s_status': ("queued", "processing"),
             'order_status': 'ordered',
             's_status': 'oncache',
         }
+
+        if product_types is None or product_types is []:
+            product_types = ['landsat', 'modis', 'viirs', 'sentinel']
 
         if not isinstance(product_types, list):
             # unicode values of either: u"['plot']" or u"['landsat', 'modis', 'viirs', 'sentinel']"
@@ -512,11 +521,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         #           'product_opts', 'priority', 'order_date', 'running']
         return db.fetcharr
 
-
     def get_products_to_process(self, record_limit=500,
                                 for_user=None,
                                 priority=None,
-                                product_types=['landsat', 'modis', 'viirs', 'sentinel'],
+                                product_types=None,
                                 encode_urls=False):
         """
         Find scenes that are oncache and return them as properly formatted
@@ -528,6 +536,9 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         :param encode_urls: whether to encode the urls
         :return: list
         """
+        if product_types is None or product_types is []:
+            product_types = ['landsat', 'modis', 'viirs', 'sentinel']
+
         logger.info('Retrieving products to process...')
         logger.warn('Record limit:{0}'.format(record_limit))
         logger.warn('Priority:{0}'.format(priority))
@@ -557,22 +568,27 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             _orders = Order.where({'ee_order_id': ordernumber})
             return _orders[0] if _orders else []
 
-        ipaddr    = socket.gethostbyaddr(socket.gethostname())[2][0]
-        token     = inventory.get_cached_session()
+        ipaddr = socket.gethostbyaddr(socket.gethostname())[2][0]
+        token = inventory.get_cached_session()
         ee_orders = [utils.conv_dict(i) for i in inventory.get_available_orders(token, contact_id)]
 
         logger.info('load_ee_orders - Number of ESPA orders in EE: {}'.format(len(ee_orders)))
 
         for ee_order in ee_orders:
             scene_info = [utils.conv_dict(i) for i in ee_order.get('units')]
-            contactid    = str(ee_order.get('contactId'))
+            contactid = str(ee_order.get('contactId'))
             order_number = ee_order.get('orderNumber')
-            espa_order   = find_espa_order(order_number)
+            espa_order = find_espa_order(order_number)
 
-            if espa_order: # EE order already exists in the system, update the associated scenes 
-                self.update_ee_orders(scene_info, order_number, espa_order.id)
+            if espa_order:  # EE order already exists in the system, update the associated scenes
+                try:
+                    self.update_ee_orders(scene_info, order_number, espa_order.id)
+                except AttributeError:
+                    raise ProductionProviderException("Order object does not have an ID attribute")
             else:
-                logger.debug("load_ee_orders - new espa order from EE. scene: {}, contactid: {}, order_number: {}".format(scene_info, contactid, order_number))
+                logger.debug(
+                    "load_ee_orders - new espa order from EE. scene: {}, contactid: {}, order_number: {}".format(
+                        scene_info, contactid, order_number))
                 user = User.by_contactid(contactid)
 
                 if user is None:
@@ -581,14 +597,17 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                         username, email_addr = inventory.get_user_details(token, contactid, ipaddr)
                         # Find or create the user
                         user = User(username, email_addr, 'from', 'earthexplorer', contactid)
-                        #cache.set(cache_key, user, 43200) # 12 hours -> 60 * 60 * 12
+                        # cache.set(cache_key, user, 43200) # 12 hours -> 60 * 60 * 12
                         logger.debug("load_ee_orders - created user, username: {}".format(user.username))
                     except inventory.LTAError as e:
-                        logger.error("load_ee_orders - LTAError: Unable to retrieve user name for contactid {}. exception: {}".format(contactid, e))
+                        msg = f"load_ee_orders - LTAError: Unable to retrieve user name for contactid {contactid}." \
+                              f"exception: {e}"
+                        logger.error(msg)
 
                 if user:
                     # We have a user now.  Now build the new Order since it wasn't found
-                    logger.debug("load_ee_orders - we have a user, build the order. email: {}  order_number: {}".format(user.email, order_number))
+                    logger.debug("load_ee_orders - we have a user, build the order. email: {}  order_number: {}".format(
+                        user.email, order_number))
                     order_dict = {'orderid': Order.generate_ee_order_id(user.email, order_number),
                                   'user_id': user.id,
                                   'order_type': 'level2_ondemand',
@@ -606,7 +625,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                     self.update_ee_orders(scene_info, order_number, order.id)
                 else:
                     logger.debug("unable to import EE order: eeorder {} contactid {}".format(order_number, contactid))
-        
+
     @staticmethod
     def gen_ee_scene_list(ee_scenes, order_id):
         """
@@ -801,7 +820,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             # duplicates will also be marked C
             for unit in order_status['units']:
                 if unit['statusCode'] == 'R':
-                    rejected.append(unit['orderingId']) # or 'displayId', 'entityId'
+                    rejected.append(unit['orderingId'])  # or 'displayId', 'entityId'
                 elif unit['statusCode'] == 'C':
                     available.append(unit['orderingId'])
 
@@ -873,7 +892,8 @@ class ProductionProvider(ProductionProviderInterfaceV0):
                 passed_dep_check.append(s)
         return passed_dep_check
 
-    def handle_submitted_landsat_products(self, scenes):
+    @staticmethod
+    def handle_submitted_landsat_products(scenes):
         """
         Handles all submitted landsat products
         :return: True
@@ -922,14 +942,12 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         logger.warn("Found {0} submitted modis products".format(len(modis_products)))
 
         if len(modis_products) > 0:
-            lpdaac_ids = []
-            nonlp_ids = []
 
             prod_name_list = [p.name for p in modis_products]
             token = inventory.get_cached_session()
             results = inventory.check_valid(token, prod_name_list)
-            valid = list(set(r for r,v in results.items() if v))
-            invalid = list(set(prod_name_list)-set(valid))
+            valid = list(set(r for r, v in results.items() if v))
+            invalid = list(set(prod_name_list) - set(valid))
 
             available_ids = [p.id for p in modis_products if p.name in valid]
             if len(available_ids):
@@ -970,7 +988,6 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         return True
 
-
     def handle_submitted_viirs_products(self, viirs_products):
         """
         Moves all submitted viirs products to oncache if true
@@ -984,14 +1001,12 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         logger.warn("Found {0} submitted viirs products".format(len(viirs_products)))
 
         if len(viirs_products) > 0:
-            lpdaac_ids = []
-            nonlp_ids = []
 
             prod_name_list = [p.name for p in viirs_products]
             token = inventory.get_cached_session()
             results = inventory.check_valid(token, prod_name_list)
-            valid = list(set(r for r,v in results.items() if v))
-            invalid = list(set(prod_name_list)-set(valid))
+            valid = list(set(r for r, v in results.items() if v))
+            invalid = list(set(prod_name_list) - set(valid))
 
             available_ids = [p.id for p in viirs_products if p.name in valid]
             if len(available_ids):
@@ -1070,10 +1085,10 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         scenes = order.scenes({'status NOT ': ('complete', 'unavailable')})
         if len(scenes) == 0:
             logger.info('Completing order: {0}'.format(order.orderid))
-            #only send the email if this was an espa order.
+            # only send the email if this was an espa order.
             if order.order_source == 'espa' and not order.completion_email_sent:
                 try:
-                    sent = self.send_completion_email(order)
+                    self.send_completion_email(order)
                     order.completion_email_sent = datetime.datetime.now()
                     order.completion_date = datetime.datetime.now()
                     order.status = 'complete'
@@ -1087,7 +1102,8 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         return True
 
-    def calc_scene_download_sizes(self, order_ids):
+    @staticmethod
+    def calc_scene_download_sizes(order_ids):
         """
         Processing occasionally reports product completion before we're able to
         see the download and retrieve its size
@@ -1133,7 +1149,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
 
         for order in orders:
             try:
-                #with transaction.atomic():
+                # with transaction.atomic():
                 order.update('status', 'purged')
                 for product in order.scenes():
                     product.status = 'purged'
@@ -1240,9 +1256,9 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         # handle cancelled orders
         days = config.get('policy.purge_orders_after')
         cutoff = datetime.datetime.now() - datetime.timedelta(days=int(days))
-        search = {'status': 'cancelled',  'completion_email_sent IS': None, 'order_date >': cutoff}
+        search = {'status': 'cancelled', 'completion_email_sent IS': None, 'order_date >': cutoff}
         if user:
-                search.update(user_id=user.id)
+            search.update(user_id=user.id)
         self.handle_cancelled_orders(search)
 
         # retrieve all scenes in submitted state
@@ -1285,7 +1301,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             timeout = int(config.get('system.run_order_purge_every'))
             cache.set(cache_key, datetime.datetime.now(), timeout)
 
-            #purge the orders from disk now
+            # purge the orders from disk now
             self.purge_orders(send_email=True)
         else:
             logger.info('Purge lock detected... skipping')
@@ -1321,19 +1337,19 @@ class ProductionProvider(ProductionProviderInterfaceV0):
             return match.group(0)
 
         cache_key = 'prod_whitelist'
-        prodlist  = cache.get(cache_key)
-        mesos_url = config.url_for('mesos_master') # url.<mode>.mesos_master
+        prodlist = cache.get(cache_key)
+        mesos_url = config.url_for('mesos_master')  # url.<mode>.mesos_master
 
         whitelist_additions = []
         if 'prod_whitelist_additions' in config.__dict__.keys():
-            whitelist_additions = config.prod_whitelist_additions.replace("'","").split(",")
+            whitelist_additions = config.prod_whitelist_additions.replace("'", "").split(",")
 
         if prodlist is None:
             logger.info("Regenerating production whitelist...")
             # timeout in 6 hours
             timeout = 60 * 60 * 6
             try:
-                slaves   = requests.get(mesos_url + "/slaves", verify=False)
+                slaves = requests.get(mesos_url + "/slaves", verify=False)
                 pids = (getpid(s) for s in slaves.json()['slaves'])
                 prodlist = [getip(pid) for pid in pids]
                 prodlist.append('127.0.0.1')
@@ -1375,8 +1391,8 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         # Update scenes directly to oncache since they previously
         # went through the inventory check
         Scene.bulk_update([s.id for s in scenes], {'status': 'oncache',
-                                                             'log_file_contents': '',
-                                                             'note': '',
-                                                             'retry_count': 0})
+                                                   'log_file_contents': '',
+                                                   'note': '',
+                                                   'retry_count': 0})
 
         return True
