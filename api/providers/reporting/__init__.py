@@ -334,23 +334,20 @@ MULTISTATS = {
 }
 
 
-class ReportingProviderInterfaceV0(object):
-    __metaclass__ = abc.ABCMeta
-
+class ReportingProviderInterfaceV0(object, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def listing(self, show_query):
-        '''
-
-        :param show_query=False:
+        """
+        :param show_query:
         :return: return Dict of available reports
-        '''
+        """
 
     @abc.abstractmethod
     def run(self, name):
-        '''
+        """
         :param name:
         :return OrderedDict of results for report
-        '''
+        """
         return
 
 

@@ -42,7 +42,8 @@ class ReportingProvider(ReportingProviderInterfaceV0):
             logger.warn("Query was empty for {0}: {1}".format(name, query))
             return {}
 
-    def stat_list(self, show_query=False):
+    @staticmethod
+    def stat_list(show_query=False):
         # make a copy of this as we dont want to modify the
         # actual dict in this module
         _stats = copy.deepcopy(STATS)
@@ -102,7 +103,8 @@ class ReportingProvider(ReportingProviderInterfaceV0):
             logger.critical("Query was empty for {0}: {1}".format(name, query))
             return None
 
-    def missing_auxiliary_data(self, sensor_group, year=None):
+    @staticmethod
+    def missing_auxiliary_data(sensor_group, year=None):
         _sensor_groups = {'L17': {1978: ['ncep', 'toms']},
                           'L8': {2013: ['lads']}}
         _cur_year = datetime.datetime.now().year
