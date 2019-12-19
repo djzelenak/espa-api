@@ -185,13 +185,13 @@ class OrderValidatorV0(validictory.SchemaValidator):
         north_south = [abs(o) for o in [order['image_extents']['north'], order['image_extents']['south']]]
         if max(north_south) < 80:
             cdict = dict(inzone=order['projection']['utm']['zone'],
-                        east=order['image_extents']['east'],
-                        west=order['image_extents']['west'],
-                        zbuffer=3)
+                         east=order['image_extents']['east'],
+                         west=order['image_extents']['west'],
+                         zbuffer=3)
             if not self.is_utm_zone_nearby(**cdict):
                 msg = ('image_extents (East: {east}, West: {west}) are not near the'
-                        ' requested UTM zone ({inzone})'
-                        .format(**cdict))
+                       ' requested UTM zone ({inzone})'
+                       .format(**cdict))
                 errors.append(msg)
         return errors
 
@@ -199,6 +199,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
     def is_utm_zone_nearby(inzone, east, west, zbuffer=3):
         def long2utm(dd_lon):
             return (math.floor((dd_lon + 180) / 6.) % 60) + 1
+
         return (long2utm(west) - zbuffer) <= inzone <= (long2utm(east) + zbuffer)
 
     @staticmethod
@@ -260,11 +261,10 @@ class OrderValidatorV0(validictory.SchemaValidator):
         '''
         value = x.get(fieldname)
         if (isinstance(value, str) and
-            (isinstance(pattern, str) and not re.match(pattern, value)
-             or not isinstance(pattern, str) and not pattern.match(value))):
-                self._errors.append("Remove unrecognized input ID: {} ({} must match regex {})"
-                                    .format(value.upper(), path.split('.inputs')[0], pattern))
-
+                (isinstance(pattern, str) and not re.match(pattern, value)
+                 or not isinstance(pattern, str) and not pattern.match(value))):
+            self._errors.append("Remove unrecognized input ID: {} ({} must match regex {})"
+                                .format(value.upper(), path.split('.inputs')[0], pattern))
 
     def validate_enum_keys(self, x, fieldname, schema, path, valid_list):
         """Validates the keys in the given object match expected keys"""
@@ -551,18 +551,18 @@ class OrderValidatorV0(validictory.SchemaValidator):
 
 
 class BaseValidationSchema(object):
-    formats = {'gtiff':    'GeoTiff',
-               'envi':     'ENVI',
+    formats = {'gtiff': 'GeoTiff',
+               'envi': 'ENVI',
                'hdf-eos2': 'HDF-EOS2',
-               'netcdf':   'NetCDF'}
+               'netcdf': 'NetCDF'}
 
-    resampling_methods = {'nn':  'Nearest Neighbor',
+    resampling_methods = {'nn': 'Nearest Neighbor',
                           'bil': 'Bilinear Interpolation',
-                          'cc':  'Cubic Convolution'}
+                          'cc': 'Cubic Convolution'}
 
     projections = {'aea': {'type': 'object',
                            'title': 'Albers Equal Area',
-                           'pixel_units':  ('meters', 'dd'),
+                           'pixel_units': ('meters', 'dd'),
                            'display_rank': 0,
                            'properties': {'standard_parallel_1': {'type': 'number',
                                                                   'title': '1st Standard Parallel',
@@ -604,7 +604,7 @@ class BaseValidationSchema(object):
                                                              'nad27': 'North American Datum 1927',
                                                              'nad83': 'North American Datum 1983'}}}},
                    'utm': {'type': 'object',
-                           'pixel_units':  ('meters', 'dd'),
+                           'pixel_units': ('meters', 'dd'),
                            'display_rank': 1,
                            'title': 'Universal Transverse Mercator',
                            'properties': {'zone': {'type': 'integer',
@@ -750,7 +750,7 @@ class BaseValidationSchema(object):
                                                           'minItems': 1,
                                                           'items': {'type': 'string',
                                                                     'enum': sn.instance(
-                                                                            _sensor_reg[key][2]).products}}}}
+                                                                        _sensor_reg[key][2]).products}}}}
 
     request_schema['properties'].update(sensor_schema)
     request_schema['oneormoreobjects'] = list(sensor_schema.keys())
