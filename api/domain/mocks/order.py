@@ -11,8 +11,10 @@ import os
 import random
 import datetime
 
+
 class MockOrderException(Exception):
     pass
+
 
 class MockOrder(object):
     """ Class for interacting with the ordering_order table """
@@ -20,9 +22,9 @@ class MockOrder(object):
     def __init__(self):
         try:
             mode = os.environ["espa_api_testing"]
-            if mode is not "True":
-                raise("MockOrder objects only allowed while testing")
-        except:
+            if mode != "True":
+                raise MockOrderException("MockOrder objects only allowed while testing")
+        except Exception:
             raise MockOrderException("MockOrder objects only allowed while testing")
         self.base_order = build_base_order()
         self.ordering_provider = OrderingProvider()
@@ -33,17 +35,17 @@ class MockOrder(object):
 
     def as_dict(self):
         return {
-                  "completion_date": '',
-                  "note": '',
-                  "order_date": '',
-                  "order_source": '',
-                  "order_type": '',
-                  "orderid": '',
-                  "priority": '',
-                  "product_options": '',
-                  "product_opts": '',
-                  "status": ''
-                }
+            "completion_date": '',
+            "note": '',
+            "order_date": '',
+            "order_source": '',
+            "order_type": '',
+            "orderid": '',
+            "priority": '',
+            "product_options": '',
+            "product_opts": '',
+            "status": ''
+        }
 
     def generate_testing_order(self, user_id):
         user = User.find(user_id)
@@ -59,7 +61,7 @@ class MockOrder(object):
 
         ee_orders = (conv_dict(m) for m in mock_inventory.get_available_orders_partial('fauxtoken', partial))
         email_addr = 'klsmith@usgs.gov'
-
+        order = None
         for eeorder in ee_orders:
             order_id = Order.generate_ee_order_id(email_addr, eeorder.get('orderNumber'))
             scene_info = [conv_dict(m) for m in eeorder.get('units')]
@@ -79,11 +81,13 @@ class MockOrder(object):
                           'product_options': 'include_sr: true',
                           'product_opts': Order.get_default_ee_options(scene_info)}
 
-
             order = Order.create(order_dict)
             self.production_provider.load_ee_scenes(scene_info, order.id)
 
-        return order.id
+        try:
+            return order.id
+        except AttributeError:
+            raise MockOrderException("The Order object is None or is missing an ID attribute")
 
     def scene_names_list(self, order_id):
         scenes = Scene.where({'order_id': order_id})

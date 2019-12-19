@@ -8,21 +8,21 @@ class MockUserException(Exception):
 
 
 class MockUser(object):
-    ''' class for mocking the User class in unit tests '''
+    """ class for mocking the User class in unit tests """
 
     def __init__(self):
         try:
             mode = os.environ['espa_api_testing']
-            if mode is not 'True':
+            if mode != 'True':
                 raise MockUserException("MockUser objects only allowed while testing")
-        except:
+        except Exception:
             raise MockUserException("MockUser objects only allowed while testing")
 
     def __repr__(self):
         return "MockUser: {0}".format(self.__dict__)
 
     def add_testing_user(self):
-        ''' add user record to test schemas auth_user table '''
+        """ add user record to test schemas auth_user table """
         user = User('bilbo_baggins', 'bilbo@usgs.gov', 'bilbo', 'baggins', '123456')
         return user.id
 
@@ -35,4 +35,4 @@ class MockUser(object):
     @classmethod
     def get(cls, *args):
         user = User.where({'username': 'bilbo_baggins'})[0]
-        return (user.username, user.email, user.first_name, user.last_name, user.contactid)
+        return user.username, user.email, user.first_name, user.last_name, user.contactid
