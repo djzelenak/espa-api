@@ -178,5 +178,6 @@ class ConfigurationProvider(ConfigurationProviderInterfaceV0):
             db.select(con_query)
             for i in db:
                 config[i['key']] = i['value']
-
+        print('*&***&*&*&*&*&*&')
+        print(config)
         return config

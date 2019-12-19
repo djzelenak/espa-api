@@ -9,7 +9,7 @@ from test import version0_testorders as testorders
 
 from mock import patch
 
-from api.transports import http
+from api.transports import http_main
 from api.util import lowercase_all
 from api.util.dbconnect import db_instance
 from api.domain.user import User
@@ -31,7 +31,7 @@ class TransportTestCase(unittest.TestCase):
         self.user = User.find(self.mock_user.add_testing_user())
         self.order_id = self.mock_order.generate_testing_order(self.user.id)
 
-        self.app = http.app.test_client()
+        self.app = http_main.app.test_client()
         self.app.testing = True
 
         self.sceneids = self.mock_order.scene_names_list(self.order_id)[0:2]
