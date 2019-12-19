@@ -4,6 +4,7 @@ import configparser
 import os
 import subprocess
 import datetime
+import json
 
 from . import connections
 import six
@@ -206,5 +207,15 @@ def cond_str(i):
 
 
 def conv_dict(i):
-
     return dict([(cond_str(k), cond_str(v)) for k, v in i.items()])
+
+
+def json_safe(i):
+    i = i.replace("'", '"')
+    i = i.replace('None', '"None"')
+    i = i.replace(' ', '')
+    return i
+
+
+def jsonify(i):
+    return json.loads(json_safe(i))

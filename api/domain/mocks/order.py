@@ -2,7 +2,7 @@ from api.util.dbconnect import db_instance
 from api.domain.order import Order
 from api.domain.scene import Scene
 from api.domain.user import User
-from api.util import chunkify, conv_dict
+from api.util import chunkify, conv_dict, jsonify
 from test.version0_testorders import build_base_order
 from api.providers.ordering.ordering_provider import OrderingProvider
 from api.providers.production.production_provider import ProductionProvider
@@ -10,6 +10,7 @@ from api.external.mocks import inventory as mock_inventory
 import os
 import random
 import datetime
+import json
 
 
 class MockOrderException(Exception):
@@ -64,7 +65,8 @@ class MockOrder(object):
         order = None
         for eeorder in ee_orders:
             order_id = Order.generate_ee_order_id(email_addr, eeorder.get('orderNumber'))
-            scene_info = [conv_dict(m) for m in eeorder.get('units')]
+            units = jsonify(eeorder.get('units'))
+            scene_info = [conv_dict(u) for u in units]
             user = User.find(user_id)
             ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
 

@@ -575,7 +575,8 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         logger.info('load_ee_orders - Number of ESPA orders in EE: {}'.format(len(ee_orders)))
 
         for ee_order in ee_orders:
-            scene_info = [utils.conv_dict(i) for i in ee_order.get('units')]
+            units = utils.jsonify(ee_order.get('units'))
+            scene_info = [utils.conv_dict(u) for u in units]
             contactid = str(ee_order.get('contactId'))
             order_number = ee_order.get('orderNumber')
             espa_order = find_espa_order(order_number)
