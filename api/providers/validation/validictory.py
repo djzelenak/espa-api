@@ -15,7 +15,6 @@ import api.providers.ordering.ordering_provider as ordering
 import api.domain.sensor as sn
 
 from api import __location__
-from six.moves import map
 
 
 class OrderValidatorV0(validictory.SchemaValidator):
@@ -781,11 +780,11 @@ class ValidationProvider(ValidationInterfaceV0):
             # validictory.validate(order, self.schema.request_schema, fail_fast=False, disallow_unknown_properties=True,
             #                      validator_cls=OrderValidatorV0, required_by_default=False)
         except validictory.MultipleValidationError as e:
-            num, message = e.args
+            message, = e.args
             raise ValidationException(message)
         except validictory.SchemaError as e:
-            num, message = e.args
-            msg = 'Schema errors:\n' + message
+            message, = e.args
+            msg = f"Schema errors:\n{message}"
             raise ValidationException(msg)
 
         return self.massage_formatting(order)

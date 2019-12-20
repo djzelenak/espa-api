@@ -7,6 +7,7 @@ from api.external.mocks import onlinecache as mockonlinecache
 from api.external.mocks import inventory as mockinventory
 from api.external import inventory
 
+
 class TestLPDAAC(unittest.TestCase):
     def setUp(self):
         pass
@@ -46,14 +47,14 @@ class TestInventory(unittest.TestCase):
     @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
     def test_api_id_lookup(self):
         entity_ids = inventory.convert(self.token, ['LC08_L1TP_156063_20170207_20170216_01_T1'], 'LANDSAT_8_C1')
-        self.assertEqual(set(['LC08_L1TP_156063_20170207_20170216_01_T1']), set(entity_ids))
+        self.assertEqual({'LC08_L1TP_156063_20170207_20170216_01_T1'}, set(entity_ids))
 
     @patch('api.external.inventory.requests.get', mockinventory.RequestsSpoof)
     @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
     def test_api_validation(self):
-        expected = {k: True for k in self.collection_ids}
         results = inventory.verify_scenes(self.token, ['LC08_L1TP_156063_20170207_20170216_01_T1'], 'LANDSAT_8_C1')
-        self.assertItemsEqual({'LC08_L1TP_156063_20170207_20170216_01_T1': True}, results)
+        test = {'LC08_L1TP_156063_20170207_20170216_01_T1': True}
+        self.assertDictEqual(test, results)
 
     @patch('api.external.inventory.requests.get', mockinventory.RequestsSpoof)
     @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
@@ -62,9 +63,9 @@ class TestInventory(unittest.TestCase):
         results = inventory.get_download_urls(self.token, ['LC08_L1TP_156063_20170207_20170216_01_T1'], 'LANDSAT_8_C1')
         self.assertIsInstance(results, dict)
         ehost, ihost = 'invalid.com', '127.0.0.1'
-        results = {k:v.replace(ehost, ihost) for k,v in results.items()}
-        self.assertEqual(set(entity_ids.values()), set(['LC81560632017038LGN00']))
-        ip_address_host_regex = 'http://\d+\.\d+\.\d+\.\d+/.*\.tar\.gz'
+        results = {k: v.replace(ehost, ihost) for k,v in results.items()}
+        self.assertEqual(set(entity_ids.values()), {'LC81560632017038LGN00'})
+        ip_address_host_regex = r'http://\d+\.\d+\.\d+\.\d+/.*\.tar\.gz'
         for pid in entity_ids.values():
             self.assertRegexpMatches(results.get(pid), ip_address_host_regex)
 

@@ -72,7 +72,7 @@ class ValidationException(Exception):
                 err = re.sub(r'<obj>.', '', err)
                 self.response[err_key].append(err)
 
-        super(ValidationException, self).__init__(str(self.response))
+        super(ValidationException, self).__init__(f'{self.response}')
 
 
 class InventoryException(Exception):

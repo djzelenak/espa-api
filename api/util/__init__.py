@@ -84,7 +84,7 @@ def backup_cron():
 
 
 def lowercase_all(indata):
-    if hasattr(indata, 'iteritems'):
+    if hasattr(indata, 'items'):
         ret = {}
         for key, val in indata.items():
             if key.lower() == 'note':

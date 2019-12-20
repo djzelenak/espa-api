@@ -19,6 +19,8 @@ config = ConfigurationProvider()
 # -----------------------------------------------------------------------------+
 # Find Documentation here:                                                     |
 #      https://earthexplorer.usgs.gov/inventory/documentation/json-api         |
+
+
 def split_by_dataset(product_ids):
     """
     Subset list of Collection IDs (LC08_...) by the LTA JSON data set name
@@ -30,8 +32,10 @@ def split_by_dataset(product_ids):
     return {k: list(g) for k, g in groupby(sorted(product_ids),
                 lambda x: sensor.instance(x).lta_json_name)}
 
+
 class LTAError(Exception):
     pass
+
 
 class LTAService(object):
     def __init__(self, token=None, current_user=None, ipaddr=None):
@@ -146,7 +150,7 @@ class LTAService(object):
 
         :return: bool
         """
-        url = self.base_url + 'login'
+        url = f"{self.base_url}login"
         logger.debug('HEAD {}'.format(url))
         resp = requests.head(url)
         return resp.ok
