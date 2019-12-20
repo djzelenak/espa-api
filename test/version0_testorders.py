@@ -359,12 +359,13 @@ class InvalidOrders(object):
         """
         order = copy.deepcopy(self.valid_order)
         results = []
-        fieldname = '.'.join(mapping)
+        # fieldname = '.'.join(mapping)
         if req:
             # noinspection PyTypeChecker
             exc = self.build_exception(desc="Required field '{fieldname}' is missing",
                                        value=None,
-                                       fieldname=fieldname,
+                                       # fieldname=fieldname,
+                                       fieldname=mapping[-1],
                                        exctype=validator.RequiredFieldValidationError,
                                        path=mapping)
             results.append((self.delete_key_loc(order, mapping), 'required', exc))
