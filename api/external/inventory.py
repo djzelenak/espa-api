@@ -196,7 +196,7 @@ class LTAService(object):
         results = resp.get('data')
 
         id_list = [i for i in product_ids]
-        if dataset.startswith('MODIS'):
+        if dataset.startswith('MODIS') and results:
             # WARNING: See above. Need to "undo" the MODIS mapping problem.
             modis_results = dict()
             for k, v in results.items():
@@ -205,7 +205,7 @@ class LTAService(object):
             results = modis_results
             modis_results = None
 
-        if dataset.startswith('VIIRS'):
+        if dataset.startswith('VIIRS') and results:
             # Undo the file extension addition from above
             viirs_results = dict()
             for k, v in results.items():
