@@ -1,4 +1,15 @@
 ## Change Notes
+###### October 2019
+* Transition from Hadoop to Mesos computer cluster
+* Added support for Sentinel-2 level-2 products
+###### September 2019
+* Transition to using M2M JSON API and off SOAP services
+###### March-June 2019
+* Added support for ordering VIIRS daily NDVI and daily 500-m SR
+* Added support for ordering MODIS daily NDVI
+* Additional error handling
+* Updated ordering restrictions
+* Implemented a 10000 open unit limit
 ###### March 2018
 * Final deprecation of Landsat Precollection-based & Cfmask products
 ###### November 2017

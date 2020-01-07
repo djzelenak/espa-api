@@ -22,7 +22,7 @@ class Order(object):
                 'FROM ordering_order '
                 'WHERE ')
 
-    valid_statuses = ('complete', 'queued', 'oncache', 'onorder', 'purged',
+    valid_statuses = ('complete', 'oncache', 'onorder', 'purged',
                       'processing', 'error', 'unavailable', 'submitted')
 
     def __init__(self, id=None, orderid=None, status=None, order_source=None,
@@ -167,6 +167,8 @@ class Order(object):
                     sensor_type = 'modis'
                 elif isinstance(sensor.instance(item1), sensor.Viirs):
                     sensor_type = 'viirs'
+                elif isinstance(sensor.instance(item1), sensor.Sentinel2_AB):
+                    sensor_type = 'sentinel'
 
                 for s in opts[key]['inputs']:
                     scene_dict = {'name': s,
@@ -295,27 +297,35 @@ class Order(object):
         :return: Dictionary populated with default product options
         """
         # standard product selection options
-        o = {'include_source_data': False,  # underlying raster
-             'include_source_metadata': False,  # source metadata
-             'include_customized_source_data': False,
-             'include_sr_toa': False,  # LEDAPS top of atmosphere
-             'include_sr_thermal': False,  # LEDAPS band 6
-             'include_sr': False,  # LEDAPS surface reflectance
-             'include_dswe': False,  # Dynamic Surface Water
-             'include_sr_browse': False,  # surface reflectance browse
-             'include_sr_ndvi': False,  # normalized difference veg
-             'include_sr_ndmi': False,  # normalized difference moisture
-             'include_sr_nbr': False,  # normalized burn ratio
-             'include_sr_nbr2': False,  # normalized burn ratio 2
-             'include_sr_savi': False,  # soil adjusted vegetation
-             'include_sr_msavi': False,  # modified soil adjusted veg
-             'include_sr_evi': False,  # enhanced vegetation
-             'include_st': False,  # surface temperature
-             'include_orca': False, # surface water reflectance
-             'include_modis_ndvi': False,  # Daily modis ndvi
-             'include_viirs_ndvi': False,  # Daily viirs ndvi
-             'include_solr_index': False,  # solr search index record
-             'include_statistics': False}  # should we do stats & plots?
+        o = {'include_source_data': False,             # underlying raster
+             'include_source_metadata': False,         # source metadata
+             'include_customized_source_data': False,  # customized source data
+             'include_sr_toa': False,                  # LEDAPS top of atmosphere
+             'include_sr_thermal': False,              # LEDAPS band 6
+             'include_sr': False,                      # LEDAPS surface reflectance
+             'include_dswe': False,                    # Dynamic Surface Water
+             'include_sr_browse': False,               # surface reflectance browse
+             'include_sr_ndvi': False,                 # normalized difference veg
+             'include_sr_ndmi': False,                 # normalized difference moisture
+             'include_sr_nbr': False,                  # normalized burn ratio
+             'include_sr_nbr2': False,                 # normalized burn ratio 2
+             'include_sr_savi': False,                 # soil adjusted vegetation
+             'include_sr_msavi': False,                # modified soil adjusted veg
+             'include_sr_evi': False,                  # enhanced vegetation
+             'include_st': False,                      # surface temperature
+             'include_orca': False,                    # surface water reflectance
+             'include_modis_ndvi': False,              # Daily modis ndvi
+             'include_viirs_ndvi': False,              # Daily viirs ndvi
+             'include_s2_sr': False,                   # Sentinel-2 surface reflectance
+             'include_s2_ndvi': False,                 # Sentinel-2 ndvi
+             'include_s2_ndmi': False,                 # Sentinel-2 ndmi
+             'include_s2_nbr': False,                  # Sentinel-2 nbr
+             'include_s2_nbr2': False,                 # Sentinel-2 nbr-2
+             'include_s2_savi': False,                 # Sentinel-2 savi
+             'include_s2_msavi': False,                # Sentinel-2 msavi
+             'include_s2_evi': False,                  # Sentinel-2 evi
+             'include_solr_index': False,              # solr search index record
+             'include_statistics': False}              # should we do stats & plots?
 
         return o
 
@@ -433,27 +443,28 @@ class Order(object):
         """
         ee_order = {'format': 'gtiff'}
         for item in item_ls:
+            sceneid = item['orderingId']
             try:
-                scene_info = sensor.instance(item['sceneid'])
+                scene_info = sensor.instance(sceneid)
             except sensor.ProductNotImplemented:
                 log_msg = ('Received unsupported product via EE: {}'
-                           .format(item['sceneid']))
+                           .format(sceneid))
                 logger.critical(log_msg)
                 continue
 
             short = scene_info.shortname
 
             if short in ee_order:
-                ee_order[short]['inputs'].append(item['sceneid'])
+                ee_order[short]['inputs'].append(sceneid)
             else:
                 if isinstance(scene_info, sensor.Landsat):
-                    ee_order[short] = {'inputs': [item['sceneid']],
+                    ee_order[short] = {'inputs': [sceneid],
                                        'products': ['sr']}
                 elif isinstance(scene_info, sensor.Modis):
-                    ee_order[short] = {'inputs': [item['sceneid']],
+                    ee_order[short] = {'inputs': [sceneid],
                                        'products': ['l1']}
                 elif isinstance(scene_info, sensor.Viirs):
-                    ee_order[short] = {'inputs': [item['sceneid']],
+                    ee_order[short] = {'inputs': [sceneid],
                                        'products': ['l1']}
 
         return ee_order
@@ -682,6 +693,14 @@ class OptionsConversion(object):
                 ('include_sr_evi', 'sr_evi', True),
                 ('include_modis_ndvi', 'modis_ndvi', True),
                 ('include_viirs_ndvi', 'viirs_ndvi', True),
+                ('include_s2_sr', 's2_sr', True),
+                ('include_s2_ndvi', 's2_ndvi', True),
+                ('include_s2_ndmi', 's2_ndmi', True),
+                ('include_s2_nbr', 's2_nbr', True),
+                ('include_s2_nbr2', 's2_nbr2', True),
+                ('include_s2_savi', 's2_savi', True),
+                ('include_s2_msavi', 's2_msavi', True),
+                ('include_s2_evi', 's2_evi', True),
                 ('include_orca', 'orca', True),
                 ('include_st', 'st', True),
                 ('st_algorithm', 'stalg_split_window',   'split_window'),

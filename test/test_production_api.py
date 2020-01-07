@@ -8,7 +8,7 @@ from api.domain.mocks.user import MockUser
 from api.domain.order import Order, OptionsConversion
 from api.domain.scene import Scene
 from api.domain.user import User
-from api.external.mocks import lta, inventory, lpdaac, onlinecache, hadoop
+from api.external.mocks import inventory, lpdaac, onlinecache
 from api.interfaces.production.version1 import API
 from api.notification import emails
 from api.providers.configuration.configuration_provider import ConfigurationProvider
@@ -18,6 +18,7 @@ from api.providers.ordering.ordering_provider import OrderingProvider, OrderingP
 from api.system.mocks import errors
 from mock import patch
 from copy import deepcopy
+from functools import partial
 
 api = API()
 ordering_provider = OrderingProvider()
@@ -67,6 +68,19 @@ class TestProductionAPI(unittest.TestCase):
 
     @patch('api.external.inventory.available', lambda: True)
     @patch('api.providers.production.production_provider.ProductionProvider.parse_urls_m2m',
+           lambda x, y: y)
+    def test_fetch_production_products_sentinel(self):
+        order_id = self.mock_order.generate_testing_order(self.user_id)
+        # need scenes with statuses of 'processing'
+        scenes = Scene.where({'order_id': order_id, 'sensor_type': 'sentinel'})
+        self.mock_order.update_scenes(order_id, 'sentinel', 'status', ['processing', 'oncache'])
+        user = User.find(self.user_id)
+        params = {'for_user': user.username, 'product_types': ['sentinel']}
+        response = api.fetch_production_products(params)
+        self.assertTrue('bilbo' in response[0]['orderid'])
+
+    @patch('api.external.inventory.available', lambda: True)
+    @patch('api.providers.production.production_provider.ProductionProvider.parse_urls_m2m',
             lambda x, y: y)
     def test_fetch_production_products_landsat(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
@@ -79,7 +93,7 @@ class TestProductionAPI(unittest.TestCase):
 
     def test_fetch_production_products_plot(self):
         order_id = self.mock_order.generate_testing_order(self.user_id)
-        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs'), 'status', ['complete'])
+        self.mock_order.update_scenes(order_id, ('landsat', 'sentinel', 'modis', 'viirs'), 'status', ['complete'])
         order = Order.find(order_id)
         plot_scene = order.scenes({'name': 'plot'})[0]
         plot_scene.name = 'plot'
@@ -108,7 +122,8 @@ class TestProductionAPI(unittest.TestCase):
         new = Scene.get('ordering_scene.status', scene.name, order.orderid)
         self.assertTrue('retry' == new)
 
-    @patch('api.external.lta.update_order_status', mock_production_provider.respond_true)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.update_order_status', mock_production_provider.respond_true)
     def test_production_set_product_error_unavailable(self):
         """
         Move a scene status from error to unavailable based on the error
@@ -202,7 +217,8 @@ class TestProductionAPI(unittest.TestCase):
                                               'somewhere', log_file_contents)
         self.assertEqual('unavailable', Scene.get('ordering_scene.status', scene.name, order.orderid))
 
-    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
     def test_update_product_details_update_status(self):
         """
@@ -217,7 +233,8 @@ class TestProductionAPI(unittest.TestCase):
                                     'status': 'Queued'})
         self.assertTrue(Scene.get('ordering_scene.status', scene.name, order.orderid) == 'Queued')
 
-    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
     @patch('api.external.onlinecache.capacity', onlinecache.capacity)
     def test_update_product_details_set_product_error(self):
@@ -233,7 +250,8 @@ class TestProductionAPI(unittest.TestCase):
                                            error='problems yo')
         self.assertTrue(Scene.find(scene.id).status == 'error')
 
-    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
     def test_update_product_details_set_product_unavailable(self):
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
@@ -244,7 +262,8 @@ class TestProductionAPI(unittest.TestCase):
                                            error='include_dswe is an unavailable product option for OLITIRS')
         self.assertTrue('unavailable' == Scene.get('ordering_scene.status', scene.name, order.orderid))
 
-    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
     @patch('os.path.getsize', lambda y: 999)
     def test_update_product_details_mark_product_complete(self):
@@ -260,7 +279,8 @@ class TestProductionAPI(unittest.TestCase):
 
         self.assertTrue('complete' == Scene.get('ordering_scene.status', scene.name, order.orderid))
 
-    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
     @patch('os.path.getsize', lambda y: 999)
     def test_update_product_details_mark_product_processing(self):
@@ -275,7 +295,8 @@ class TestProductionAPI(unittest.TestCase):
         scene = order.scenes({'id': scene.id})[0]
         self.assertEqual('processing', scene.status)
 
-    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
     @patch('os.path.getsize', lambda y: 999)
     def test_update_product_details_mark_cancelled_product_processing(self):
@@ -320,7 +341,8 @@ class TestProductionAPI(unittest.TestCase):
         self.assertTrue('unavailable' == scene.status)
         self.assertTrue('Solar zenith angle is too large, cannot process scene to SR' in scene.note)
 
-    @patch('api.external.lta.update_order_status', lta.update_order_status_fail)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status_fail)
     @patch('api.providers.production.production_provider.ProductionProvider.set_product_retry', mock_production_provider.set_product_retry)
     @patch('os.path.getsize', lambda y: 999)
     def test_update_product_details_fail_lta_mark_product_complete(self):
@@ -373,11 +395,12 @@ class TestProductionAPI(unittest.TestCase):
         order.update('status', 'ordered')
         self.assertTrue(emails.Emails().send_all_initial([order]))
 
-    @patch('api.external.lta.get_order_status', lta.get_order_status)
-    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.get_order_status', inventory.get_order_status)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status)
     def test_production_handle_onorder_landsat_products(self):
-        tram_order_ids = lta.sample_tram_order_ids()[0:3]
-        scene_names = lta.sample_scene_names()[0:3]
+        tram_order_ids = inventory.sample_tram_order_ids()[0:3]
+        scene_names = inventory.sample_scene_names()[0:3]
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
         scenes = order.scenes()[0:3]
         for idx, scene in enumerate(scenes):
@@ -400,26 +423,30 @@ class TestProductionAPI(unittest.TestCase):
         for s in Scene.where({'order_id': order_id, 'sensor_type': 'landsat'}):
             self.assertTrue(s.status == 'submitted')
 
-    @patch('api.external.lta.get_available_orders', lta.get_available_orders_partial)
-    @patch('api.external.lta.update_order_status', lta.update_order_status)
-    @patch('api.external.inventory.get_user_name', inventory.get_user_name)
+    available_partial = partial(inventory.get_available_orders_partial, partial=True)
+    @patch('api.external.inventory.get_available_orders', available_partial)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status)
+    @patch('api.external.inventory.get_user_details', lambda a, b, c: ('klsmith', 'klsmith@usgs.gov'))
     @patch('api.external.inventory.get_session', lambda: True)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
     def test_production_load_ee_orders_partial(self):
-        order = Order.find(self.mock_order.generate_ee_testing_order(self.user_id, partial=True))
-        self.assertEqual(order.product_opts, {'format': 'gtiff',
-                                               'etm7_collection': {'inputs': ['LE07_L1TP_026027_20170912_20171008_01_T1'],
-                                                        'products': ['sr']}})
-        key = 'system.load_ee_orders_enabled'
+        order   = Order.find(self.mock_order.generate_ee_testing_order(self.user_id, partial=True))
+        key     = 'system.load_ee_orders_enabled'
+
         self.assertEqual(api.get_production_key(key)[key], 'True')
+        self.assertEqual(order.product_opts, {'format': 'gtiff',
+                                              'tm5_collection': {'inputs': ['LT05_L1GS_125061_19871229_20170210_01_T2'],
+                                                       'products': ['sr']}})
+        
         production_provider.load_ee_orders()
         reorder = Order.find(order.id)
         self.assertEqual(reorder.product_opts, {'format': 'gtiff',
-                                               'etm7_collection': {'inputs': ['LE07_L1TP_026027_20170912_20171008_01_T1'],
-                                                        'products': ['sr']},
-                                               'tm5_collection': {'inputs': ['LT05_L1TP_025027_20110913_20160830_01_T1'],
-                                                        'products': ['sr']}})
+                                                'tm5_collection': {'inputs': ['LT05_L1GS_125061_19871229_20170210_01_T2', 
+                                                                              'LT05_L1TP_025027_20110913_20160830_01_T1'],
+                                                         'products': ['sr']}})
 
-    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status)
     def test_production_handle_failed_ee_updates(self):
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
         for scene in order.scenes():
@@ -431,30 +458,41 @@ class TestProductionAPI(unittest.TestCase):
         scenes = Scene.where({'failed_lta_status_update IS NOT': None})
         self.assertTrue(len(scenes) == 0)
 
-    @patch('api.providers.production.production_provider.ProductionProvider.update_landsat_product_status', mock_production_provider.respond_true)
     @patch('api.providers.production.production_provider.ProductionProvider.get_contactids_for_submitted_landsat_products', mock_production_provider.contact_ids_list)
+    @patch('api.external.inventory.check_valid', lambda token, scenes: dict.fromkeys(scenes, True))
     @patch('api.external.inventory.available', lambda: True)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
     def test_production_handle_submitted_landsat_products(self):
         orders = Order.find(self.mock_order.generate_testing_order(self.user_id))
         scenes = orders.scenes({'sensor_type': 'landsat'})
         self.assertTrue(production_provider.handle_submitted_landsat_products(scenes))
 
-    @patch('api.external.lta.update_order_status', lta.update_order_status)
+    @patch('api.external.inventory.available', lambda: True)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.check_valid', inventory.check_valid_sentinel)
+    def test_production_handle_submitted_sentinel_products(self):
+        orders = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        scenes = orders.scenes({'sensor_type': 'sentinel'})
+        self.assertTrue(production_provider.handle_submitted_sentinel_products(scenes))
+
+
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.update_order_status', inventory.update_order_status)
     def test_production_set_products_unavailable(self):
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
         self.assertTrue(production_provider.set_products_unavailable(order.scenes(), "you want a reason?"))
 
-    @patch('api.providers.production.production_provider.ProductionProvider.check_dependencies_for_products', mock_production_provider.check_dependencies_for_products)
-    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
-    @patch('api.external.inventory.check_valid', inventory.check_valid_landsat)
-    def test_production_update_landsat_product_status(self):
-        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
-        for scene in order.scenes({'name !=': 'plot'}):
-            scene.status = 'submitted'
-            scene.sensor_type = 'landsat'
-            user = User.find(self.user_id)
-            scene.save()
-        self.assertTrue(production_provider.update_landsat_product_status(user.contactid))
+    # @patch('api.providers.production.production_provider.ProductionProvider.check_dependencies_for_products', mock_production_provider.check_dependencies_for_products)
+    # @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    # @patch('api.external.inventory.check_valid', inventory.check_valid_landsat)
+    # def test_production_update_landsat_product_status(self):
+    #     order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+    #     for scene in order.scenes({'name !=': 'plot'}):
+    #         scene.status = 'submitted'
+    #         scene.sensor_type = 'landsat'
+    #         user = User.find(self.user_id)
+    #         scene.save()
+    #     self.assertTrue(production_provider.update_landsat_product_status(user.contactid))
 
     def test_production_get_contactids_for_submitted_landsat_products(self):
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
@@ -484,6 +522,21 @@ class TestProductionAPI(unittest.TestCase):
 
     @patch('api.external.inventory.available', lambda: True)
     @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
+    @patch('api.external.inventory.check_valid', inventory.check_valid_sentinel)
+    def test_production_handle_submitted_sentinel_products_input_exists(self):
+        # handle oncache scenario
+        order = Order.find(self.mock_order.generate_testing_order(self.user_id))
+        for scene in order.scenes({'name !=': 'plot'}):
+            scene.status = 'submitted'
+            scene.sensor_type = 'sentinel'
+            scene.save()
+            sid = scene.id
+        scenes = order.scenes({'sensor_type': 'sentinel'})
+        self.assertTrue(production_provider.handle_submitted_sentinel_products(scenes))
+        #self.assertEquals(Scene.find(sid).status, "oncache")
+
+    @patch('api.external.inventory.available', lambda: True)
+    @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
     @patch('api.external.inventory.check_valid', inventory.check_valid_viirs)
     def test_production_handle_submitted_viirs_products_input_exists(self):
         # handle oncache scenario
@@ -498,7 +551,7 @@ class TestProductionAPI(unittest.TestCase):
 
     @patch('api.external.inventory.available', lambda: True)
     @patch('api.external.inventory.get_cached_session', inventory.get_cached_session) 
-    @patch('api.external.inventory.check_valid', inventory.check_valid_modis)   
+    @patch('api.external.inventory.check_valid', inventory.check_valid_modis_false)   
     def test_production_handle_submitted_modis_products_input_missing(self):
         # handle unavailable scenario
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
@@ -513,7 +566,7 @@ class TestProductionAPI(unittest.TestCase):
 
     @patch('api.external.inventory.available', lambda: True)
     @patch('api.external.inventory.get_cached_session', inventory.get_cached_session)
-    @patch('api.external.inventory.check_valid', inventory.check_valid_viirs)
+    @patch('api.external.inventory.check_valid', inventory.check_valid_viirs_false)
     def test_production_handle_submitted_viirs_products_input_missing(self):
         # handle unavailable scenario
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
@@ -557,8 +610,8 @@ class TestProductionAPI(unittest.TestCase):
         order = Order.find(self.mock_order.generate_testing_order(self.user_id))
         scenes = order.scenes()
         Scene.bulk_update([s.id for s in scenes], {'status': 'complete', 'download_size': 0})
-        scenes = Order.find(order.id).scenes({'status': 'complete', 'download_size': 0})
-        self.assertTrue(production_provider.calc_scene_download_sizes(scenes))
+        #scenes = Order.find(order.id).scenes({'status': 'complete', 'download_size': 0})
+        self.assertTrue(production_provider.calc_scene_download_sizes([order.id]))
         upscenes = Scene.where({'status': 'complete', 'download_size': 999})
         self.assertEqual(len(upscenes), len(scenes))
 
@@ -612,55 +665,35 @@ class TestProductionAPI(unittest.TestCase):
         response = api.get_production_key(bad_key)
         self.assertEqual(response.keys(), ['msg'])
 
-    @patch('api.external.hadoop.HadoopHandler.job_names_ids',
-           hadoop.jobs_names_ids)
-    def test_catch_orphaned_scenes(self):
-        order_id = self.mock_order.generate_testing_order(self.user_id)
-        # need scenes with statuses of 'queued'
-        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs', 'plot'), 'status', ['queued'])
-        response = production_provider.catch_orphaned_scenes()
-        self.assertTrue(response)
-
-        old_time = datetime.datetime.now() - datetime.timedelta(minutes=15)
-
-        for s in Scene.where({'order_id': order_id}):
-            self.assertTrue(s.reported_orphan is not None)
-            s.reported_orphan = old_time
-            s.save()
-
-        response = production_provider.catch_orphaned_scenes()
-        self.assertTrue(response)
-        for s in Scene.where({'order_id': order_id}):
-            self.assertTrue(s.orphaned)
-
-    @patch('api.external.hadoop.HadoopHandler.job_names_ids',
-           hadoop.jobs_names_ids)
     def test_handle_stuck_jobs(self):
+        time_jobs_stuck = datetime.datetime.now() - datetime.timedelta(hours=6)
         order_id = self.mock_order.generate_testing_order(self.user_id)
         # Make some really old jobs
-        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs', 'plot'), 'status', ['processing'])
-        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs', 'plot'), 'status_modified', [datetime.datetime(1900, 1, 1)])
-        scenes = Scene.where({'status': 'processing', 'order_id': order_id})
+        self.mock_order.update_scenes(order_id,
+                                      ('landsat', 'modis', 'viirs', 'sentinel', 'plot'),
+                                      'status', ['scheduled'])
+        self.mock_order.update_scenes(order_id,
+                                      ('landsat', 'modis', 'viirs', 'sentinel', 'plot'),
+                                      'status_modified', [datetime.datetime(1900, 1, 1)])
+
+        scenes = Scene.where({'status': ('tasked', 'scheduled', 'processing'), 'order_id': order_id})
         n_scenes = len(scenes)
+
         response = production_provider.handle_stuck_jobs(scenes)
         self.assertTrue(response)
 
-        scenes = Scene.where({'status': 'processing', 'order_id': order_id, 'reported_orphan is not': None})
-        self.assertEqual(n_scenes, len(scenes))
-
-        self.mock_order.update_scenes(order_id, ('landsat', 'modis', 'viirs', 'plot'), 'reported_orphan', [datetime.datetime(1900, 1, 1)])
-        response = production_provider.handle_stuck_jobs(scenes)
-        self.assertTrue(response)
-
-        scenes = Scene.where({'status': 'processing', 'order_id': order_id})
+        scenes = Scene.where({'status': ('tasked', 'scheduled', 'processing'), 'order_id': order_id})
         self.assertEqual(0, len(scenes))
 
+        scenes = Scene.where({'status': 'oncache', 'order_id': order_id})
+        self.assertEqual(n_scenes, len(scenes))
 
     def test_convert_product_options(self):
         """
         Test the conversion procedure to make sure that the new format for orders converts
         to the old format
         """
+        self.maxDiff = None
         scenes = ['LE07_L1TP_026027_20170912_20171008_01_T1', 'LC08_L1TP_025027_20160521_20170223_01_T1',
                   'LT05_L1TP_025027_20110913_20160830_01_T1']
 
@@ -714,6 +747,14 @@ class TestProductionAPI(unittest.TestCase):
                    'include_sr_savi': False,
                    'include_sr_thermal': False,
                    'include_sr_toa': False,
+                   'include_s2_sr': False,
+                   'include_s2_ndvi': False,
+                   'include_s2_msavi': False,
+                   'include_s2_evi': False,
+                   'include_s2_savi': False,
+                   'include_s2_nbr': False,
+                   'include_s2_nbr2': False,
+                   'include_s2_ndmi': False,
                    'include_modis_ndvi': False,
                    'include_viirs_ndvi': False,
                    'include_statistics': False,
@@ -807,15 +848,6 @@ class TestProductionAPI(unittest.TestCase):
         new_time = scene.status_modified
         self.assertGreater(new_time, old_time)
 
-    @patch('api.external.hadoop.HadoopHandler.list_jobs', hadoop.jobs_names_ids)
-    @patch('api.external.hadoop.HadoopHandler.kill_job', lambda x,y: True)
-    def test_hadoop_reset_status(self):
-        order_id = self.mock_order.generate_testing_order(self.user_id)
-        scenes = Scene.where({'order_id': order_id})
-        Scene.bulk_update([s.id for s in scenes], {'status': 'processing'})
-        self.assertTrue(production_provider.reset_processing_status())
-        scenes = Scene.where({'order_id': order_id})
-        self.assertEqual({'submitted'}, set([s.status for s in scenes]))
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

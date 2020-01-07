@@ -45,18 +45,18 @@ class Scene(object):
         :param cksum_distro_location: checksum location
         :param cksum_download_url: access point for users
         :param status: current processing status
-        :param processing_location: Hadoop node doing the processing
+        :param processing_location: Mesos node doing the processing
         :param completion_date: date when processing completed
-        :param log_file_contents: Hadoop log file
+        :param log_file_contents: processing log file
         :param ee_unit_id: EarthExplorer ID
         :param tram_order_id: LTA tram
         :param sensor_type: landsat/modis/plot
-        :param job_name: Hadoop job name
+        :param job_name: processing task name
         :param retry_after: when to retry
         :param retry_limit: max number of retry attempts
         :param retry_count: retry attempts
-        :param reported_orphan: time reported missing hadoop
-        :param orphaned: missing hadoop job
+        :param reported_orphan: time reported missing
+        :param orphaned: missing job
         :param download_size: size of final product download
         :param failed_lta_status_update: status update not yet delivered to LTA
         :param status_modified: most recent time status was updated

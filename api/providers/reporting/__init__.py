@@ -39,7 +39,9 @@ REPORTS = {
                      SUM(CASE WHEN name LIKE 'MOD13%' THEN 1 ELSE 0 END) "MOD13",
                      SUM(CASE WHEN name LIKE 'MYD13%' THEN 1 ELSE 0 END) "MYD13",
                      SUM(CASE WHEN name LIKE 'MOD11%' THEN 1 ELSE 0 END) "MOD11",
-                     SUM(CASE WHEN name LIKE 'MYD11%' THEN 1 ELSE 0 END) "MYD11"
+                     SUM(CASE WHEN name LIKE 'MYD11%' THEN 1 ELSE 0 END) "MYD11",
+                     SUM(CASE WHEN name LIKE 'VNP09%' THEN 1 ELSE 0 END) "VNP09",
+                     SUM(CASE WHEN name LIKE 'L1C%' OR name LIKE 'S2%' THEN 1 ELSE 0 END) "S2[A|B]"
                      FROM ordering_scene
                      WHERE status not in ('purged', 'cancelled', 'complete', 'unavailable') '''
     },
@@ -124,7 +126,8 @@ REPORTS = {
                      COUNT(s.name) "Scene Count",
                      SUM(CASE when s.status in ('complete', 'unavailable') then 1 else 0 end) "C",
                      SUM(CASE when s.status = 'processing' then 1 ELSE 0 END) "P",
-                     SUM(CASE when s.status = 'queued' then 1 ELSE 0 END) "Q",
+                     SUM(CASE when s.status = 'tasked' then 1 ELSE 0 END) "T",
+                     SUM(CASE when s.status = 'scheduled' then 1 ELSE 0 END) "Sch",
                      SUM(CASE when s.status = 'oncache' then 1 ELSE 0 END) "OC",
                      SUM(CASE when s.status = 'onorder' then 1 ELSE 0 END) "OO",
                      SUM(CASE when s.status = 'retry' then 1 ELSE 0 END) "R",
@@ -154,8 +157,7 @@ REPORTS = {
                      u.first_name "First Name",
                      u.last_name "Last Name",
                      SUM(case when s.status = 'error' then 1 else 0 end) "Error",
-                     SUM(case when s.status = 'retry' then 1 else 0 end) "Retry",
-                     SUM(case when s.status = 'onorder' then 1 else 0 end) "On Order"
+                     SUM(case when s.status = 'retry' then 1 else 0 end) "Retry"
                      FROM ordering_scene s, ordering_order o, auth_user u
                      WHERE s.order_id = o.id
                      AND o.user_id = u.id
@@ -206,14 +208,15 @@ REPORTS = {
         'query': r'''SELECT u.username "Username",
                      SUM(CASE WHEN s.status = 'processing'
                          THEN 1 ELSE 0 END) "Processing",
-                     SUM(CASE WHEN s.status = 'queued'
+                     SUM(CASE WHEN s.status IN
+                         ('tasked', 'scheduled')
                          THEN 1 ELSE 0 END) "Queued",
                      SUM(CASE WHEN s.status IN
-                         ('queued', 'processing')
+                         ('processing', 'tasked', 'scheduled')
                          THEN 1 ELSE 0 END) "Total Running",
                      SUM(CASE WHEN s.status IN
-                         ('queued', 'processing', 'onorder',
-                          'submitted', 'error', 'retry', 'oncache')
+                         ('processing', 'submitted', 'error', 'onorder',
+                          'retry', 'oncache', 'tasked', 'scheduled')
                          THEN 1 ELSE 0 END) "Open Products",
                      u.email "Email",
                      u.first_name "First Name",
@@ -240,7 +243,7 @@ REPORTS = {
                       WHERE
                       u.id = o.user_id
                       AND o.id = s.order_id
-                      AND s.status in ('queued', 'processing')
+                      AND s.status in ('tasked', 'scheduled', 'processing')
                       GROUP BY u.email)
                      SELECT
                      s.name "Scene",
@@ -327,7 +330,7 @@ MULTISTATS = {
                      WHERE s.status = 'complete'
                      AND completion_date > now() - interval '1 hours'
                      GROUP BY "machine" '''
-    },
+    }
 }
 
 

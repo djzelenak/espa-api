@@ -20,7 +20,6 @@ from api.providers.configuration.configuration_provider import ConfigurationProv
 from api.providers.production.mocks.production_provider import MockProductionProvider
 from api.providers.production.production_provider import ProductionProvider
 from api.providers.ordering.ordering_provider import OrderingProviderException, OrderingProvider
-from api.external.mocks import lta as mocklta
 from api.external.mocks import inventory as mockinventory
 from api.system.logger import ilogger as logger
 from mock import patch
@@ -193,6 +192,7 @@ class TestValidation(unittest.TestCase):
         else:
             self.fail('Failed MODIS pixel resize test')
 
+    # this takes way too 
     def test_validate_bad_orders(self):
         """
         Build a series of invalid orders to try and catch any potential errors in a
@@ -221,6 +221,56 @@ class TestValidation(unittest.TestCase):
                 with self.assertRaisesRegexp(exc_type, exc):
                     api.validation(order, self.staffuser.username)
 
+    def test_order_st_validation(self):
+        """
+        Validate an order that includes st options
+        """
+        exc_type = ValidationException
+
+        # ---- Scenario 1: No algorithm supplied ----
+        opts_1 = {'note': '',
+                'etm7_collection': {'inputs': ['le07_l1tp_029030_20171222_20180117_01_t2'], 'products': ['st']},
+                'resampling_method': 'nn',
+                'format': 'gtiff'}
+        err_msg_1 = "Missing surface temperature algorithm"
+
+        with self.assertRaisesRegexp(exc_type, err_msg_1):
+            api.validation.validate(opts_1, self.staffuser.username)
+
+        # ---- Scenario 2: No reanalysis data supplied ----
+        opts_2 = {'note': '',
+                'etm7_collection': {'inputs': ['le07_l1tp_029030_20171222_20180117_01_t2'],
+                                    'products': ['st', 'stalg_single_channel']},
+                'resampling_method': 'nn',
+                'format': 'gtiff'}
+        err_msg_2 = "Missing reanalysis data source for single channel algorithm"
+
+        with self.assertRaisesRegexp(exc_type, err_msg_2):
+            api.validation.validate(opts_2, self.staffuser.username)
+
+        # ---- Scenario 3: 'st' not supplied ----
+        opts_3 = {'note': '',
+                'etm7_collection': {'inputs': ['le07_l1tp_029030_20171222_20180117_01_t2'],
+                                    'products': ['reanalsrc_fp']},
+                'resampling_method': 'nn',
+                'format': 'gtiff'}
+
+        err_msg_3 = "Must include 'st' in products if specifying surface temperature options"
+
+        with self.assertRaisesRegexp(exc_type, err_msg_3):
+            api.validation.validate(opts_3, self.staffuser.username)
+
+        # ---- Scenario 4: good order options are validated ----
+        good_opts = {'note': '',
+                'etm7_collection': {'inputs': ['le07_l1tp_029030_20171222_20180117_01_t2'],
+                                    'products': ['reanalsrc_fp', 'st', 'stalg_single_channel']},
+                'resampling_method': 'nn',
+                'format': 'gtiff'}
+
+        api.validation.validate(good_opts, self.staffuser.username)
+
+        return None
+
     @patch('api.external.inventory.available', lambda: True)
     @patch('api.providers.production.production_provider.ProductionProvider.parse_urls_m2m',
            lambda x, y: y)
@@ -243,7 +293,9 @@ class TestValidation(unittest.TestCase):
                                                                       filters={'status': ('submitted',
                                                                                           'oncache',
                                                                                           'onorder',
-                                                                                          'queued',
+                                                                                          'tasked',
+                                                                                          'scheduled',
+                                                                                          'retry',
                                                                                           'processing')}))
 
     def test_get_scenes_for_new_user(self):

@@ -12,8 +12,6 @@ from api import OpenSceneLimitException
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.providers.caching.caching_provider import CachingProvider
 # ----------------------------------------------------------------------------------
-from api.external import lta, onlinecache  # TODO: is this the best place for these?
-from api.notification import emails        # TODO: is this the best place for these?
 from api.system.logger import ilogger as logger  # TODO: is this the best place for these?
 
 import copy
@@ -78,8 +76,18 @@ class OrderingProvider(ProviderInterfaceV0):
             outs = pub_prods[sensor_type]['products']
             ins = pub_prods[sensor_type]['inputs']
 
+            ### Leaving this here as it could be a useful template
+            ### if we introduce new sensors in the future which are
+            ### role restricted.
             # Restrict ordering VIIRS to staff
-            if role and sensor_type.startswith('vnp'):
+            # if role and sensor_type.startswith('vnp'):
+            #     for sc_id in ins:
+            #         upd['not_implemented'].append(sc_id)
+            #     pub_prods.pop(sensor_type)
+            #     continue
+
+            # Restrict ordering Sentinel to staff
+            if role and sensor_type == 'sentinel':
                 for sc_id in ins:
                     upd['not_implemented'].append(sc_id)
                 pub_prods.pop(sensor_type)
@@ -173,7 +181,9 @@ class OrderingProvider(ProviderInterfaceV0):
         if filters and not isinstance(filters, dict):
             raise OrderingProviderException('filters must be dict')
 
-        user_orders = Order.where({'user_id': user_id})
+        # See if the user has any open orders first
+        user_orders = Order.where({'user_id': user_id, 'status': 'ordered'})
+
         if len(user_orders) > 0:
             scenes = Order.get_user_scenes(user_id=user_id, params=filters)
 
@@ -234,8 +244,8 @@ class OrderingProvider(ProviderInterfaceV0):
 
         logger.info('Received request to cancel {} from {}'
                     .format(orderid, request_ip_address))
-        killable_scene_states = ('submitted', 'oncache', 'onorder', 'queued',
-                                 'retry', 'error', 'unavailable', 'complete')
+        killable_scene_states = ('submitted', 'oncache', 'onorder', 'retry', 
+                                 'error', 'unavailable', 'complete')
         scenes = order.scenes(sql_dict={'status': killable_scene_states})
         if len(scenes) > 0:
             Scene.bulk_update([s.id for s in scenes], Scene.cancel_opts())

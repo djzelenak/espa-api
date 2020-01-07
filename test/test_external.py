@@ -5,10 +5,6 @@ from mock import patch, MagicMock
 from test.version0_testorders import build_base_order
 from api.external import onlinecache
 from api.external.mocks import onlinecache as mockonlinecache
-from api.external.mocks import hadoop as mockhadoop
-from api.external import lta
-from api.external.mocks import lta as mocklta
-from api.external.hadoop import HadoopHandler
 from api.external.mocks import inventory as mockinventory
 
 from api.external import lpdaac
@@ -21,43 +17,6 @@ class TestLPDAAC(unittest.TestCase):
 
     def tearDown(self):
         pass
-
-
-
-class TestLTA(unittest.TestCase):
-    def setUp(self):
-        os.environ['espa_api_testing'] = 'True'
-        self.contact_id = 0
-        self.lta_order_number = 0
-        self.lta_unit_number = 0
-        base_order = build_base_order()
-        self.scene_ids = [base_order[b].get('inputs', [None]).pop() for b in base_order if type(base_order[b]) == dict]
-        self.scene_ids = [s for s in self.scene_ids if s and (s.startswith('L'))]  # Landsat only
-
-    def tearDown(self):
-        os.environ['espa_api_testing'] = ''
-
-    #@patch('api.external.lta.OrderUpdateServiceClient.update_order', mocklta.return_update_order_resp)
-    @patch('api.external.lta.SoapClient', mocklta.MockSudsClient)
-    def test_get_available_orders(self):
-        resp = lta.get_available_orders()
-        self.assertEqual(len(resp[('100', '', '')]), 3)
-
-    @patch('api.external.lta.SoapClient', mocklta.MockSudsClient)
-    def test_get_order_status(self):
-        resp = lta.get_order_status(self.lta_order_number)
-        self.assertIn('order_status', resp)
-        self.assertEqual(resp['order_num'], str(self.lta_order_number))
-
-    @patch('api.external.lta.SoapClient', mocklta.MockSudsClient)
-    def test_update_order_complete(self):
-        resp = lta.update_order_status(self.lta_order_number, self.lta_unit_number, 'C')
-        self.assertTrue(resp.success)
-
-    @patch('api.external.lta.SoapClient', mocklta.MockSudsClient)
-    def test_update_order_incomplete(self):
-        resp = lta.update_order_status('failure', self.lta_unit_number, 'C')
-        self.assertFalse(resp.success)
 
 
 class TestInventory(unittest.TestCase):
@@ -115,22 +74,9 @@ class TestInventory(unittest.TestCase):
 
     @patch('api.external.inventory.requests.get', mockinventory.RequestsSpoof)
     @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
-    def test_set_user_context(self):
-        success = inventory.set_user_context(self.token, self.contact_id)
-        self.assertTrue(success)
-
-    @patch('api.external.inventory.requests.get', mockinventory.RequestsSpoof)
-    @patch('api.external.inventory.requests.post', mockinventory.RequestsSpoof)
     def test_clear_user_context(self):
         success = inventory.clear_user_context(self.token)
         self.assertTrue(success)
-
-    @patch('api.external.inventory.requests.get', mockinventory.BadRequestSpoofNegative)
-    @patch('api.external.inventory.requests.post', mockinventory.BadRequestSpoofNegative)
-    def test_false_data_response(self):
-        expected = 'Get user context ESPA failed for user {}'.format(self.contact_id)
-        with self.assertRaisesRegexp(inventory.LTAError, expected):
-            _ = inventory.set_user_context(self.token, self.contact_id)
 
 
 class TestCachedInventory(unittest.TestCase):
@@ -190,40 +136,4 @@ class TestOnlineCache(unittest.TestCase):
         results = self.cache.delete('bilbo')
         self.assertTrue(results)
 
-
-class TestHadoopHandler(unittest.TestCase):
-    """
-    Tests for the hadoop interaction class
-    """
-    def setUp(self):
-        os.environ['espa_api_testing'] = 'True'
-        self.hadoop = HadoopHandler()
-
-    def tearDown(self):
-        os.environ['espa_api_testing'] = ''
-
-    @patch('api.external.hadoop.HadoopHandler._remote_cmd', mockhadoop.list_jobs)
-    def test_list_jobs(self):
-        resp = self.hadoop.list_jobs()
-        self.assertIsInstance(resp, dict)
-        for key, value in resp.items():
-            self.assertIsInstance(key, str)
-            self.assertIsInstance(value, str)
-
-    @patch('api.external.hadoop.HadoopHandler.job_names_ids', mockhadoop.jobs_names_ids)
-    def test_job_names_ids(self):
-        resp = self.hadoop.job_names_ids()
-        self.assertIsInstance(resp, dict)
-
-    @patch('api.external.hadoop.HadoopHandler._remote_cmd', mockhadoop.slave_ips)
-    def test_slave_ips(self):
-        resp = self.hadoop.slave_ips()
-        self.assertIsInstance(resp, list)
-        self.assertTrue(len(resp) > 0)
-
-    @patch('api.external.hadoop.HadoopHandler.master_ip', mockhadoop.master_ip)
-    def test_master_ip(self):
-        resp = self.hadoop.master_ip()
-        self.assertIsInstance(resp, str)
-        self.assertTrue(len(resp.split('.')) == 4)
 

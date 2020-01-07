@@ -1,5 +1,5 @@
 """
-TODO: Replaces lta.py
+Replaced lta.py
 """
 import json
 import urllib
@@ -13,8 +13,7 @@ import requests
 import memcache
 
 from api.domain import sensor
-from api.providers.configuration.configuration_provider import (
-    ConfigurationProvider)
+from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.providers.caching.caching_provider import CachingProvider
 from api.system.logger import ilogger as logger
 
@@ -170,12 +169,6 @@ class LTAService(object):
         else:
             logger.error('{} logout failed'.format(self.current_user))
 
-    def easy_id_lookup(self, product_ids):
-        retdata = dict()
-        for sensor_name, id_list in split_by_dataset(product_ids).items():
-             retdata.update(self.id_lookup(id_list, sensor_name))
-        return retdata
-
     def id_lookup(self, product_ids, dataset):
         """
         Convert Collection IDs (LC08_...) into M2M entity IDs
@@ -205,24 +198,85 @@ class LTAService(object):
         id_list = [i for i in product_ids]
         if dataset.startswith('MODIS'):
             # WARNING: See above. Need to "undo" the MODIS mapping problem.
-            results = {[i for i in id_list if k in i
-                        ].pop(): v for k,v in results.items()}
+            modis_results = dict()
+            for k, v in results.items():
+                _key = [i for i in id_list if k in i].pop()
+                modis_results[_key] = v
+            results = modis_results
+            modis_results = None
 
         if dataset.startswith('VIIRS'):
             # Undo the file extension addition from above
-            results = {[i for i in id_list if i in k].pop(): v for k, v in results.items()}
+            viirs_results = dict()
+            for k, v in results.items():
+              _key = [i for i in id_list if i in k].pop()
+              viirs_results[_key] = v
+            results = viirs_results
+            viirs_results = None
+
         return {k: results.get(k) for k in id_list}
+
+    def download_options(self, entity_ids, dataset):
+        """ 
+        Make a downloadOptions request to the M2M Api.
+        """
+        endpoint = 'downloadoptions'
+        payload = dict(apiKey=self.token,
+                       entityIds=entity_ids,
+                       products='STANDARD',
+                       datasetName=dataset)
+        resp = self._post(endpoint, payload)
+        return resp.get('data')
+
+    def download_available(self, entity_ids, dataset):
+        """
+        Iterates over a downloadoptions request for the provided
+        entity_ids, determining download url availability
+        """
+        status_dict = dict()
+        m2m_ids = entity_ids.values()
+        dload_options = self.download_options(m2m_ids, dataset) # list of dicts, keys 'entityId', 'downloadOptions'
+        for option in dload_options:
+            # In some instances the entityId returned by downloadOptions is an integer
+            # so we want to convert it to a string to match with other instances of entityId.
+            # This prevents a KeyError from occurring in verify_scenes()
+            try:
+                entity_id = unicode(str(option['entityId']), "utf-8")
+            except Exception as e:
+                msg = 'Error converting entityID {0} to unicode string format - {1}'.format(option['entityId'],
+                                                                                            e.message)
+                logger.critical(msg)
+                raise LTAError(msg)
+            standard_product = [p for p in option['downloadOptions'] if p['downloadCode'] == 'STANDARD'][0] 
+            available = standard_product['available'] # True or False
+            status_dict[entity_id] = available
+        return status_dict
+
 
     def verify_scenes(self, product_ids, dataset):
         """
-        Check if supplied IDs successfully mapped to M2M entity IDs
+        Check if supplied IDs successfully map to M2M entity IDs
 
         :param product_ids: Landsat Collection IDs ['LC08_..', ...]
         :type product_ids: list
         :return: dict
         """
-        entity_ids = self.id_lookup(product_ids, dataset)
-        return {k: entity_ids.get(k) is not None for k in product_ids}
+        entity_ids = self.id_lookup(product_ids, dataset) # gather M2M entity ids
+        # M2M entity ids do not correlate to product availability though. And product download url
+        # requests will Fail a request if any of the products requested are not actually
+        # available (as of M2M api version 1.4.1). So we need to make a downloadOptions request
+        # to the M2M Api to ensure said product is actually available
+        availability = self.download_available(entity_ids, dataset) # dict of {entityid:availability, ...}
+
+        response = dict()
+        for k, v in entity_ids.items():
+            if v:
+                response[k] = availability[v]
+            else:
+                logger.info("id: {} is not available".format(k))
+                response[k] = False
+
+        return response
 
     def get_download_urls(self, entity_ids, dataset, products='STANDARD',
                           stage=True, usage='[espa]:sr'):
@@ -246,14 +300,118 @@ class LTAService(object):
         resp = self._post('download', payload)
         results = resp.get('data')
 
-        # Use the URL taken directly from the M2M JSON API if VIIRS
-        if 'VNP' in dataset:
-            return {i['entityId']: i['url'] for i in results}
-        # Otherwise use our internal network conversion
+        if results:
+            # Use the URL taken directly from the M2M JSON API if VIIRS
+            if 'VNP' in dataset:
+                return {i['entityId']: i['url'] for i in results}
+            # For now, let's keep the original M2M download url for sentinel
+            elif 'SENTINEL' in dataset:
+                return {i['entityId']: i['url'] for i in results}
+            # Otherwise use our internal network conversion
+            else:
+                return self.network_urls(
+                    self.network_urls({i['entityId']: i['url'] for i in results},
+                                      'landsat'), 'modis')
         else:
-            return self.network_urls(
-                self.network_urls({i['entityId']: i['url'] for i in results},
-                                  'landsat'), 'modis')
+            logger.warn("inventory.get_download_urls - no data in POST response returned for entity_ids: {}, dataset: {}".format(entity_ids, dataset))
+            
+
+    def get_order_status(self, order_number):
+        """
+        Return the order status for the given order number.
+        
+        :param order_number: EE order id
+        :type order_number: string
+        """
+        endpoint  = 'orderstatus'
+        payload   = dict(apiKey=self.token, orderNumber=order_number)
+        response  = self._post(endpoint, payload)
+        result    = response.get('data')
+        errorCode = response.get('errorCode')
+        error     = response.get('error')
+        # result keys: 'orderNumber', 'units', 'statusCode', 'statusText'
+        # 'units' dicts keys: 'datasetName', 'displayId', 'entityId', 'orderingid',
+        #                     'productCode', 'productDescription', 'statusCode',
+        #                     'statusText', 'unitNumber'
+        return result
+        
+    def update_order_status(self, order_number, unit_number, status):
+        """
+        Update the status of orders ESPA is working on.
+
+        :param order_number: EE order id
+        :type  order_number: string
+        :param unit_number:  id for unit to update
+        :type  unit_number:  string
+        :param status:       the EE defined status value
+        :type  status:       string
+        """
+        endpoint = 'setunitstatus'
+        payload  = dict(apiKey=self.token, orderNumber=order_number, unitStatus=status, 
+                        firstUnitNumber=unit_number, lastUnitNumber=unit_number)
+        response = self._post(endpoint, payload)
+        error    = response.get('error')
+
+        if not error:
+            return {'success': True, 'message': None, 'status': None}
+        else:
+            # throw exception if non 200 response?
+            logger.error("Problem updating order status in EE. order_number: {}  unit_number: {}  status: {}  response: {}".format(order_number, unit_number, status, response))
+            return {'success': False, 'message': response, 'status': 'Fail'}
+
+    def get_available_orders(self, contactid=None):
+        """
+        Return collection of ESPA orders from EE
+        """
+        endpoint = 'getorderqueue'
+        payload = dict(apiKey=self.token, queueName='espa')
+        response = self._post(endpoint, payload)
+        data = response.get('data')
+        orders = []
+
+
+        if isinstance(data, dict) and 'orders' in data.keys():
+            if contactid:
+              orders = [o for o in data.get('orders') if o.get('contactId') == contactid] 
+            else:
+              orders = data.get('orders')
+        else:
+            logger.error("Problem retrieving available orders from M2M. response: {}".format(response))
+
+        return orders
+
+## sample response, now includes contactId
+# {u'access_level': u'appuser',
+#  u'api_version': u'1.4.1',
+#  u'catalog_id': u'EE',
+#  u'data': {u'orders': [{u'contactId': 888718,
+#                         u'orderNumber': u'0101905173361',
+#                         u'statusCode': u'Q',
+#                         u'statusText': u'Queued for Processing',
+#                         u'units': [{u'datasetName': None,
+#                                     u'displayId': None,
+#                                     u'entityId': None,
+#                                     u'orderingId': u'LT05_L1GS_125061_19871229_20170210_01_T2',
+#                                     u'productCode': u'SR05',
+#                                     u'productDescription': u'LANDSAT TM COLLECTIONS LAND SURFACE REFLECTANCE ON-DEMAND',
+#                                     u'statusCode': None,
+#                                     u'statusText': None,
+#                                     u'unitNumber': 1}]},
+
+    def get_user_email(self, contactid):
+        """
+        This method will get the end-user lookup data given a contactid.
+
+        :param contactid: ERS identification key (number form
+        :type contactid: int
+        :return: dictionary
+        """
+        endpoint = 'userLookup'
+        payload = dict(apiKey=self.token, contactId=int(contactid))
+        resp = self._post(endpoint, payload)
+        if not bool(resp.get('data')):
+            raise LTAError('Get user email failed for contactid {}'.format(contactid))
+        return str(resp.get('data'))
 
     def get_user_context(self, contactid, ipaddress=None, context='ESPA'):
         """
@@ -339,57 +497,64 @@ class LTACachedService(LTAService):
 ''' This is the public interface that calling code should use to interact
     with this module'''
 
-
-def get_session():
-    return LTAService().login()
-
-
-def logout(token):
-    return LTAService(token).logout()
-
-
-def convert(token, product_ids, dataset):
-    return LTAService(token).id_lookup(product_ids, dataset)
-
-
-def verify_scenes(token, product_ids, dataset):
-    return LTAService(token).verify_scenes(product_ids, dataset)
-
-
-def get_download_urls(token, entity_ids, dataset, usage='[espa]'):
-    return LTAService(token).get_download_urls(entity_ids, dataset, usage=usage)
-
-
-def get_user_context(token, contactid, ipaddress=None):
-    return LTAService(token).get_user_context(contactid, ipaddress)
-
-
-def set_user_context(token, contactid, ipaddress=None):
-    return LTAService(token).set_user_context(contactid, ipaddress)
-
-
-def get_user_name(token, contactid, ipaddress=None):
-    context = get_user_context(token, contactid, ipaddress)
-    return str(context.get('username'))
-
-
-def clear_user_context(token):
-    return LTAService(token).clear_user_context()
-
-
 def available():
     return LTAService().available()
-
 
 def check_valid(token, product_ids):
     return dict(z for d, l in split_by_dataset(product_ids).items()
                  for z in verify_scenes(token, l, d).items())
+
+def clear_user_context(token):
+    return LTAService(token).clear_user_context()
+
+def convert(token, product_ids, dataset):
+    return LTAService(token).id_lookup(product_ids, dataset)
 
 def download_urls(token, product_ids, dataset, usage='[espa]'):
     entities = convert(token, product_ids, dataset)
     urls = get_download_urls(token, entities.values(), dataset, usage=usage)
     return {p: urls.get(e) for p, e in entities.items() if e in urls}
 
+def get_available_orders(token, contactid=None):
+    return LTAService(token).get_available_orders(contactid)
 
 def get_cached_session():
     return LTACachedService().cached_login()
+
+def get_download_urls(token, entity_ids, dataset, usage='[espa]'):
+    return LTAService(token).get_download_urls(entity_ids, dataset, usage=usage)
+
+def get_order_status(token, order_number):
+    return LTAService(token).get_order_status(order_number)
+
+def get_session():
+    return LTAService().login()
+
+def get_user_name(token, contactid, ipaddress=None):
+    context = LTAService(token).get_user_context(contactid, ipaddress)
+    return str(context.get('username'))
+
+def get_user_details(token, contactid, ipaddress=None):
+    email    = LTAService(token).get_user_email(contactid)
+    username = get_user_name(token, contactid, ipaddress)
+    return username, email
+
+def logout(token):
+    return LTAService(token).logout()
+
+def update_order_status(token, order_number, unit_number, status):
+    return LTAService(token).update_order_status(order_number, unit_number, status)
+
+def verify_scenes(token, product_ids, dataset):
+    return LTAService(token).verify_scenes(product_ids, dataset)
+
+
+
+
+
+
+
+
+
+
+

@@ -148,7 +148,9 @@ class API(object):
                                             filters={'status': ('submitted',
                                                                 'oncache',
                                                                 'onorder',
-                                                                'queued',
+                                                                'tasked',
+                                                                'scheduled',
+                                                                'retry',
                                                                 'processing')})
             # performs inventory check, raises InventoryException
             self.inventory.check(order, user.contactid)
