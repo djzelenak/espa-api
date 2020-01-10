@@ -26,7 +26,7 @@ stats:
         - 'sr_nbr'
         - 'sr_nbr2'
         - 'st'
-        - 'orca'
+        - 'aq_refl'
 
 olitirs8:
     role:
@@ -37,7 +37,6 @@ olitirs8:
         - reanalsrc_merra2
         - reanalsrc_fp
         - reanalsrc_fpit
-        - orca
     by_date:
         sr:
             - "< 2016050 | > 2016058"
@@ -159,8 +158,8 @@ source_modis_ndvi:
     message: >
         NDVI not available for requested products
 
-source_orca_sensors:
-    sensors: [olitirs8_collection, oli8_collection, etm7_collection, tm4_collection, tm5_collection]
-    orca_sensors: [olitirs8_collection, oli8_collection]
+source_aq_refl_sensors:
+    all_sensors: [olitirs8_collection, oli8_collection, etm7_collection, tm4_collection, tm5_collection]
+    valid_sensors: [olitirs8_collection, oli8_collection]
     message: >
-        LaORCA currently only available for Landsat 8 OLI or OLI/TIRS
+        Aquatic Reflectance currently only available for Landsat 8 OLI or OLI/TIRS
