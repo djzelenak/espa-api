@@ -596,18 +596,18 @@ class TestValidation(unittest.TestCase):
         for vorder in valid_orders:
             api.validation.validate(vorder, self.staffuser.username)
 
-    def test_orca_sensor_restricted(self):
-        """ Users should only be able to order LaORCA for
+    def test_aq_refl_sensor_restricted(self):
+        """ Users should only be able to order Aquatic Reflectance for
             Landsat 8 OLI and/or OLITIRS"""
         valid_orders = [
             {
             "olitirs8_collection": {
                 "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
-                "products": ["orca"]
+                "products": ["aq_refl"]
             },
             "oli8_collection": {
                 "inputs": ["lo08_l1tp_021049_20150304_20170227_01_t1"],
-                "products": ["orca"]
+                "products": ["aq_refl"]
             },
             "format": "gtiff"
         }]
@@ -616,16 +616,16 @@ class TestValidation(unittest.TestCase):
             {
             "olitirs8_collection": {
                 "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
-                "products": ["orca"]
+                "products": ["aq_refl"]
             },
             "etm7_collection": {
                 "inputs": ["le07_l1tp_151041_20190218_20190316_01_t1"],
-                "products": ["orca"]
+                "products": ["aq_refl"]
             },
             "format": "gtiff"
         }]
         for iorder in invalid_orders:
-            with self.assertRaisesRegex(ValidationException, "LaORCA currently only available for Landsat 8 OLI or OLI/TIRS"):
+            with self.assertRaisesRegexp(ValidationException, "Aquatic Reflectance currently only available for Landsat 8 OLI or OLI/TIRS"):
                 api.validation.validate(iorder, self.staffuser.username)
         for vorder in valid_orders:
             api.validation.validate(vorder, self.staffuser.username)

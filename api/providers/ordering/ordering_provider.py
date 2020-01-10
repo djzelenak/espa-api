@@ -84,13 +84,6 @@ class OrderingProvider(ProviderInterfaceV0):
             #     pub_prods.pop(sensor_type)
             #     continue
 
-            # Restrict ordering Sentinel to staff
-            if role and sensor_type == 'sentinel':
-                for sc_id in ins:
-                    upd['not_implemented'].append(sc_id)
-                pub_prods.pop(sensor_type)
-                continue
-
             if sensor_type in all_ordering_rsctd:
                 for sc_id in ins:
                     if sensor_type in upd['ordering_restricted']:

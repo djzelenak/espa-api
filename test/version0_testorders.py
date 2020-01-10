@@ -124,8 +124,8 @@ def build_base_order():
                                'products': ['l1']}
             else:
                 base[label] = {'inputs': ['{}{}'.format(prefix, acq)],
-                               # don't include orca in our test base order since it has sensor restrictions
-                               'products': [p for p in sn.instance('{}{}'.format(prefix, acq)).products if p != 'orca']}
+                               # don't include aq_refl in our test base order since it has sensor restrictions
+                               'products': [p for p in sn.instance('{}{}'.format(prefix, acq)).products if p != 'aq_refl']}
 
     # We need to have at least 2 scenes for viirs-related tests to work
     base['vnp09ga'] = {'inputs': ['VNP09GA.A2014245.h10v04.001.2017043103958',

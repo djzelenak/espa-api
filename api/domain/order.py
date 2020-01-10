@@ -315,7 +315,7 @@ class Order(object):
              'include_sr_msavi': False,                # modified soil adjusted veg
              'include_sr_evi': False,                  # enhanced vegetation
              'include_st': False,                      # surface temperature
-             'include_orca': False,                    # surface water reflectance
+             'include_aq_refl': False,                 # aquatic reflectance
              'include_modis_ndvi': False,              # Daily modis ndvi
              'include_viirs_ndvi': False,              # Daily viirs ndvi
              'include_s2_sr': False,                   # Sentinel-2 surface reflectance
@@ -707,7 +707,7 @@ class OptionsConversion(object):
                 ('include_s2_savi', 's2_savi', True),
                 ('include_s2_msavi', 's2_msavi', True),
                 ('include_s2_evi', 's2_evi', True),
-                ('include_orca', 'orca', True),
+                ('include_aq_refl', 'aq_refl', True),
                 ('include_st', 'st', True),
                 ('st_algorithm', 'stalg_split_window',   'split_window'),
                 ('st_algorithm', 'stalg_single_channel', 'single_channel'),
