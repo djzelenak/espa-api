@@ -1,0 +1,43 @@
+FROM docker:19.03.1
+
+MAINTAINER USGS LSRD http://eros.usgs.gov
+
+ENV PYTHON_VERSION 3.6.8
+
+# Update repository indexes from all remote repositories
+# and install some system dependencies required for building Python, etc.
+RUN apk update && \
+    apk add wget \
+            gcc \
+            libc-dev \
+            zlib \
+            zlib-dev \
+            libffi-dev \
+            openssl-dev \
+            make
+
+# Build and install Python using a specified version
+RUN wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tar.xz && \
+    tar -xf Python-${PYTHON_VERSION}.tar.xz && \
+    rm -f Python-${PYTHON_VERSION}.tar.xz && \
+    cd Python-${PYTHON_VERSION} && \
+    ./configure && \
+    make && \
+    make install && \
+    cd ../ && \
+    rm -rf Python-${PYTHON_VERSION}
+
+# Install remaining GitLab CI Pipeline environment dependencies
+RUN apk add memcached \
+            libpq \
+            postgresql-dev \
+            postgresql-client
+
+# Upgrade currently installed packages to match repositories
+RUN apk upgrade
+
+# Get most recent pip version
+RUN pip3 install --upgrade pip
+
+# Install docker-compose
+RUN pip3 install docker-compose

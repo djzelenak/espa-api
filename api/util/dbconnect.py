@@ -8,14 +8,17 @@ import os
 from collections import OrderedDict
 from api.util import api_cfg
 
+
 def dictfetchall(cursor, fetcharr):
-    ''' Returns all rows from a cursor as a dict '''
+    """ Returns all rows from a cursor as a dict """
     desc = cursor.description
     return [OrderedDict(list(zip([col[0] for col in desc], row)))
             for row in fetcharr]
 
+
 class DBConnectException(Exception):
     pass
+
 
 class DBConnect(object):
     """
@@ -23,6 +26,20 @@ class DBConnect(object):
     """
     def __init__(self, dbhost, db, dbuser, dbpass, dbport, autocommit=False,
                  cursor_factory=db_extras.DictCursor):
+        test_mode = False
+        # Check to see if we have set this value, and if it is "True",
+        # then we want to use specific environment variables
+        # to connect our unit tests to the proper DB
+        if 'espa_api_testing' in list(os.environ.keys()):
+            if os.environ["espa_api_testing"] == "True":
+                test_mode = True
+
+        if test_mode:
+            keys = list(os.environ.keys())
+            if 'ESPA_PG_TEST_HOST' in keys and 'ESPA_PG_TEST_PORT' in keys:
+                dbhost = os.environ["ESPA_PG_TEST_HOST"]
+                dbport = os.environ["ESPA_PG_TEST_PORT"]
+
         try:
             self.conn = psycopg2.connect(host=dbhost, database=db, user=dbuser,
                                          password=dbpass, port=dbport)
@@ -36,9 +53,8 @@ class DBConnect(object):
         # psycopg2 doesn't allow you to specify a schema when connecting to the database.
         # by modifying search_path for the connection, we can ensure were only working with
         # tables in the espa_unit_testing schema
-        if 'espa_api_testing' in os.environ.keys():
-            if os.environ["espa_api_testing"] is "True":
-                self.cursor.execute("set search_path = espa_unit_test;")
+        if test_mode:
+            self.cursor.execute("set search_path = espa_unit_test;")
 
     def execute(self, sql_str, params=None):
         """
@@ -143,6 +159,7 @@ class DBConnect(object):
             del self.conn
         except Exception as e:
             raise DBConnectException(e)
+
 
 def db_instance():
     return DBConnect(**api_cfg('db'))

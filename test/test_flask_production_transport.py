@@ -63,13 +63,13 @@ class ProductionTransportTestCase(unittest.TestCase):
         response = self.app.get('/production-api', environ_base={'REMOTE_ADDR': '127.0.0.1'})
         response_data = json.loads(response.get_data())
         assert response.content_type == 'application/json'
-        assert set(response_data.keys()) == set(['0', '1'])
+        assert set(response_data.keys()) == {'0', '1'}
 
     @patch('api.interfaces.production.version1.API.get_production_whitelist', api.get_production_whitelist)
     def test_get_production_api_v1(self):
         response = self.app.get('/production-api/v1', environ_base={'REMOTE_ADDR': '127.0.0.1'})
         response_data = json.loads(response.get_data())
-        assert set(response_data.keys()) == set(["operations", "description"])
+        assert set(response_data.keys()) == {"operations", "description"}
         assert "ESPA Production" in response_data['description']
 
     @patch('api.providers.production.production_provider.ProductionProvider.get_products_to_process',
