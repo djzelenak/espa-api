@@ -93,25 +93,6 @@ tm4:
         - reanalsrc_fp
         - reanalsrc_fpit
 
-sentinel:
-    by_date:
-        sr:
-            - "< 2016050 | > 2016058"
-        sr_ndvi:
-            - "< 2016050 | > 2016058"
-        sr_evi:
-            - "< 2016050 | > 2016058"
-        sr_msavi:
-            - "< 2016050 | > 2016058"
-        sr_savi:
-            - "< 2016050 | > 2016058"
-        sr_ndmi:
-            - "< 2016050 | > 2016058"
-        sr_nbr:
-            - "< 2016050 | > 2016058"
-        sr_nbr2:
-            - "< 2016050 | > 2016058"
-
 # These are orders which should go through alternative channels
 source:
     sensors: [olitirs8_collection, oli8_collection, etm7_collection, tm4_collection, tm5_collection]
