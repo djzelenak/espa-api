@@ -37,6 +37,7 @@ olitirs8:
         - reanalsrc_merra2
         - reanalsrc_fp
         - reanalsrc_fpit
+        - aq_refl
 
 etm7:
     role:
