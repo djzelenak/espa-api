@@ -23,9 +23,9 @@ products:
     category: l2p
     title: "Surface Reflectance"
     display_rank: 0
-  orca:
+  aq_refl:
     category: l2p
-    title: "Surface Water Reflectance"
+    title: "Aquatic Reflectance"
     display_rank: 1
   st:
     category: l2p
