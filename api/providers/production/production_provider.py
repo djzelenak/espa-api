@@ -727,7 +727,7 @@ class ProductionProvider(ProductionProviderInterfaceV0):
         token = inventory.get_cached_session()
         for s in ee_scenes:
             unit_number = s['unitNumber']
-            unit_scenes = [so for so in scenes if so.ee_unit_id == unit_number]
+            unit_scenes = [so for so in scenes if str(so.ee_unit_id) == unit_number]
 
             if unit_scenes:
                 scene = unit_scenes[0]
