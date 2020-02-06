@@ -1,7 +1,6 @@
 ''' Holds logic necessary for interacting with the online distribution
 cache '''
 
-import re
 import os
 
 from api.providers.configuration.configuration_provider import ConfigurationProvider
@@ -145,7 +144,7 @@ class OnlineCache(object):
         """
         try:
             result = self.client.execute(cmd)
-        except Exception, exception:
+        except Exception as exception:
             if not silent:
                 logger.critical('Error executing command: {} '
                                 'Raised exception: {}'.format(cmd, exception))

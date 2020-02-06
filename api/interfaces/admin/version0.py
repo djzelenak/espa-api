@@ -2,6 +2,7 @@ import traceback
 import sys
 from api.system.logger import ilogger as logger
 from api.domain import default_error_message, admin_api_operations
+import six
 
 
 class API(object):
@@ -122,7 +123,7 @@ class API(object):
         except:
             exc_type, exc_val, exc_trace = sys.exc_info()
             logger.critical("ERR updating system status params: {0}\n exception {1}".format(params, traceback.format_exc()))
-            raise exc_type, exc_val, exc_trace
+            six.reraise(exc_type, exc_val, exc_trace)
 
         return response
 
@@ -136,7 +137,7 @@ class API(object):
             exc_type, exc_val, exc_trace = sys.exc_info()
             logger.critical(
                 "ERR retrieving system config: exception {0}".format(traceback.format_exc()))
-            raise exc_type, exc_val, exc_trace
+            six.reraise(exc_type, exc_val, exc_trace)
 
     def available_stats(self):
         """

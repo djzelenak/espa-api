@@ -8,11 +8,10 @@ it into ops """
 import abc
 
 
-class ConfigurationProviderInterfaceV0(object):
+class ConfigurationProviderInterfaceV0(object, metaclass=abc.ABCMeta):
     """
     This class should be stateless to allow hot-swapping config variables
     """
-    __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
     def mode(self):

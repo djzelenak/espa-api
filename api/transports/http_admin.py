@@ -1,10 +1,9 @@
 # Contains Admin facing REST functionality
 
 import flask
-import memcache
 import traceback
 
-from api.domain import default_error_message, admin_api_operations
+from api.domain import admin_api_operations
 
 from api.interfaces.admin.version1 import API as APIv1
 from api.system.logger import ilogger as logger
@@ -13,7 +12,6 @@ from api.transports.http_json import MessagesResponse
 from api.providers.caching.caching_provider import CachingProvider
 
 from flask import jsonify
-from flask import make_response
 from flask import request
 from flask_httpauth import HTTPBasicAuth
 from flask_restful import Resource
@@ -184,7 +182,7 @@ class SystemStatus(Resource):
             if response is not True:
                 resp = MessagesResponse(errors=['internal server error'],
                                         code=500)
-            elif isinstance(response, dict) and response.keys() == ['msg']:
+            elif isinstance(response, dict) and list(response.keys()) == ['msg']:
                 resp = MessagesResponse(errors=response['msg'],
                                         code=400)
             else:

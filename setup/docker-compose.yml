@@ -6,13 +6,13 @@ services:
       container_name: memcached
       image: memcached:1.4.39
       ports:
-        - "127.0.0.1:30070:11211"
+        - "30070:11211"
     postgres:
       build: .
       hostname: postgres
       container_name: postgres
       ports:
-        - "127.0.0.1:30080:5432"
+        - "30080:5432"
       environment: 
         - PGDATA=/usr/local/pgsql/data
         - POSTGRES_PASSWORD=password1

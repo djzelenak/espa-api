@@ -1,4 +1,7 @@
 ## Change Notes
+###### December 2019
+* Porting to Python 3
+* Remove support for Python 2
 ###### October 2019
 * Transition from Hadoop to Mesos computer cluster
 * Added support for Sentinel-2 level-2 products

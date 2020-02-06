@@ -2,15 +2,11 @@
 Replaced lta.py
 """
 import json
-import urllib
 import traceback
-import datetime
 import socket
 import re
 from itertools import groupby
-
 import requests
-import memcache
 
 from api.domain import sensor
 from api.providers.configuration.configuration_provider import ConfigurationProvider
@@ -23,6 +19,8 @@ config = ConfigurationProvider()
 # -----------------------------------------------------------------------------+
 # Find Documentation here:                                                     |
 #      https://earthexplorer.usgs.gov/inventory/documentation/json-api         |
+
+
 def split_by_dataset(product_ids):
     """
     Subset list of Collection IDs (LC08_...) by the LTA JSON data set name
@@ -34,8 +32,10 @@ def split_by_dataset(product_ids):
     return {k: list(g) for k, g in groupby(sorted(product_ids),
                 lambda x: sensor.instance(x).lta_json_name)}
 
+
 class LTAError(Exception):
     pass
+
 
 class LTAService(object):
     def __init__(self, token=None, current_user=None, ipaddr=None):
@@ -72,7 +72,7 @@ class LTAService(object):
 
     @base_url.setter
     def base_url(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('LTAService base_url must be string')
         self._base_url = value
 
@@ -150,7 +150,7 @@ class LTAService(object):
 
         :return: bool
         """
-        url = self.base_url + 'login'
+        url = f"{self.base_url}login"
         logger.debug('HEAD {}'.format(url))
         resp = requests.head(url)
         return resp.ok
@@ -196,7 +196,7 @@ class LTAService(object):
         results = resp.get('data')
 
         id_list = [i for i in product_ids]
-        if dataset.startswith('MODIS'):
+        if dataset.startswith('MODIS') and results:
             # WARNING: See above. Need to "undo" the MODIS mapping problem.
             modis_results = dict()
             for k, v in results.items():
@@ -205,7 +205,7 @@ class LTAService(object):
             results = modis_results
             modis_results = None
 
-        if dataset.startswith('VIIRS'):
+        if dataset.startswith('VIIRS') and results:
             # Undo the file extension addition from above
             viirs_results = dict()
             for k, v in results.items():
@@ -234,17 +234,18 @@ class LTAService(object):
         entity_ids, determining download url availability
         """
         status_dict = dict()
-        m2m_ids = entity_ids.values()
+        m2m_ids = list(entity_ids.values())
         dload_options = self.download_options(m2m_ids, dataset) # list of dicts, keys 'entityId', 'downloadOptions'
         for option in dload_options:
             # In some instances the entityId returned by downloadOptions is an integer
             # so we want to convert it to a string to match with other instances of entityId.
             # This prevents a KeyError from occurring in verify_scenes()
             try:
-                entity_id = unicode(str(option['entityId']), "utf-8")
+                entity_id = str(option['entityId'])
             except Exception as e:
-                msg = 'Error converting entityID {0} to unicode string format - {1}'.format(option['entityId'],
-                                                                                            e.message)
+                num, message = e.args
+                msg = 'Error converting entityID {0} to text-string format - {1}'.format(option['entityId'],
+                                                                                            message)
                 logger.critical(msg)
                 raise LTAError(msg)
             standard_product = [p for p in option['downloadOptions'] if p['downloadCode'] == 'STANDARD'][0] 
@@ -512,7 +513,7 @@ def convert(token, product_ids, dataset):
 
 def download_urls(token, product_ids, dataset, usage='[espa]'):
     entities = convert(token, product_ids, dataset)
-    urls = get_download_urls(token, entities.values(), dataset, usage=usage)
+    urls = get_download_urls(token, list(entities.values()), dataset, usage=usage)
     return {p: urls.get(e) for p, e in entities.items() if e in urls}
 
 def get_available_orders(token, contactid=None):

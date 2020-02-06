@@ -6,7 +6,7 @@ import os
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 
-class OrderNotFound(StandardError):
+class OrderNotFound(Exception):
 
     """Error raised when an order is not found"""
 
@@ -20,7 +20,7 @@ class OrderNotFound(StandardError):
         super(OrderNotFound, self).__init__(orderid)
 
 
-class ItemNotFound(StandardError):
+class ItemNotFound(Exception):
     """Error raised when an item is not found"""
 
     def __init__(self, orderid, itemid):
@@ -72,7 +72,7 @@ class ValidationException(Exception):
                 err = re.sub(r'<obj>.', '', err)
                 self.response[err_key].append(err)
 
-        super(ValidationException, self).__init__(str(self.response))
+        super(ValidationException, self).__init__(f'{self.response}')
 
 
 class InventoryException(Exception):

@@ -1,5 +1,8 @@
+[![pipeline status](https://eroslab.cr.usgs.gov/lsrd/espa-api/badges/develop/pipeline.svg)](https://eroslab.cr.usgs.gov/lsrd/espa-api/commits/develop)
 
-# espa-api [![build status][0]][1] [![Codecov branch][12]][13]
+
+[![coverage report](https://eroslab.cr.usgs.gov/lsrd/espa-api/badges/develop/coverage.svg)](https://eroslab.cr.usgs.gov/lsrd/espa-api/commits/develop)
+
 
 This is an API for interacting with the ESPA ordering system. 
 

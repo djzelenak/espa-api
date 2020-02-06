@@ -8,7 +8,6 @@ import psycopg2.extensions as db_extns
 from api.domain.scene import Scene, SceneException
 from api.domain import sensor, format_sql_params
 from api.system.logger import ilogger as logger
-from psycopg2.extras import Json
 
 
 class OrderException(Exception):
@@ -142,8 +141,9 @@ class Order(object):
                 db.execute(sql, params)
                 db.commit()
         except DBConnectException as e:
+            num, message = e.args
             logger.critical('Error creating new order: {}\n'
-                            'sql: {}'.format(e.message, log_sql))
+                            'sql: {}'.format(message, log_sql))
             raise OrderException(e)
 
         order = Order.find(params['orderid'])
@@ -153,7 +153,7 @@ class Order(object):
         if params['ee_order_id']:
             return order
 
-        sensor_keys = sensor.SensorCONST.instances.keys()
+        sensor_keys = list(sensor.SensorCONST.instances.keys())
 
         bulk_ls = []
         for key in opts:
@@ -191,9 +191,10 @@ class Order(object):
         try:
             Scene.create(bulk_ls)
         except SceneException as e:
+            num, message = e.args
             logger.critical('Order creation failed on scene injection, '
                             'order: {}\nexception: {}'
-                            .format(order.orderid, e.message))
+                            .format(order.orderid, message))
 
             with db_instance() as db:
                 db.execute('delete ordering_order where id = %s',
@@ -232,8 +233,9 @@ class Order(object):
                     obj = Order(**od)
                     ret.append(obj)
         except DBConnectException as e:
+            num, message = e.args
             logger.critical('Error order where: {}\n'
-                            'sql: {}'.format(e.message, log_sql))
+                            'sql: {}'.format(message, log_sql))
             raise OrderException(e)
 
         return ret
@@ -248,7 +250,7 @@ class Order(object):
         """
         if isinstance(id, int):
             found = cls.where({'id': id})
-        elif isinstance(id, basestring):
+        elif isinstance(id, str):
             found = cls.where({'orderid': str(id)})
         else:
             raise OrderException(" cannot find order by %s " % id)
@@ -527,13 +529,16 @@ class Order(object):
                                  db_extns.AsIs(cols), vals))
                 db.commit()
 
-                logger.info('Saved updates to order id: {}\n'
-                            'order.id: {}\nsql: {}\nargs: {}'
-                            .format(self.orderid, self.id, log_sql,
-                                    zip(attr_tup, vals)))
+                msg = f"\n*** Saved updates to order id: {self.orderid}\n" \
+                      f"order.id: {self.id}\n" \
+                      f"sql: {log_sql}\n" \
+                      f"args: {list(zip(attr_tup, vals))}\n***"
+                logger.info(msg)
+
         except DBConnectException as e:
+            num, message = e.args
             logger.critical('Error saving order: {}\nsql: {}'
-                            .format(e.message, log_sql))
+                            .format(message, log_sql))
 
             raise OrderException(e)
 
@@ -561,8 +566,9 @@ class Order(object):
                 db.execute(sql, (db_extns.AsIs(att), val, self.id))
                 db.commit()
         except DBConnectException as e:
+            num, message = e.args
             logger.critical('Error updating order: {}\nSQL: {}'
-                            .format(e.message, log_sql))
+                            .format(message, log_sql))
 
         self.__setattr__(att, val)
 
@@ -605,13 +611,13 @@ class Order(object):
         po = self.product_opts
         _out_list = []
         prod_out = {}
-        for k, v in po.iteritems():
+        for k, v in po.items():
             if isinstance(po[k], dict) and 'products' in po[k].keys():
                 _out_list.append(po[k])
 
         for item in _out_list:
-            for input in item['inputs']:
-                prod_out[input] = item['products']
+            for __input__ in item['inputs']:
+                prod_out[__input__] = item['products']
 
         return prod_out
 
@@ -817,7 +823,7 @@ class OptionsConversion(object):
                     prod_ls.append(key)
                 opts.pop(key)  # Reduce further iterations
 
-        prods = cls._translate(cls.prod_map, prod_ls).keys()
+        prods = list(cls._translate(cls.prod_map, prod_ls).keys())
 
         if len(prods) < 1:
             prods.append('sr')
@@ -847,7 +853,7 @@ class OptionsConversion(object):
 
         old_attrs, new_attrs, conv_attrs = zip(*attr_map)
         # Reverse the old and new lists to reuse the _translate method
-        conv_map = zip(new_attrs, old_attrs, conv_attrs)
+        conv_map = list(zip(new_attrs, old_attrs, conv_attrs))
 
         prod_ls = []
         for key, val in opts.items():
@@ -874,7 +880,7 @@ class OptionsConversion(object):
                 raise ValueError('Unrecognized key: {}'.format(key))
 
         old_prods, new_prods, conv_prods = zip(*cls.prod_map)
-        conv_map = zip(new_prods, old_prods, conv_prods)
+        conv_map = list((zip(new_prods, old_prods, conv_prods)))
         ret.update(cls._translate(conv_map, prod_ls))
 
         return ret

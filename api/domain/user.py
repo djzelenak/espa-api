@@ -7,12 +7,11 @@ from passlib.hash import pbkdf2_sha256
 from validate_email import validate_email
 
 from api.domain import format_sql_params
-from api.domain.order import Order
-from api.domain.scene import Scene
 from api.external.ers import ERSApi
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.system.logger import ilogger as logger
 from api.util.dbconnect import db_instance, DBConnectException
+import six
 
 ers = ERSApi()
 
@@ -40,7 +39,7 @@ class User(object):
 
     @username.setter
     def username(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected a string')
         self._username = value
 
@@ -50,7 +49,7 @@ class User(object):
 
     @first_name.setter
     def first_name(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected a string')
         self._first_name = value
 
@@ -60,7 +59,7 @@ class User(object):
 
     @last_name.setter
     def last_name(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected a string')
         self._last_name = value
 
@@ -70,7 +69,7 @@ class User(object):
 
     @contactid.setter
     def contactid(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError('Expected a string')
         self._contactid = value
 
@@ -81,7 +80,7 @@ class User(object):
     @email.setter
     def email(self, value):
         if not validate_email(value):
-            raise StandardError('user email value invalid')
+            raise Exception('user email value invalid')
         self._email = value.strip()
 
     @property
@@ -142,7 +141,7 @@ class User(object):
                 logger.critical("ERR user find_or_create args {0} {1} " \
                                 "{2} {3}\n trace: {4}".format(username, email, first_name,
                                                               last_name, traceback.format_exc()))
-                raise exc_type, exc_val, exc_trace
+                six.reraise(exc_type, exc_val, exc_trace)
 
         return user_id
 
@@ -171,8 +170,9 @@ class User(object):
                                i["last_name"], i["contactid"])
                     ret.append(obj)
         except DBConnectException as e:
+                num, message = e.args
                 logger.critical('Error querying for users: {}\n'
-                                'sql: {}'.format(e.message, log_sql))
+                                'sql: {}'.format(message, log_sql))
                 raise UserException(e)
         return ret
 
@@ -241,7 +241,7 @@ class User(object):
         except:
             exc_type, exc_val, exc_trace = sys.exc_info()
             logger.critical("ERR retrieving roles for user. msg{0} trace{1}".format(exc_val, traceback.format_exc()))
-            raise exc_type, exc_val, exc_trace
+            six.reraise(exc_type, exc_val, exc_trace)
 
         return result
 

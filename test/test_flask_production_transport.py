@@ -3,14 +3,14 @@
 import json
 import os
 import unittest
-import version0_testorders as testorders
+from test import version0_testorders as testorders
 
 from api.domain.mocks.order import MockOrder
 from api.domain.mocks.user import MockUser
 from api.domain.user import User
 from api.interfaces.ordering.mocks.version1 import MockAPI
 from api.providers.production.mocks.production_provider import MockProductionProvider
-from api.transports import http
+from api.transports import http_main
 from api.util import lowercase_all
 from api.util.dbconnect import db_instance
 from mock import patch
@@ -29,7 +29,7 @@ class ProductionTransportTestCase(unittest.TestCase):
         self.user = User.find(self.mock_user.add_testing_user())
         self.order_id = self.mock_order.generate_testing_order(self.user.id)
 
-        self.app = http.app.test_client()
+        self.app = http_main.app.test_client()
         self.app.testing = True
 
         self.sceneids = self.mock_order.scene_names_list(self.order_id)[0:2]
@@ -63,13 +63,13 @@ class ProductionTransportTestCase(unittest.TestCase):
         response = self.app.get('/production-api', environ_base={'REMOTE_ADDR': '127.0.0.1'})
         response_data = json.loads(response.get_data())
         assert response.content_type == 'application/json'
-        assert set(response_data.keys()) == set(['0', '1'])
+        assert set(response_data.keys()) == {'0', '1'}
 
     @patch('api.interfaces.production.version1.API.get_production_whitelist', api.get_production_whitelist)
     def test_get_production_api_v1(self):
         response = self.app.get('/production-api/v1', environ_base={'REMOTE_ADDR': '127.0.0.1'})
         response_data = json.loads(response.get_data())
-        assert set(response_data.keys()) == set(["operations", "description"])
+        assert set(response_data.keys()) == {"operations", "description"}
         assert "ESPA Production" in response_data['description']
 
     @patch('api.providers.production.production_provider.ProductionProvider.get_products_to_process',
@@ -169,7 +169,7 @@ class ProductionTransportTestCase(unittest.TestCase):
         url = "/production-api/v1/configuration/system_message_title"
         response = self.app.get(url, environ_base={'REMOTE_ADDR': '127.0.0.1'})
         response_data = json.loads(response.get_data())
-        assert response_data.keys() == ['system_message_title']
+        assert list(response_data.keys()) == ['system_message_title']
 
     @patch('api.interfaces.admin.version1.API.get_stat_whitelist', api.get_stat_whitelist)
     def test_get_production_api_stat_products_complete_24_hrs(self):

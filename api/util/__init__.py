@@ -1,11 +1,13 @@
 import smtplib
 from email.mime.text import MIMEText
-import ConfigParser
+import configparser
 import os
 import subprocess
 import datetime
+import json
 
-import connections
+from . import connections
+import six
 
 
 def get_cfg(cfgfile=None):
@@ -21,7 +23,7 @@ def get_cfg(cfgfile=None):
         cfg_path = cfgfile
 
     cfg_info = {}
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(cfg_path)
 
     for sect in config.sections():
@@ -70,7 +72,7 @@ def backup_cron():
     Make a backup of the current user's crontab
     to /home/~/backups/
     """
-    bk_path = os.path.join(os.environ['ESPA_CONFIG_PATH'], backups)
+    bk_path = os.path.join(os.environ['ESPA_CONFIG_PATH'], 'backups')
     if not os.path.exists(bk_path):
         os.makedirs(bk_path)
 
@@ -82,16 +84,16 @@ def backup_cron():
 
 
 def lowercase_all(indata):
-    if hasattr(indata, 'iteritems'):
+    if hasattr(indata, 'items'):
         ret = {}
-        for key, val in indata.iteritems():
+        for key, val in indata.items():
             if key.lower() == 'note':
                 ret[lowercase_all(key)] = val
             else:
                 ret[lowercase_all(key)] = lowercase_all(val)
         return ret
 
-    elif isinstance(indata, basestring):
+    elif isinstance(indata, six.string_types):
         return indata.lower()
 
     elif hasattr(indata, '__iter__'):
@@ -129,7 +131,7 @@ def chunkify(lst, n):
     :param n: the number of parts to divide list into
     :return: list of lists for pieces of original list
     """
-    return [lst[i::n] for i in xrange(n)]
+    return [lst[i::n] for i in range(n)]
 
 
 def julian_date_check(julian_date, restrictions):
@@ -159,7 +161,7 @@ def julian_date_check(julian_date, restrictions):
     if not isinstance(restrictions, tuple):
         if isinstance(restrictions, list):
             restrictions = tuple(restrictions)
-        elif isinstance(restrictions, basestring):
+        elif isinstance(restrictions, six.string_types):
             restrictions = restrictions,
 
     for r in restrictions:
@@ -195,3 +197,25 @@ def julian_date_check(julian_date, restrictions):
                 return False
 
     return True
+
+
+def cond_str(i):
+    if not isinstance(i, str):
+        return str(i)
+    else:
+        return i
+
+
+def conv_dict(i):
+    return dict([(cond_str(k), cond_str(v)) for k, v in i.items()])
+
+
+def json_safe(i):
+    i = i.replace("'", '"')
+    i = i.replace('None', '"None"')
+    i = i.replace(' ', '')
+    return i
+
+
+def jsonify(i):
+    return json.loads(json_safe(i))

@@ -787,7 +787,7 @@ def instance(product_id):
 
     instances = SensorCONST.instances
 
-    for key in instances.iterkeys():
+    for key in instances.keys():
         if re.match(instances[key][0], _id):
             inst = instances[key][1](product_id.strip())
             inst.shortname = key

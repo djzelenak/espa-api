@@ -1,5 +1,4 @@
 
-from api.util.sshcmd import RemoteHost
 from api.providers.administration import AdminProviderInterfaceV0
 from api.providers.administration import AdministrationProviderException
 from api.providers.configuration.configuration_provider import ConfigurationProvider
@@ -55,7 +54,8 @@ class AdministrationProvider(AdminProviderInterfaceV0):
         else:
             return OnlineCache().capacity()
 
-    def error_to(self, orderid, state):
+    @staticmethod
+    def error_to(orderid, state):
         order = Order.find(orderid)
         err_scenes = order.scenes({'status': 'error'})
         try:
@@ -76,7 +76,8 @@ class AdministrationProvider(AdminProviderInterfaceV0):
 
             return True
         except SceneException as e:
-            logger.critical('ERR admin provider error_to\ntrace: {}'.format(e.message))
+            num, message = e.args
+            logger.critical('ERR admin provider error_to\ntrace: {}'.format(message))
             raise AdministrationProviderException('ERR updating with error_to')
 
     @staticmethod
@@ -111,14 +112,15 @@ class AdministrationProvider(AdminProviderInterfaceV0):
                 db.execute(sql, sql_vals)
                 db.commit()
         except DBConnectException as e:
+            num, message = e.args
             logger.critical("error updating system status: {}".format(e))
-            return {'msg': "error updating database: {}".format(e.message)}
+            return {'msg': "error updating database: {}".format(message)}
 
         return True
 
     @staticmethod
     def get_system_config():
-        return ConfigurationProvider()._retrieve_config()
+        return ConfigurationProvider().retrieve_config()
 
     @staticmethod
     def admin_whitelist():

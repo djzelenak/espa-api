@@ -1,9 +1,7 @@
 import abc
 
 
-class ValidationInterfaceV0(object):
-    __metaclass__ = abc.ABCMeta
-
+class ValidationInterfaceV0(object, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def validate(self, order, username):
         """Validate a given order, make sure all parameters are good"""

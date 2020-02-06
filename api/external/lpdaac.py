@@ -3,12 +3,10 @@ Purpose: lpdaac services client module
 Author: David V. Hill
 '''
 
-import requests
 import os
 
 from api.domain import sensor
 from api import util as utils
-
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.system.logger import ilogger as logger
 
@@ -27,7 +25,7 @@ class LPDAACService(object):
             products = [products]
 
         for product in products:
-            if isinstance(product, basestring):
+            if isinstance(product, str):
                 product = sensor.instance(product)
 
             response[product.product_id] = self.input_exists(product)
@@ -51,7 +49,7 @@ class LPDAACService(object):
         Returns:
         True/False
         '''
-        if isinstance(product, str) or isinstance(product, unicode):
+        if isinstance(product, str):
             product = sensor.instance(product)
 
         result = False
@@ -63,7 +61,7 @@ class LPDAACService(object):
                 try:
                     wait = 3  # seconds
                     result = utils.connections.is_reachable(url, timeout=wait)
-                except Exception, e:
+                except Exception as e:
                     logger.exception('Exception checking modis input {0}\n '
                                      'Exception:{1}'
                                      .format(url, e))
@@ -78,7 +76,7 @@ class LPDAACService(object):
         url = {}
 
         #be nice and accept a string
-        if isinstance(product, str) or isinstance(product, unicode):
+        if isinstance(product, str):
             product = sensor.instance(product)
 
         #also be nice and accept a sensor.Modis object
@@ -128,7 +126,7 @@ class LPDAACService(object):
 
     def _build_modis_input_file_path(self, product):
 
-        if isinstance(product, str) or isinstance(product, unicode):
+        if isinstance(product, str):
             product = sensor.instance(product)
 
         if isinstance(product, sensor.Aqua):
@@ -165,7 +163,7 @@ class LPDAACService(object):
 
     def _build_viirs_input_file_path(self, product):
 
-        if isinstance(product, str) or isinstance(product, unicode):
+        if isinstance(product, str):
             product = sensor.instance(product)
 
         if isinstance(product, sensor.Viirs09GA):

@@ -1,4 +1,3 @@
-import os
 
 from api.providers.inventory import InventoryInterfaceV0
 from api.external import inventory, lpdaac
@@ -36,7 +35,7 @@ class InventoryProviderV0(InventoryInterfaceV0):
 
         if lta_ls:
             if inventory.available():
-                results.update(self.check_dmid(lta_ls, contactid))
+                results.update(self.check_dmid(lta_ls))
             else:
                 msg = 'Could not connect to Landsat data source'
                 raise InventoryConnectionException(msg)
@@ -45,12 +44,12 @@ class InventoryProviderV0(InventoryInterfaceV0):
             if inventory.available():
                 logger.warn('Checking M2M Inventory for LP DAAC granules')
                 try:
-                    results.update(self.check_dmid(lpdaac_ls, contactid))
+                    results.update(self.check_dmid(lpdaac_ls))
                 except InventoryException:
                     logger.warn("Unable to verify inventory with DMID")
             elif lpdaac.check_lpdaac_available():
                 try:
-                    results.update(self.check_LPDAAC(lpdaac_ls))
+                    results.update(self.check_lpdaac(lpdaac_ls))
                 except InventoryException:
                     logger.warn("Unable to verify inventory with LPDAAC")
             else:
@@ -66,7 +65,7 @@ class InventoryProviderV0(InventoryInterfaceV0):
             raise InventoryException(not_avail)
 
     @staticmethod
-    def check_dmid(prod_ls, contactid=None):
+    def check_dmid(prod_ls):
         try:
             token = inventory.get_cached_session()
             return inventory.check_valid(token, prod_ls)
@@ -76,7 +75,7 @@ class InventoryProviderV0(InventoryInterfaceV0):
             raise InventoryConnectionException(msg)
 
     @staticmethod
-    def check_LPDAAC(prod_ls):
+    def check_lpdaac(prod_ls):
         return lpdaac.verify_products(prod_ls)
 
 
@@ -85,5 +84,5 @@ class InventoryProvider(InventoryProviderV0):
 
 
 class MockInventoryProvider(InventoryInterfaceV0):
-    def check(self, order):
+    def check(self, order, contactid=None):
         pass

@@ -2,7 +2,6 @@ import copy
 import collections
 
 import api.domain.sensor as sn
-import validictory
 from validictory import validator
 
 good_test_projections = {'aea': {'standard_parallel_1': 29.5,
@@ -164,7 +163,7 @@ class InvalidOrders(object):
     def __iter__(self):
         return iter(self.invalid_list)
 
-    def build_exception(self, desc, value, fieldname, exctype=validator.FieldValidationError, path='', **params):
+    def build_exception(self, desc, value, fieldname, exctype=None, path='', **params):
         """
         Build the expected error message for the failure
 
@@ -176,6 +175,9 @@ class InvalidOrders(object):
         params['fieldname'] = fieldname
         message = desc.format(**params)
         err = ''
+
+        if exctype is None:
+            exctype = validator.FieldValidationError
 
         if exctype == validator.FieldValidationError:
             # err = "Value {!r} for field '{}' {}".format(value, path, message)
@@ -195,7 +197,6 @@ class InvalidOrders(object):
 
         # exc = validator.MultipleValidationError([err])
         exc = err
-
         return exc
 
     def build_invalid_list(self, path=None):
@@ -231,11 +232,11 @@ class InvalidOrders(object):
                 elif self.abbreviated:
                     self.abbr.append(constr_type)
 
-                invalidatorname = 'invalidate_' + constr_type
+                invalidatorname = f"invalidate_{constr_type}"
 
                 try:
                     invalidator = getattr(self, invalidatorname, None)
-                except:
+                except Exception:
                     raise Exception('{} has no associated testing'.format(constr_type))
 
                 if not invalidator:
@@ -287,8 +288,11 @@ class InvalidOrders(object):
             raise Exception('{} constraint not accounted for in testing'.format(val_type))
 
         for val in test_vals:
-            exc = self.build_exception('is not of type {fieldtype}', val, mapping[-1],
-                                       path=mapping, fieldtype=val_type)
+            exc = self.build_exception(desc='is not of type {fieldtype}',
+                                       value=val,
+                                       fieldname=mapping[-1],
+                                       path=mapping,
+                                       fieldtype=val_type)
             upd = self.build_update_dict(mapping, val)
             results.append((self.update_dict(order, upd), 'type', exc))
 
@@ -323,8 +327,11 @@ class InvalidOrders(object):
         for dep in dependency:
             path = mapping[:-1] + (dep,)
             # noinspection PyTypeChecker
-            exc = self.build_exception("Field '{dependency}' is required by field '{fieldname}'", None,
-                                       mapping[-1], dependency=dep, path=mapping,
+            exc = self.build_exception(desc="Field '{dependency}' is required by field '{fieldname}'",
+                                       value=None,
+                                       fieldname=mapping[-1],
+                                       dependency=dep,
+                                       path=mapping,
                                        exctype=validator.DependencyValidationError)
             results.append((self.delete_key_loc(order, path), 'dependencies', exc))
 
@@ -352,11 +359,15 @@ class InvalidOrders(object):
         """
         order = copy.deepcopy(self.valid_order)
         results = []
-
+        # fieldname = '.'.join(mapping)
         if req:
             # noinspection PyTypeChecker
-            exc = self.build_exception("Required field '{fieldname}' is missing", None, mapping[-1],
-                                       path=mapping, exctype=validator.RequiredFieldValidationError)
+            exc = self.build_exception(desc="Required field '{fieldname}' is missing",
+                                       value=None,
+                                       # fieldname=fieldname,
+                                       fieldname=mapping[-1],
+                                       exctype=validator.RequiredFieldValidationError,
+                                       path=mapping)
             results.append((self.delete_key_loc(order, mapping), 'required', exc))
 
         return results
@@ -386,8 +397,11 @@ class InvalidOrders(object):
         val = min_val - 1
 
         upd = self.build_update_dict(mapping, val)
-        exc = self.build_exception("is less than minimum value: {minimum}", val, mapping[-1],
-                                   minimum=min_val, path=mapping)
+        exc = self.build_exception(desc="is less than minimum value: {minimum}",
+                                   value=val,
+                                   fieldname=mapping[-1],
+                                   minimum=min_val,
+                                   path=mapping)
         results.append((self.update_dict(order, upd), 'minimum', exc))
         return results
 
@@ -407,7 +421,10 @@ class InvalidOrders(object):
             base.append(base[0])
 
             upd = self.build_update_dict(mapping, base)
-            exc = self.build_exception("is not unique", base[0], mapping[-1], path=mapping)
+            exc = self.build_exception(desc="is not unique",
+                                       value=base[0],
+                                       fieldname=mapping[-1],
+                                       path=mapping)
             results.append((self.update_dict(order, upd), 'uniqueItems', exc))
 
         return results
@@ -472,8 +489,10 @@ class InvalidOrders(object):
         inv_key = {'INVALID KEY': 'something'}
 
         upd = self.build_update_dict(mapping, inv_key)
-        exc = self.build_exception('Unknown key: Allowed keys {}'.format(keys),
-                                   'INVALID KEY', mapping[-1], path=mapping)
+        exc = self.build_exception(desc='Unknown key: Allowed keys {}'.format(keys),
+                                   value='INVALID KEY',
+                                   fieldname=mapping[-1],
+                                   path=mapping)
         results.append((self.update_dict(order, upd), 'enum_keys', exc))
         return results
 
@@ -505,23 +524,33 @@ class InvalidOrders(object):
 
         if 'lonlat' in order['projection']:
             upd = {'image_extents': {'units': 'meters'}}
-            exc = self.build_exception('must be "dd" for projection "lonlat"', 'meters', mapping[-1],
+            exc = self.build_exception(desc='must be "dd" for projection "lonlat"',
+                                       value='meters',
+                                       fieldname=mapping[-1],
                                        path=mapping)
             results.append((self.update_dict(order, upd), 'extents', exc))
         else:
             upd = {'image_extents': m_ext}
-            exc = self.build_exception(': pixel count value is greater than maximum size of {} pixels'.format(max_pixels),
-                                       max_pixels + 1, mapping[-1], path=mapping)
+            exc = self.build_exception(desc=': pixel count value is greater than '
+                                            'maximum size of {} pixels'.format(max_pixels),
+                                       value=max_pixels + 1,
+                                       fieldname=mapping[-1],
+                                       path=mapping)
             results.append((self.update_dict(order, upd), 'extents', exc))
 
         upd = {'image_extents': dd_ext}
-        exc = self.build_exception(': pixel count value is greater than maximum size of {} pixels'.format(max_pixels),
-                                   max_pixels + 1, mapping[-1], path=mapping)
+        exc = self.build_exception(desc=': pixel count value is greater than '
+                                        'maximum size of {} pixels'.format(max_pixels),
+                                   value=max_pixels + 1,
+                                   fieldname=mapping[-1],
+                                   path=mapping)
         results.append((self.update_dict(order, upd), 'extents', exc))
 
         upd = {'image_extents': ext}
-        exc = self.build_exception(': pixel count value falls below acceptable threshold, check extent parameters',
-                                   0, mapping[-1], path=mapping)
+        exc = self.build_exception(desc=': pixel count value falls below acceptable threshold, check extent parameters',
+                                   value=0,
+                                   fieldname=mapping[-1],
+                                   path=mapping)
         results.append((self.update_dict(order, upd), 'extents', exc))
 
         return results
@@ -615,17 +644,21 @@ class InvalidOrders(object):
         for key in keys:
             order = self.delete_key_loc(order, mapping + (key,))
 
-        exc = self.build_exception('No requests for products were submitted', None, None, path=mapping,
-                                   exctype=validator.RequiredFieldValidationError)
-
+        msg = "No requests for products were submitted"
+        exc = self.build_exception(desc=msg,
+                                   value=None,
+                                   fieldname=None,
+                                   exctype=validator.RequiredFieldValidationError,
+                                   path=mapping)
         results.append((order, 'oneormoreobjects', exc))
 
         return results
 
-    def invalidate_set_ItemCount(self, (count_key, max_val), mapping):
+    def invalidate_set_ItemCount(self, key_count, mapping):
         """
         Used internally for setting max number of items on arrays, not touched by users
         """
+        (count_key, max_val) = key_count
         order = copy.deepcopy(self.valid_order)
         results = []
 

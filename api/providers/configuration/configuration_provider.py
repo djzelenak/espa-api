@@ -14,8 +14,9 @@ class ConfigurationProviderException(Exception):
 class ConfigurationProvider(ConfigurationProviderInterfaceV0):
 
     def __init__(self):
+
         # fetch vars set in api_cfg['config']
-        for k, v in api_cfg().iteritems():
+        for k, v in api_cfg().items():
             self.__setattr__(k, v)
 
     @property
@@ -32,16 +33,16 @@ class ConfigurationProvider(ConfigurationProviderInterfaceV0):
 
     @property
     def configuration_keys(self):
-        return self._retrieve_config()
+        return self.retrieve_config()
 
     def url_for(self, service_name):
         key = "url.{0}.{1}".format(self.mode, service_name)
-        current = self._retrieve_config()
+        current = self.retrieve_config()
 
         return current.get(key)
 
     def get(self, key):
-        current = self._retrieve_config()
+        current = self.retrieve_config()
 
         if isinstance(key, (list, tuple)):
             ret = [current.get(k) for k in key]
@@ -87,7 +88,7 @@ class ConfigurationProvider(ConfigurationProviderInterfaceV0):
         return self.get(key)
 
     def exists(self, key):
-        current = self._retrieve_config()
+        current = self.retrieve_config()
 
         if key in current:
             return True
@@ -121,7 +122,7 @@ class ConfigurationProvider(ConfigurationProviderInterfaceV0):
 
             path = os.path.join(base, ts)
 
-        current = self._retrieve_config()
+        current = self.retrieve_config()
         line = ("INSERT INTO ordering_configuration (key, value) VALUES ('{0}', '{1}') "
                 "ON CONFLICT (key) "
                 "DO UPDATE SET value = '{1}';\n")
@@ -136,16 +137,16 @@ class ConfigurationProvider(ConfigurationProviderInterfaceV0):
         if environment not in ('dev', 'tst', 'ops'):
             raise ConfigurationProviderException('invalid argument value for switch_ee_environment')
 
-        print "****\nWARNING:\nSwitching backend EE/LTA service environments " \
-              "from {} to {}\n****\n".format(self.mode, environment)
+        print("****\nWARNING:\nSwitching backend EE/LTA service environments "
+              "from {} to {}\n****\n".format(self.mode, environment))
 
-        def up_vals(key, val):
-            print key + ' to: ' + val
-            resp = self.put(key, val)
+        def up_vals(k, v):
+            print(f"{k} to: {v}")
+            resp = self.put(k, v)
             if resp == {_up_key: _up_val}:
-                print 'update successful'
+                print('update successful')
             else:
-                print 'there was a problem, return value was: {}'.format(_resp)
+                print('there was a problem, return value was: {}'.format(resp))
 
         try:
             with open(self.explorer_yaml) as f:
@@ -161,19 +162,18 @@ class ConfigurationProvider(ConfigurationProviderInterfaceV0):
                     _up_val = _edict[grp][key][environment]
                     up_vals(_up_key, _up_val)
             return True
-        except AttributeError as e:
+        except (TypeError, AttributeError):
             raise ConfigurationProviderException("explorer_yaml not defined in .cfgnfo")
-        except IOError as e:
+        except IOError:
             raise ConfigurationProviderException("{} as defined by explorer_yaml in "
                                                  ".cfgnfo not found".format(self.explorer_yaml))
 
     @staticmethod
-    def _retrieve_config():
+    def retrieve_config():
         config = {}
         with db_instance() as db:
             con_query = 'select key, value from ordering_configuration'
             db.select(con_query)
             for i in db:
                 config[i['key']] = i['value']
-
         return config

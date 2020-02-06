@@ -4,7 +4,6 @@ from api.util.dbconnect import DBConnectException, db_instance
 import psycopg2.extensions as db_extns
 from api.system.logger import ilogger as logger
 from api.domain import format_sql_params
-import datetime
 
 
 class SceneException(Exception):
@@ -153,18 +152,20 @@ class Scene(object):
                 ret = db[0][col]
 
         except DBConnectException as e:
+            num, message = e.args
             logger.critical('Error scene get\n'
                             'msg: {0}\n'
-                            'sql: {1}'.format(e.message, log_sql))
+                            'sql: {1}'.format(message, log_sql))
 
-            raise SceneException(e.message)
+            raise SceneException(message)
 
         except KeyError as e:
+            num, message = e.args
             logger.critical('Scene.get returned no results\n'
                             'sql: {}'.format(log_sql))
 
             raise SceneException('Key Error: {}'
-                                 .format(e.message))
+                                 .format(message))
 
         return ret
 
@@ -211,10 +212,11 @@ class Scene(object):
                 db.commit()
 
         except DBConnectException as e:
+            num, message = e.args
             logger.critical('error creating new scene(s): {}\n'
                             'sql: {}\n'
-                            .format(e.message, log_sql))
-            raise SceneException(e.message)
+                            .format(message, log_sql))
+            raise SceneException(message)
 
     @classmethod
     def where(cls, params):
@@ -242,8 +244,9 @@ class Scene(object):
                     obj = Scene(**sd)
                     ret.append(obj)
         except DBConnectException as e:
+            num, message = e.args
             logger.critical('Error retrieving scenes: {}\n'
-                            'sql: {}'.format(e.message, log_sql))
+                            'sql: {}'.format(message, log_sql))
             raise SceneException(e)
 
         return ret
@@ -308,7 +311,7 @@ class Scene(object):
 
         sql = 'UPDATE ordering_scene SET %s = %s WHERE id in %s'
 
-        fields = '({})'.format(','.join(updates.keys()))
+        fields = '({})'.format(','.join(list(updates.keys())))
         vals = tuple(updates.values())
         ids = tuple(ids)
 
@@ -320,12 +323,14 @@ class Scene(object):
             with db_instance() as db:
                 log_sql = db.cursor.mogrify(sql, (db_extns.AsIs(fields),
                                                   vals, ids))
-                logger.info('\n*** Bulk Updating scenes: \n' + log_sql + "\n\***\n")
+                msg = f"\n*** Bulk Updating scenes: \n {log_sql} \n***\n"
+                logger.info(msg)
                 db.execute(sql, (db_extns.AsIs(fields), vals, ids))
                 db.commit()
         except DBConnectException as e:
+            num, message = e.args
             logger.critical('Error scene bulk_update: {}\nSQL: {}'
-                            .format(e.message, log_sql))
+                            .format(message, log_sql))
             raise SceneException(e)
 
         return True
@@ -346,12 +351,14 @@ class Scene(object):
             with db_instance() as db:
                 log_sql = db.cursor.mogrify(sql, (db_extns.AsIs(att),
                                                   val, self.id))
-                logger.info("\n*** Updating scene: \n" + log_sql + '\n***\n"')
+                msg = f"\n*** Updating scene: \n {log_sql} \n***\n"
+                logger.info(msg)
                 db.execute(sql, (db_extns.AsIs(att), val, self.id))
                 db.commit()
         except DBConnectException as e:
+            num, message = e.args
             raise SceneException('Error updating scene: {}\nSQL: {}'
-                                 .format(e.message, log_sql))
+                                 .format(message, log_sql))
 
         self.__setattr__(att, val)
 
@@ -383,13 +390,16 @@ class Scene(object):
 
                 db.execute(sql, (db_extns.AsIs(cols), vals, self.id))
                 db.commit()
-                logger.info('\n*** Saved updates to scene id: {}, name:{}\n'
-                            'sql: {}\n args: {}\n***'
-                            .format(self.id, self.name,
-                                    log_sql, zip(attr_tup, vals)))
+                msg = f"\n*** Saved updates to scene id: {self.id}\n" \
+                      f"name: {self.name}\n" \
+                      f"sql: {log_sql}\n" \
+                      f"args: {list(zip(attr_tup, vals))}\n***"
+                logger.info(msg)
+
         except DBConnectException as e:
+            num, message = e.args
             logger.critical("Error saving scene: {}\n"
-                            "sql: {}".format(e.message, log_sql))
+                            "sql: {}".format(message, log_sql))
             raise SceneException(e)
 
         new = Scene.where({'id': self.id})[0]
@@ -419,16 +429,18 @@ class Scene(object):
                 ret = db[0][col]
 
         except DBConnectException as e:
+            num, message = e.args
             logger.critical('Error retrieving order_attr: {}\n'
-                            'sql: {} \n'.format(e.message, log_sql))
+                            'sql: {} \n'.format(message, log_sql))
             raise SceneException(e)
 
         except KeyError as e:
+            num, message = e.args
             logger.critical('Error order_attr returned no results\n'
                             'sql: {}'.format(log_sql))
 
             raise SceneException('Key Error: {}'
-                                 .format(e.message))
+                                 .format(message))
 
         return ret
 

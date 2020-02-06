@@ -6,8 +6,7 @@ import random
 
 from api.interfaces.ordering.version1 import API as APIv1
 from api.util import lowercase_all
-from api.util.dbconnect import db_instance
-import version0_testorders as testorders
+from test import version0_testorders as testorders
 from api.providers.validation.validictory import BaseValidationSchema
 from api import ValidationException, InventoryException, OpenSceneLimitException, __location__
 
@@ -19,8 +18,7 @@ from api.domain.user import User
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.providers.production.mocks.production_provider import MockProductionProvider
 from api.providers.production.production_provider import ProductionProvider
-from api.providers.ordering.ordering_provider import OrderingProviderException, OrderingProvider
-from api.external.mocks import inventory as mockinventory
+from api.providers.ordering.ordering_provider import OrderingProvider
 from api.system.logger import ilogger as logger
 from mock import patch
 
@@ -71,10 +69,10 @@ class TestAPI(unittest.TestCase):
         os.environ['espa_api_testing'] = ''
 
     def test_api_versions_key_val(self):
-        self.assertEqual(set(api.api_versions().keys()), set(['v0', 'v1']))
+        self.assertEqual(set(api.api_versions().keys()), {'v0', 'v1'})
 
     def test_get_available_products_key_val(self):
-        self.assertEqual(api.available_products(self.product_id, self.user.username).keys()[0], self.sensor_id)
+        self.assertEqual(list(api.available_products(self.product_id, self.user.username).keys())[0], self.sensor_id)
 
     def test_get_available_products_by_staff(self):
         # staff should see all available products
@@ -167,7 +165,8 @@ class TestValidation(unittest.TestCase):
             try:
                 good = api.validation(valid_order, self.staffuser.username)
             except ValidationException as e:
-                self.fail('Raised ValidationException: {}'.format(e.message))
+                num, message = e.args
+                self.fail('Raised ValidationException: {}'.format(message))
 
     def test_modis_resize(self):
         """
@@ -186,7 +185,8 @@ class TestValidation(unittest.TestCase):
         try:
             api.validation(modis_order, self.staffuser.username)
         except Exception as e:
-            self.assertIn(exc_key, e.response)
+            message, = e.args
+            self.assertIn(exc_key, message)
             self.assertIsInstance(e.response[exc_key], list)
             self.assertIn(exc, str(e.response[exc_key]))
         else:
@@ -217,8 +217,8 @@ class TestValidation(unittest.TestCase):
 
             for order, test, exc in invalid_list:
                 # empty lists cause assertRaisesRegExp to fail
-                exc = str(exc).replace('[', '\[')
-                with self.assertRaisesRegexp(exc_type, exc):
+                exc = str(exc).replace('[', r'\[')
+                with self.assertRaisesRegex(exc_type, exc):
                     api.validation(order, self.staffuser.username)
 
     def test_order_st_validation(self):
@@ -234,7 +234,7 @@ class TestValidation(unittest.TestCase):
                 'format': 'gtiff'}
         err_msg_1 = "Missing surface temperature algorithm"
 
-        with self.assertRaisesRegexp(exc_type, err_msg_1):
+        with self.assertRaisesRegex(exc_type, err_msg_1):
             api.validation.validate(opts_1, self.staffuser.username)
 
         # ---- Scenario 2: No reanalysis data supplied ----
@@ -245,7 +245,7 @@ class TestValidation(unittest.TestCase):
                 'format': 'gtiff'}
         err_msg_2 = "Missing reanalysis data source for single channel algorithm"
 
-        with self.assertRaisesRegexp(exc_type, err_msg_2):
+        with self.assertRaisesRegex(exc_type, err_msg_2):
             api.validation.validate(opts_2, self.staffuser.username)
 
         # ---- Scenario 3: 'st' not supplied ----
@@ -257,7 +257,7 @@ class TestValidation(unittest.TestCase):
 
         err_msg_3 = "Must include 'st' in products if specifying surface temperature options"
 
-        with self.assertRaisesRegexp(exc_type, err_msg_3):
+        with self.assertRaisesRegex(exc_type, err_msg_3):
             api.validation.validate(opts_3, self.staffuser.username)
 
         # ---- Scenario 4: good order options are validated ----
@@ -340,7 +340,7 @@ class TestValidation(unittest.TestCase):
             invalid_order[stype]['products'] = invalid_list[stype]['products']
             for p in invalid_order[stype]['products']:
                 err_message = invalid_list[stype]['err_msg'].format(p)
-                with self.assertRaisesRegexp(exc_type, err_message):
+                with self.assertRaisesRegex(exc_type, err_message):
                     api.validation.validate(invalid_order, self.staffuser.username)
 
     def test_projection_units_geographic(self):
@@ -368,7 +368,7 @@ class TestValidation(unittest.TestCase):
         for bname in bad_parts:
             invalid_order = copy.deepcopy(part_order)
             invalid_order.update({bname: bad_parts.get(bname)})
-            with self.assertRaisesRegexp(exc_type, err_msg.format(bname)):
+            with self.assertRaisesRegex(exc_type, err_msg.format(bname)):
                 api.validation.validate(invalid_order, self.staffuser.username)
 
     def test_l1_only_restricted(self):
@@ -415,7 +415,7 @@ class TestValidation(unittest.TestCase):
             }
         ]
         for iorder in invalid_orders:
-            with self.assertRaisesRegexp(ValidationException, "non-customized products"):
+            with self.assertRaisesRegex(ValidationException, "non-customized products"):
                 api.validation.validate(iorder, self.staffuser.username)
 
     def test_l1_only_restricted_override(self):
@@ -490,7 +490,7 @@ class TestValidation(unittest.TestCase):
     #     invalid_order = copy.deepcopy(self.base_order)
     #     invalid_order['projection'] = {'utm': {'zone': 50, 'zone_ns': 'north'}}
     #     invalid_order['image_extents'] = {'east': 32.5, 'north': 114.9, 'south': 113.5, 'units': u'dd', 'west': 31.5}
-    #     with self.assertRaisesRegexp(ValidationException, 'are not near the requested UTM zone'):
+    #     with self.assertRaisesRegex(ValidationException, 'are not near the requested UTM zone'):
     #         api.validation.validate(invalid_order, self.staffuser.username)
 
     def test_modis_viirs_ndvi_restricted(self):
@@ -549,7 +549,7 @@ class TestValidation(unittest.TestCase):
         ]
 
         for iorder in invalid_orders:
-            with self.assertRaisesRegexp(ValidationException, "NDVI not available for requested products"):
+            with self.assertRaisesRegex(ValidationException, "NDVI not available for requested products"):
                 api.validation.validate(iorder, self.staffuser.username)
 
         valid_orders = [
@@ -630,6 +630,7 @@ class TestValidation(unittest.TestCase):
         for vorder in valid_orders:
             api.validation.validate(vorder, self.staffuser.username)
 
+
 class TestInventory(unittest.TestCase):
     def setUp(self):
         logger.warning('Testing Inventory started...')
@@ -646,7 +647,7 @@ class TestInventory(unittest.TestCase):
         self.lpdaac_order_bad = {'mod09a1': {'inputs': [self.lpdaac_prod_bad]}}
 
     @patch('api.external.inventory.available', lambda: True)
-    @patch('api.providers.inventory.inventory_provider.InventoryProviderV0.check_dmid', lambda a, b, c: {'dmid': True})
+    @patch('api.providers.inventory.inventory_provider.InventoryProviderV0.check_dmid', lambda x, y: {'dmid': True})
     def test_lta_good(self):
         """
         Check LTA support from the inventory provider
@@ -656,7 +657,7 @@ class TestInventory(unittest.TestCase):
         cfg.put('system.m2m_val_enabled', 'False')
 
     @patch('api.external.inventory.available', lambda: True)
-    @patch('api.providers.inventory.inventory_provider.InventoryProviderV0.check_dmid', lambda a, b, c: {'dmid': False})
+    @patch('api.providers.inventory.inventory_provider.InventoryProviderV0.check_dmid', lambda x, y: {'dmid': False})
     def test_lta_bad(self):
         """
         Check LTA support from the inventory provider
@@ -664,6 +665,7 @@ class TestInventory(unittest.TestCase):
         with self.assertRaises(InventoryException):
             api.inventory.check(self.lta_order_bad)
 
+    @patch('api.external.inventory.available', lambda: False)
     @patch('api.external.lpdaac.LPDAACService.input_exists', lambda x, y: True)
     @patch('api.external.lpdaac.LPDAACService.check_lpdaac_available', lambda y: True)
     def test_lpdaac_good(self):
@@ -672,6 +674,7 @@ class TestInventory(unittest.TestCase):
         """
         self.assertIsNone(api.inventory.check(self.lpdaac_order_good))
 
+    @patch('api.external.inventory.available', lambda: False)
     @patch('api.external.lpdaac.LPDAACService.input_exists', lambda x, y: False)
     @patch('api.external.lpdaac.LPDAACService.check_lpdaac_available', lambda y: True)
     def test_lpdaac_bad(self):

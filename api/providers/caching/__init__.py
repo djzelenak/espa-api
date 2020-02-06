@@ -1,10 +1,7 @@
 import abc
 
-import memcache
 
-class CachingProviderInterfaceV0(object):
-    __metaclass__ = abc.ABCMeta
-
+class CachingProviderInterfaceV0(object, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def get(self, key):
         """

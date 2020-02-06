@@ -76,3 +76,5 @@ local
 # random
 contest.py
 .directory
+
+setup/*.sh

@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from decimal import Decimal
 import copy
 import yaml
@@ -7,7 +6,7 @@ import os
 import math
 
 import validictory
-from validictory.validator import RequiredFieldValidationError, SchemaError, DependencyValidationError
+from validictory.validator import SchemaError
 
 from api.providers.validation import ValidationInterfaceV0
 from api import ValidationException
@@ -162,7 +161,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
             if self.data_source['resize']['pixel_size_units'] != valid_units:
                 msg = ('resize units must be in "{}" for projection "{}"'
                        .format(valid_units,
-                               self.data_source['projection'].keys()[0]))
+                               list(self.data_source['projection'].keys())[0]))
                 self._errors.append(msg)
 
         if 'image_extents' in self.data_source and 'projection' in self.data_source:
@@ -181,16 +180,16 @@ class OrderValidatorV0(validictory.SchemaValidator):
 
     def verify_extents_dd_and_utm(self, order):
         errors = []
-        if max(map(abs, [order['image_extents']['north'],
-                            order['image_extents']['south']])) < 80:
+        north_south = [abs(o) for o in [order['image_extents']['north'], order['image_extents']['south']]]
+        if max(north_south) < 80:
             cdict = dict(inzone=order['projection']['utm']['zone'],
-                        east=order['image_extents']['east'],
-                        west=order['image_extents']['west'],
-                        zbuffer=3)
+                         east=order['image_extents']['east'],
+                         west=order['image_extents']['west'],
+                         zbuffer=3)
             if not self.is_utm_zone_nearby(**cdict):
                 msg = ('image_extents (East: {east}, West: {west}) are not near the'
-                        ' requested UTM zone ({inzone})'
-                        .format(**cdict))
+                       ' requested UTM zone ({inzone})'
+                       .format(**cdict))
                 errors.append(msg)
         return errors
 
@@ -198,6 +197,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
     def is_utm_zone_nearby(inzone, east, west, zbuffer=3):
         def long2utm(dd_lon):
             return (math.floor((dd_lon + 180) / 6.) % 60) + 1
+
         return (long2utm(west) - zbuffer) <= inzone <= (long2utm(east) + zbuffer)
 
     @staticmethod
@@ -258,12 +258,11 @@ class OrderValidatorV0(validictory.SchemaValidator):
         Validates that the given field, if a string, matches the given regular expression.
         '''
         value = x.get(fieldname)
-        if (isinstance(value, basestring) and
-            (isinstance(pattern, basestring) and not re.match(pattern, value)
-             or not isinstance(pattern, basestring) and not pattern.match(value))):
-                self._errors.append("Remove unrecognized input ID: {} ({} must match regex {})"
-                                    .format(value.upper(), path.split('.inputs')[0], pattern))
-
+        if (isinstance(value, str) and
+                (isinstance(pattern, str) and not re.match(pattern, value)
+                 or not isinstance(pattern, str) and not pattern.match(value))):
+            self._errors.append("Remove unrecognized input ID: {} ({} must match regex {})"
+                                .format(value.upper(), path.split('.inputs')[0], pattern))
 
     def validate_enum_keys(self, x, fieldname, schema, path, valid_list):
         """Validates the keys in the given object match expected keys"""
@@ -283,7 +282,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
         """Validates that the absolute value of a field falls within a given range"""
         value = x.get(fieldname)
 
-        if isinstance(value, (int, long, float, Decimal)):
+        if isinstance(value, (int, float, Decimal)):
             if not val_range[0] <= abs(value) <= val_range[1]:
                 msg = ('Absolute value of {} must fall between {} and {}'
                        .format(path, val_range[0], val_range[1]))
@@ -293,7 +292,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
         """Validates the pixel size given for Decimal Degrees is within a given range"""
         value = x.get(fieldname)
 
-        if isinstance(value, (int, long, float, Decimal)):
+        if isinstance(value, (int, float, Decimal)):
             if 'pixel_size_units' in x:
                 if x['pixel_size_units'] == 'dd':
                     if not val_range[0] <= value <= val_range[1]:
@@ -305,7 +304,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
         """Validates the pixel size given for Meters is within a given range"""
         value = x.get(fieldname)
 
-        if isinstance(value, (int, long, float, Decimal)):
+        if isinstance(value, (int, float, Decimal)):
             if 'pixel_size_units' in x:
                 if x['pixel_size_units'] == 'meters':
                     if not val_range[0] <= value <= val_range[1]:
@@ -382,7 +381,7 @@ class OrderValidatorV0(validictory.SchemaValidator):
                                 .format(not_implemented))
 
         if date_restricted:
-            restr_prods = date_restricted.keys()
+            restr_prods = list(date_restricted.keys())
 
             for key in restr_prods:
                 if key not in req_prods:
@@ -520,8 +519,9 @@ class OrderValidatorV0(validictory.SchemaValidator):
             msg = 'No requests for products were submitted'
             self._errors.append(msg)
 
-    def validate_set_ItemCount(self, x, fieldname, schema, path, (key, val)):
+    def validate_set_ItemCount(self, x, fieldname, schema, path, keyval):
         """Sets item count limits for multiple arrays across a potential order"""
+        (key, val) = keyval
         if key in self._itemcount:
             raise SchemaError('ItemCount {} set multiple times'.format(key))
         if not self.validate_type_integer(val):
@@ -549,18 +549,18 @@ class OrderValidatorV0(validictory.SchemaValidator):
 
 
 class BaseValidationSchema(object):
-    formats = {'gtiff':    'GeoTiff',
-               'envi':     'ENVI',
+    formats = {'gtiff': 'GeoTiff',
+               'envi': 'ENVI',
                'hdf-eos2': 'HDF-EOS2',
-               'netcdf':   'NetCDF'}
+               'netcdf': 'NetCDF'}
 
-    resampling_methods = {'nn':  'Nearest Neighbor',
+    resampling_methods = {'nn': 'Nearest Neighbor',
                           'bil': 'Bilinear Interpolation',
-                          'cc':  'Cubic Convolution'}
+                          'cc': 'Cubic Convolution'}
 
     projections = {'aea': {'type': 'object',
                            'title': 'Albers Equal Area',
-                           'pixel_units':  ('meters', 'dd'),
+                           'pixel_units': ('meters', 'dd'),
                            'display_rank': 0,
                            'properties': {'standard_parallel_1': {'type': 'number',
                                                                   'title': '1st Standard Parallel',
@@ -602,7 +602,7 @@ class BaseValidationSchema(object):
                                                              'nad27': 'North American Datum 1927',
                                                              'nad83': 'North American Datum 1983'}}}},
                    'utm': {'type': 'object',
-                           'pixel_units':  ('meters', 'dd'),
+                           'pixel_units': ('meters', 'dd'),
                            'display_rank': 1,
                            'title': 'Universal Transverse Mercator',
                            'properties': {'zone': {'type': 'integer',
@@ -748,10 +748,10 @@ class BaseValidationSchema(object):
                                                           'minItems': 1,
                                                           'items': {'type': 'string',
                                                                     'enum': sn.instance(
-                                                                            _sensor_reg[key][2]).products}}}}
+                                                                        _sensor_reg[key][2]).products}}}}
 
     request_schema['properties'].update(sensor_schema)
-    request_schema['oneormoreobjects'] = sensor_schema.keys()
+    request_schema['oneormoreobjects'] = list(sensor_schema.keys())
 
     valid_params = {'formats': {'formats': formats},
                     'resampling_methods': {'resampling_methods': resampling_methods},
@@ -779,10 +779,12 @@ class ValidationProvider(ValidationInterfaceV0):
             # validictory.validate(order, self.schema.request_schema, fail_fast=False, disallow_unknown_properties=True,
             #                      validator_cls=OrderValidatorV0, required_by_default=False)
         except validictory.MultipleValidationError as e:
-            raise ValidationException(e.message)
-        except validictory.SchemaError as e:
-            message = 'Schema errors:\n' + e.message
+            message, = e.args
             raise ValidationException(message)
+        except validictory.SchemaError as e:
+            message, = e.args
+            msg = f"Schema errors:\n{message}"
+            raise ValidationException(msg)
 
         return self.massage_formatting(order)
 

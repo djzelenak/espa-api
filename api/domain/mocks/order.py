@@ -2,7 +2,7 @@ from api.util.dbconnect import db_instance
 from api.domain.order import Order
 from api.domain.scene import Scene
 from api.domain.user import User
-from api.util import chunkify
+from api.util import chunkify, conv_dict, jsonify
 from test.version0_testorders import build_base_order
 from api.providers.ordering.ordering_provider import OrderingProvider
 from api.providers.production.production_provider import ProductionProvider
@@ -10,9 +10,12 @@ from api.external.mocks import inventory as mock_inventory
 import os
 import random
 import datetime
+import json
+
 
 class MockOrderException(Exception):
     pass
+
 
 class MockOrder(object):
     """ Class for interacting with the ordering_order table """
@@ -20,9 +23,9 @@ class MockOrder(object):
     def __init__(self):
         try:
             mode = os.environ["espa_api_testing"]
-            if mode is not "True":
-                raise("MockOrder objects only allowed while testing")
-        except:
+            if mode != "True":
+                raise MockOrderException("MockOrder objects only allowed while testing")
+        except Exception:
             raise MockOrderException("MockOrder objects only allowed while testing")
         self.base_order = build_base_order()
         self.ordering_provider = OrderingProvider()
@@ -33,17 +36,17 @@ class MockOrder(object):
 
     def as_dict(self):
         return {
-                  "completion_date": '',
-                  "note": '',
-                  "order_date": '',
-                  "order_source": '',
-                  "order_type": '',
-                  "orderid": '',
-                  "priority": '',
-                  "product_options": '',
-                  "product_opts": '',
-                  "status": ''
-                }
+            "completion_date": '',
+            "note": '',
+            "order_date": '',
+            "order_source": '',
+            "order_type": '',
+            "orderid": '',
+            "priority": '',
+            "product_options": '',
+            "product_opts": '',
+            "status": ''
+        }
 
     def generate_testing_order(self, user_id):
         user = User.find(user_id)
@@ -56,14 +59,14 @@ class MockOrder(object):
 
     def generate_ee_testing_order(self, user_id, partial=False):
         # Have to emulate a bunch of load_ee_orders
-        cond_str  = lambda i: str(i) if isinstance(i, unicode) else i
-        conv_dict = lambda i: dict([(cond_str(k), cond_str(v)) for k, v in i.items()])
-        ee_orders = map(conv_dict, mock_inventory.get_available_orders_partial('fauxtoken', partial))
-        email_addr = 'klsmith@usgs.gov'
 
+        ee_orders = (conv_dict(m) for m in mock_inventory.get_available_orders_partial('fauxtoken', partial))
+        email_addr = 'klsmith@usgs.gov'
+        order = None
         for eeorder in ee_orders:
             order_id = Order.generate_ee_order_id(email_addr, eeorder.get('orderNumber'))
-            scene_info = map(conv_dict, eeorder.get('units'))
+            units = jsonify(eeorder.get('units'))
+            scene_info = [conv_dict(u) for u in units]
             user = User.find(user_id)
             ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
 
@@ -80,11 +83,13 @@ class MockOrder(object):
                           'product_options': 'include_sr: true',
                           'product_opts': Order.get_default_ee_options(scene_info)}
 
-
             order = Order.create(order_dict)
             self.production_provider.load_ee_scenes(scene_info, order.id)
 
-        return order.id
+        try:
+            return order.id
+        except AttributeError:
+            raise MockOrderException("The Order object is None or is missing an ID attribute")
 
     def scene_names_list(self, order_id):
         scenes = Scene.where({'order_id': order_id})

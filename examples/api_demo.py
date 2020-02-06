@@ -83,7 +83,7 @@ def espa_api(endpoint, verb='get', body=None, uauth=None):
     if isinstance(data, dict):
         messages = data.pop("messages", None)  
         if messages:
-            print(json.dumps(messages, indent=4))
+            print((json.dumps(messages, indent=4)))
     try:
         response.raise_for_status()
     except Exception as e:
@@ -100,7 +100,7 @@ def espa_api(endpoint, verb='get', body=None, uauth=None):
 
 print('GET /api/v1/user')
 resp = espa_api('user')
-print(json.dumps(resp, indent=4))
+print((json.dumps(resp, indent=4)))
 
 
 # Here, we can see what an error response will look like:
@@ -139,7 +139,7 @@ print(json.dumps(resp, indent=4))
 
 print('GET /api/v1/projections')
 projs = espa_api('projections')
-print json.dumps(projs.keys())
+print(json.dumps(list(projs.keys())))
 
 
 # This is a Schema Definition, useful for building a valid order
@@ -194,7 +194,7 @@ ls = l8_ls + l7_ls
 
 print('GET /api/v1/available-products')
 order = espa_api('available-products', body=dict(inputs=ls))
-print(json.dumps(order, indent=4))
+print((json.dumps(order, indent=4)))
 
 
 # **NOTE**: Here we will not need to know what the sensor names were for the Product IDs, thanks to the response from this `available-products` resource. 
@@ -216,7 +216,7 @@ order['resampling_method'] = 'cc'
 order['note'] = 'API Demo Jupyter!!'
 
 # Notice how it has changed from the original call available-products
-print(json.dumps(order, indent=4))
+print((json.dumps(order, indent=4)))
 
 
 # #### Place the order
@@ -226,7 +226,7 @@ print(json.dumps(order, indent=4))
 # Place the order
 print('POST /api/v1/order')
 resp = espa_api('order', verb='post', body=order)
-print(json.dumps(resp, indent=4))
+print((json.dumps(resp, indent=4)))
 
 
 # If successful, we will get our order-id
@@ -241,25 +241,25 @@ orderid = resp['orderid']
 
 # In[23]:
 
-print('GET /api/v1/order-status/{}'.format(orderid))
+print(('GET /api/v1/order-status/{}'.format(orderid)))
 resp = espa_api('order-status/{}'.format(orderid))
-print(json.dumps(resp, indent=4))
+print((json.dumps(resp, indent=4)))
 
 
 # Now, we can check for any completed products, and get the download url's for completed scenes
 
 # In[24]:
 
-print('GET /api/v1/item-status/{0}'.format(orderid))
+print(('GET /api/v1/item-status/{0}'.format(orderid)))
 resp = espa_api('item-status/{0}'.format(orderid), body={'status': 'complete'})
-print(json.dumps(resp[orderid], indent=4))
+print((json.dumps(resp[orderid], indent=4)))
 
 
 # In[25]:
 
 # Once the order is completed or partially completed, can get the download url's
 for item in resp[orderid]:
-    print("URL: {0}".format(item.get('product_dload_url')))
+    print(("URL: {0}".format(item.get('product_dload_url'))))
 
 
 # # Find previous orders 
@@ -271,7 +271,7 @@ for item in resp[orderid]:
 print('GET /api/v1/list-orders')
 filters = {"status": ["complete", "ordered"]}  # Here, we ignore any purged orders
 resp = espa_api('list-orders', body=filters)
-print(json.dumps(resp, indent=4))
+print((json.dumps(resp, indent=4)))
 
 
 # ## Emergency halt an Order
@@ -293,7 +293,7 @@ cancel_request = {"orderid": orderid, "status": "cancelled"}
 print('PUT /api/v1/order')
 order_status = espa_api('order', verb='put', body=cancel_request)
 
-print(json.dumps(order_status, indent=4))
+print((json.dumps(order_status, indent=4)))
 
 
 # # Python Script

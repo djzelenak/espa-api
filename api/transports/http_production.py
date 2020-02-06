@@ -1,5 +1,5 @@
 from flask import request, make_response, jsonify
-from flask_restful import Api, Resource, reqparse, fields, marshal
+from flask_restful import Resource
 
 from api.interfaces.production.version1 import API as APIv1
 from api.domain import production_api_operations, default_error_message
@@ -64,7 +64,7 @@ class ProductionVersion(Resource):
             if version in info_dict:
                 resp = info_dict[version]
             else:
-                ver_str = ", ".join(info_dict.keys())
+                ver_str = ", ".join(list(info_dict.keys()))
                 err_msg = "%s is not a valid api version, these are: %s" % (version, ver_str)
                 response = {"errmsg": err_msg}
                 return response, 404

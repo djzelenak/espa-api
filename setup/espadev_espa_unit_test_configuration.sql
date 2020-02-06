@@ -1,4 +1,4 @@
-set search_path =  espa_unit_test;
+set search_path =  espadev;
 
 INSERT INTO ordering_configuration (key, value) VALUES
 
@@ -56,6 +56,8 @@ INSERT INTO ordering_configuration (key, value) VALUES
     ('email.espa_address', 'system@mail_address'),
     ('email.espa_server', 'mail_host'),
     ('email.purge_report_list', 'username@emailhost'),
+    ('email.cred_notification', 'username@emailhost'),
+   -- ('email.espa_address', 'username@emailhost'),
 
 -- api.providers.administration
     ('system_message_title', 'text'),
