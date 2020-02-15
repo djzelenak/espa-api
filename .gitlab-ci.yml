@@ -1,4 +1,4 @@
-image: usgseros/espa-worker:espa-api-ci_745dd27
+image: eroslab.cr.usgs.gov:4567/lsrd/espa-api:espa-api-ci_745dd27
 
 variables:
   GIT_STRATEGY: clone
@@ -21,15 +21,17 @@ before_script:
   - docker info
   - make docker-deps-up
   - pip install -r setup/requirements.txt
+  - python3 -c "import os; h = os.getenv('ESPA_MEMCACHE_HOST'); print(h)"
+  - python3 -c "import memcache; import os; host=os.getenv('ESPA_MEMCACHE_HOST'); client=memcache.Client([host], debug=1); client.set('foo', 'bar'); print(client.get('foo'))"
+  - pg_isready -h ${ESPA_PG_TEST_HOST} -p ${ESPA_PG_TEST_PORT}
 
 test:
   script:
-    - python3 -c "import os; h = os.getenv('ESPA_MEMCACHE_HOST'); print(h)"
-    - python3 -c "import memcache; import os; host=os.getenv('ESPA_MEMCACHE_HOST'); client=memcache.Client([host], debug=1); client.set('foo', 'bar'); print(client.get('foo'))"
-    - pg_isready -h ${ESPA_PG_TEST_HOST} -p ${ESPA_PG_TEST_PORT}
     - nose2 -t ${PWD} -v --fail-fast --with-coverage
   tags:
-    - docker, eros, lsrd
+    - docker
+    - eros
+    - lsrd
 
 after_script:
   - make docker-deps-down
