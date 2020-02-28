@@ -69,7 +69,6 @@ class TransportTestCase(unittest.TestCase):
         self.mock_order.tear_down_testing_orders()
         # clean up users
         self.mock_user.cleanup()
-        os.environ['espa_api_testing'] = ''
 
     def test_get_api_response_type(self):
         response = self.app.get('/api', headers=self.headers, environ_base={'REMOTE_ADDR': '127.0.0.1'})
@@ -234,8 +233,6 @@ class TransportTestCase(unittest.TestCase):
         self.assertEqual(400, response.status_code)
         self.assertIn('messages', resp_json)
         self.assertIn('errors', resp_json['messages'])
-        self.assertIn('Schema errors',
-                      resp_json['messages']['errors'][0])
 
     @patch('api.domain.user.User.get', MockUser.get)
     def test_bad_validation_sensor_inputs(self):

@@ -6,8 +6,9 @@ import random
 
 from api.interfaces.ordering.version1 import API as APIv1
 from api.util import lowercase_all
+from test.invalid_orders import InvalidOrders
 from test import version0_testorders as testorders
-from api.providers.validation.validictory import BaseValidationSchema
+from api.providers.validation.validation_schema import BaseValidationSchema
 from api import ValidationException, InventoryException, OpenSceneLimitException, __location__
 
 import os
@@ -212,13 +213,21 @@ class TestValidation(unittest.TestCase):
 
         for proj in testorders.good_test_projections:
             invalid_order['projection'] = {proj: testorders.good_test_projections[proj]}
+            # don't introduce extra problems for pete's sake
+            if 'lonlat' not in invalid_order['projection'].keys():
+                invalid_order['resize'] = {'pixel_size': 30,
+                                           'pixel_size_units': 'meters'}
+            else:
+                invalid_order['resize'] = {'pixel_size': 0.0002695,
+                                           'pixel_size_units': 'dd'}
+            invalid_list = InvalidOrders(valid_order=invalid_order, schema=self.base_schema)
 
-            invalid_list = testorders.InvalidOrders(invalid_order, self.base_schema, abbreviated=False)
-
-            for order, test, exc in invalid_list:
-                # empty lists cause assertRaisesRegExp to fail
-                exc = str(exc).replace('[', r'\[')
-                with self.assertRaisesRegex(exc_type, exc):
+            for order, test, msg in invalid_list:
+                # fix brackets and parenthesis for regex matching
+                msg = msg.replace('[', r'\[')
+                msg = msg.replace('(', r'\(')
+                msg = msg.replace(')', r'\)')
+                with self.assertRaisesRegex(exc_type, msg):
                     api.validation(order, self.staffuser.username)
 
     def test_order_st_validation(self):
@@ -229,9 +238,9 @@ class TestValidation(unittest.TestCase):
 
         # ---- Scenario 1: No algorithm supplied ----
         opts_1 = {'note': '',
-                'etm7_collection': {'inputs': ['le07_l1tp_029030_20171222_20180117_01_t2'], 'products': ['st']},
-                'resampling_method': 'nn',
-                'format': 'gtiff'}
+                  'etm7_collection': {'inputs': ['le07_l1tp_029030_20171222_20180117_01_t2'], 'products': ['st']},
+                  'resampling_method': 'nn',
+                  'format': 'gtiff'}
         err_msg_1 = "Missing surface temperature algorithm"
 
         with self.assertRaisesRegex(exc_type, err_msg_1):
@@ -239,10 +248,10 @@ class TestValidation(unittest.TestCase):
 
         # ---- Scenario 2: No reanalysis data supplied ----
         opts_2 = {'note': '',
-                'etm7_collection': {'inputs': ['le07_l1tp_029030_20171222_20180117_01_t2'],
-                                    'products': ['st', 'stalg_single_channel']},
-                'resampling_method': 'nn',
-                'format': 'gtiff'}
+                  'etm7_collection': {'inputs': ['le07_l1tp_029030_20171222_20180117_01_t2'],
+                                      'products': ['st', 'stalg_single_channel']},
+                  'resampling_method': 'nn',
+                  'format': 'gtiff'}
         err_msg_2 = "Missing reanalysis data source for single channel algorithm"
 
         with self.assertRaisesRegex(exc_type, err_msg_2):
@@ -250,10 +259,10 @@ class TestValidation(unittest.TestCase):
 
         # ---- Scenario 3: 'st' not supplied ----
         opts_3 = {'note': '',
-                'etm7_collection': {'inputs': ['le07_l1tp_029030_20171222_20180117_01_t2'],
-                                    'products': ['reanalsrc_fp']},
-                'resampling_method': 'nn',
-                'format': 'gtiff'}
+                  'etm7_collection': {'inputs': ['le07_l1tp_029030_20171222_20180117_01_t2'],
+                                      'products': ['reanalsrc_fp']},
+                  'resampling_method': 'nn',
+                  'format': 'gtiff'}
 
         err_msg_3 = "Must include 'st' in products if specifying surface temperature options"
 
@@ -262,10 +271,10 @@ class TestValidation(unittest.TestCase):
 
         # ---- Scenario 4: good order options are validated ----
         good_opts = {'note': '',
-                'etm7_collection': {'inputs': ['le07_l1tp_029030_20171222_20180117_01_t2'],
-                                    'products': ['reanalsrc_fp', 'st', 'stalg_single_channel']},
-                'resampling_method': 'nn',
-                'format': 'gtiff'}
+                     'etm7_collection': {'inputs': ['le07_l1tp_029030_20171222_20180117_01_t2'],
+                                         'products': ['reanalsrc_fp', 'st', 'stalg_single_channel']},
+                     'resampling_method': 'nn',
+                     'format': 'gtiff'}
 
         api.validation.validate(good_opts, self.staffuser.username)
 
@@ -327,12 +336,12 @@ class TestValidation(unittest.TestCase):
         Assert that a human readable response is returned for unavailable or date restricted products
         """
         exc_type = ValidationException
-        invalid_list = {'olitirs8_collection': {'inputs': ['lc08_l1tp_031043_20160225_20170224_01_t1'],
-                                                'products': ['sr'],
-                                                'err_msg': 'Requested {} products are restricted by date'},
+        invalid_list = {'etm7_collection': {'inputs': ['le07_l1tp_031045_20160531_20170224_01_t1'],
+                                            'products': ['sr'],
+                                            'err_msg': 'Requested {} products are restricted by date'},
                         'oli8_collection': {'inputs': ['lo08_l1tp_021049_20150304_20170227_01_t1'],
                                             'products': ['sr'],
-                                            'err_msg': 'Requested {} products are not available'}}
+                                            'err_msg': "Remove invalid product request '{}'"}}
 
         for stype in invalid_list:
             invalid_order = copy.deepcopy(self.base_order)
@@ -493,7 +502,7 @@ class TestValidation(unittest.TestCase):
     #     with self.assertRaisesRegex(ValidationException, 'are not near the requested UTM zone'):
     #         api.validation.validate(invalid_order, self.staffuser.username)
 
-    def test_modis_viirs_ndvi_restricted(self):
+    def test_modis_viirs_ndvi_restricted_invalid(self):
         """ Users should only be able to order NDVI for
         Daily Surface Reflectance 500-m MODIS products """
         invalid_orders = [
@@ -552,6 +561,7 @@ class TestValidation(unittest.TestCase):
             with self.assertRaisesRegex(ValidationException, "NDVI not available for requested products"):
                 api.validation.validate(iorder, self.staffuser.username)
 
+    def test_modis_viirs_ndvi_restricted_valid(self):
         valid_orders = [
             {
                 "myd09ga": {
@@ -596,39 +606,41 @@ class TestValidation(unittest.TestCase):
         for vorder in valid_orders:
             api.validation.validate(vorder, self.staffuser.username)
 
-    def test_aq_refl_sensor_restricted(self):
+    def test_aq_refl_sensor_valid(self):
         """ Users should only be able to order Aquatic Reflectance for
             Landsat 8 OLI and/or OLITIRS"""
         valid_orders = [
             {
-            "olitirs8_collection": {
-                "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
-                "products": ["aq_refl"]
-            },
-            "oli8_collection": {
-                "inputs": ["lo08_l1tp_021049_20150304_20170227_01_t1"],
-                "products": ["aq_refl"]
-            },
-            "format": "gtiff"
-        }]
-
-        invalid_orders = [
-            {
-            "olitirs8_collection": {
-                "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
-                "products": ["aq_refl"]
-            },
-            "etm7_collection": {
-                "inputs": ["le07_l1tp_151041_20190218_20190316_01_t1"],
-                "products": ["aq_refl"]
-            },
-            "format": "gtiff"
-        }]
-        for iorder in invalid_orders:
-            with self.assertRaisesRegexp(ValidationException, "Aquatic Reflectance currently only available for Landsat 8 OLI or OLI/TIRS"):
-                api.validation.validate(iorder, self.staffuser.username)
+                "olitirs8_collection": {
+                    "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
+                    "products": ["aq_refl"]
+                },
+                "oli8_collection": {
+                    "inputs": ["lo08_l1tp_021049_20150304_20170227_01_t1"],
+                    "products": ["aq_refl"]
+                },
+                "format": "gtiff"
+            }]
         for vorder in valid_orders:
             api.validation.validate(vorder, self.staffuser.username)
+
+    def test_aq_refl_sensor_invalid(self):
+        invalid_orders = [
+            {
+                "olitirs8_collection": {
+                    "inputs": ["lc08_l1tp_015035_20140713_20170304_01_t1"],
+                    "products": ["aq_refl"]
+                },
+                "etm7_collection": {
+                    "inputs": ["le07_l1tp_151041_20190218_20190316_01_t1"],
+                    "products": ["aq_refl"]
+                },
+                "format": "gtiff"
+            }]
+        for iorder in invalid_orders:
+            with self.assertRaisesRegexp(ValidationException,
+                                         "Aquatic Reflectance currently only available for Landsat 8 OLI or OLI/TIRS"):
+                api.validation.validate(iorder, self.staffuser.username)
 
 
 class TestInventory(unittest.TestCase):

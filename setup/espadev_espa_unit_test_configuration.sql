@@ -1,4 +1,4 @@
-set search_path =  espadev;
+set search_path =  espa_unit_test;
 
 INSERT INTO ordering_configuration (key, value) VALUES
 

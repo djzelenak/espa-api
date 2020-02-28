@@ -1,17 +1,25 @@
-
 import api.domain.sensor as sn
 
 
 class BaseValidationSchema(object):
-
     formats = {'gtiff': 'GeoTiff',
                'envi': 'ENVI',
                'hdf-eos2': 'HDF-EOS2',
                'netcdf': 'NetCDF'}
+    formats_enum = list(formats.keys())
 
     resampling_methods = {'nn': 'Nearest Neighbor',
                           'bil': 'Bilinear Interpolation',
                           'cc': 'Cubic Convolution'}
+    rs_enum = list(resampling_methods.keys())
+
+    datum = {'wgs84': 'World Geodetic System 1984',
+             'nad27': 'North American Datum 1927',
+             'nad83': 'North American Datum 1983'}
+    datum_enum = list(datum.keys())
+
+    zone_ns = {'north': 'North', 'south': 'South'}
+    zone_ns_enum = list(zone_ns.keys())
 
     projections = {'aea': {'type': 'object',
                            'title': 'Albers Equal Area',
@@ -53,9 +61,7 @@ class BaseValidationSchema(object):
                                                     'title': 'Datum',
                                                     'required': True,
                                                     'display_rank': 6,
-                                                    'enum': {'wgs84': 'World Geodetic System 1984',
-                                                             'nad27': 'North American Datum 1927',
-                                                             'nad83': 'North American Datum 1983'}}}},
+                                                    'enum': datum_enum}}},
                    'utm': {'type': 'object',
                            'pixel_units': ('meters', 'dd'),
                            'display_rank': 1,
@@ -70,9 +76,9 @@ class BaseValidationSchema(object):
                                                       'title': 'UTM Hemisphere',
                                                       'display_rank': 1,
                                                       'required': True,
-                                                      'enum': {'north': 'North', 'south': 'South'}}}},
+                                                      'enum': zone_ns_enum}}},
                    'lonlat': {'type': 'null',
-                              'pixel_units': ('dd',),
+                              'pixel_units': 'dd',
                               'title': 'Geographic',
                               'display_rank': 2},
                    'sinu': {'type': 'object',
@@ -107,7 +113,8 @@ class BaseValidationSchema(object):
                                                                  'title': 'Latitude True Scale',
                                                                  'display_rank': 1,
                                                                  'required': True,
-                                                                 'abs_rng': (60, 90)},
+                                                                 'minimum': 60,
+                                                                 'maximum': 90},
                                          'false_easting': {'type': 'number',
                                                            'title': 'False Easting (meters)',
                                                            'display_rank': 2,
@@ -116,7 +123,8 @@ class BaseValidationSchema(object):
                                                             'title': 'False Northing (meters)',
                                                             'display_rank': 3,
                                                             'required': True}}}}
-
+    projections_enum = list(projections.keys())
+    units_enum = ['dd', 'meters']
     extents = {'north': {'type': 'number',
                          'title': 'Upper left Y coordinate',
                          'display_rank': 2,
@@ -137,7 +145,7 @@ class BaseValidationSchema(object):
                          'title': 'Coordinate system units',
                          'display_rank': 0,
                          'required': True,
-                         'enum': {'dd': 'Decimal Degrees', 'meters': 'Meters'}}}
+                         'enum': units_enum}}
 
     resize = {'pixel_size': {'type': 'number',
                              'title': 'Pixel Size',
@@ -149,40 +157,44 @@ class BaseValidationSchema(object):
                                    'title': 'Pixel Size Units',
                                    'display_rank': 1,
                                    'required': True,
-                                   'enum': {'dd': 'Decimal Degrees', 'meters': 'Meters'}}}
-
-    request_schema = {'type': 'object',
-                      'set_ItemCount': ('inputs', 5000),
-                      'extents': 200000000,
-                      'properties': {'projection': {'properties': projections,
-                                                    'type': 'object',
-                                                    'title': 'Reproject Products',
-                                                    'display_rank': 1,
-                                                    'single_obj': True},
-                                     'image_extents': {'type': 'object',
-                                                       'title': 'Modify Image Extents',
-                                                       'display_rank': 2,
-                                                       'properties': extents,
-                                                       'dependencies': ['projection']},
-                                     'format': {'type': 'string',
-                                                'title': 'Output Format',
-                                                'display_rank': 0,
-                                                'required': True,
-                                                'enum': formats},
-                                     'resize': {'type': 'object',
-                                                'title': 'Pixel Resizing',
-                                                'display_rank': 3,
-                                                'properties': resize},
-                                     'resampling_method': {'type': 'string',
-                                                           'title': 'Resample Method',
-                                                           'display_rank': 4,
-                                                           'enum': resampling_methods},
-                                     'plot_statistics': {'type': 'boolean',
-                                                         'title': 'Plot Output Product Statistics'},
-                                     'note': {'type': 'string',
-                                              'title': 'Order Description (optional)',
-                                              'required': False,
-                                              'blank': True}}}
+                                   'enum': units_enum}}
+    request_schema = {
+        '$schema': 'http://json-schema.org/draft-03/schema#',
+        'type': 'object',
+        'additionalProperties': False,
+        'max_items': 5000,
+        'pixel_count': 200000000,
+        'properties': {'projection': {'properties': projections,
+                                      'type': 'object',
+                                      'title': 'Reproject Products',
+                                      'display_rank': 1,
+                                      'single_obj': True},
+                       'image_extents': {'type': 'object',
+                                         'title': 'Modify Image Extents',
+                                         'display_rank': 2,
+                                         'properties': extents},
+                       'format': {'type': 'string',
+                                  'title': 'Output Format',
+                                  'display_rank': 0,
+                                  'required': True,
+                                  'enum': formats_enum},
+                       'resize': {'type': 'object',
+                                  'title': 'Pixel Resizing',
+                                  'display_rank': 3,
+                                  'properties': resize},
+                       'resampling_method': {'type': 'string',
+                                             'title': 'Resample Method',
+                                             'display_rank': 4,
+                                             'enum': rs_enum},
+                       'plot_statistics': {'type': 'boolean',
+                                           'title': 'Plot Output Product Statistics'},
+                       'note': {'type': 'string',
+                                'title': 'Order Description (optional)',
+                                'required': False,
+                                'blank': True}},
+        'dependencies': {
+            'image_extents': ['projection']
+        }}
 
     _sensor_reg = sn.SensorCONST.instances
     sensor_schema = {}
@@ -190,9 +202,9 @@ class BaseValidationSchema(object):
         sensor_schema[key] = {'type': 'object',
                               'properties': {'inputs': {'type': 'array',
                                                         'required': True,
-                                                        'ItemCount': 'inputs',
                                                         'uniqueItems': True,
                                                         'minItems': 1,
+                                                        'maxItems': 5000,
                                                         'items': {'type': 'string',
                                                                   'pattern': _sensor_reg[key][0]}},
                                              'products': {'type': 'array',

@@ -1,4 +1,4 @@
-image: usgseros/espa-worker:espa-api-ci_745dd27
+image: eroslab.cr.usgs.gov:4567/lsrd/espa-api:espa-api-ci_latest
 
 variables:
   GIT_STRATEGY: clone
@@ -6,6 +6,7 @@ variables:
   ESPA_ENV: dev
   ESPA_CONFIG_PATH: ${CI_PROJECT_DIR}/run/config.ini
   ESPA_API_EMAIL_RECEIVE: someone@nowhere.com
+  PYTHONPATH: ${PYTHONPATH}:${CI_PROJECT_DIR}
   DOCKER_TLS_CERTDIR: ""
   DOCKER_HOST: tcp://docker:2375
   DOCKER_DRIVER: overlay2
@@ -17,19 +18,16 @@ before_script:
   - export ESPA_MEMCACHE_HOST=${DOCKER_PORT_2375_TCP_ADDR}:30070
   - export ESPA_PG_TEST_HOST=${DOCKER_PORT_2375_TCP_ADDR}
   - export ESPA_PG_TEST_PORT=30080
-  - env | grep CI
-  - docker info
   - make docker-deps-up
   - pip install -r setup/requirements.txt
 
 test:
   script:
-    - python3 -c "import os; h = os.getenv('ESPA_MEMCACHE_HOST'); print(h)"
-    - python3 -c "import memcache; import os; host=os.getenv('ESPA_MEMCACHE_HOST'); client=memcache.Client([host], debug=1); client.set('foo', 'bar'); print(client.get('foo'))"
-    - pg_isready -h ${ESPA_PG_TEST_HOST} -p ${ESPA_PG_TEST_PORT}
-    - nose2 -t ${PWD} -v --fail-fast --with-coverage
+    - ${CI_PROJECT_DIR}/run/runtests
   tags:
-    - docker, eros, lsrd
+    - docker
+    - eros
+    - lsrd
 
 after_script:
   - make docker-deps-down

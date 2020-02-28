@@ -90,12 +90,9 @@ def version_filter(func):
 
 @auth.error_handler
 def unauthorized():
-    reasons = ['unknown', 'auth', 'conn', 'db']
     reason = flask.g.get('error_reason', '')
-    if reason not in reasons or reason == 'unknown':
-        logger.critical('ERR uncaught exception in user authentication')
-        msg = SystemErrorResponse
-    elif reason == 'auth':
+
+    if reason == 'auth':
         msg = AuthFailedResponse
     elif reason == 'db':
         msg = MessagesResponse(warnings=['Database connection failed'],
@@ -103,6 +100,12 @@ def unauthorized():
     elif reason == 'conn':
         msg = MessagesResponse(warnings=['ERS connection failed'],
                                code=503)
+    else:
+        # expected reasons = ['unknown', 'auth', 'conn', 'db']
+        # reason not in reasons or reason is 'unknown'
+        logger.critical('ERR uncaught exception in user authentication')
+        msg = SystemErrorResponse
+
     return msg()
 
 
