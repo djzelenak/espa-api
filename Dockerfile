@@ -1,4 +1,4 @@
-FROM python:2.7
+FROM python:3.6.8
 
 RUN mkdir -p /home/espadev/espa-api
 WORKDIR /home/espadev/espa-api
