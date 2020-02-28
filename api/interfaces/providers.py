@@ -7,7 +7,7 @@ from api.providers.ordering.ordering_provider import OrderingProvider
 from api.providers.production.production_provider import ProductionProvider
 from api.providers.reporting.reporting_provider import ReportingProvider
 from api.providers.validation import MockValidationProvider
-from api.providers.validation.validictory import ValidationProvider
+from api.providers.validation.validation_provider import ValidationProvider
 from api.providers.configuration.configuration_provider import ConfigurationProvider
 from api.providers.administration.administration_provider import AdministrationProvider
 

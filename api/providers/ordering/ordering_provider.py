@@ -46,7 +46,6 @@ class OrderingProvider(ProviderInterfaceV0):
         """
         user = User.by_username(username)
         pub_prods = copy.deepcopy(OrderingProvider.sensor_products(product_id))
-
         with open(os.path.join(__location__, 'domain/restricted.yaml')) as f:
             restricted = yaml.safe_load(f.read())
 
@@ -58,7 +57,7 @@ class OrderingProvider(ProviderInterfaceV0):
         all_ordering_rsctd = restrict_all.get('ordering', [])
 
         upd = {'date_restricted': {}, 'ordering_restricted': {}, 'not_implemented': []}
-        for sensor_type, prods in pub_prods.items():
+        for sensor_type, prods in list(pub_prods.items()):
             if sensor_type == 'not_implemented':
                 continue
 
