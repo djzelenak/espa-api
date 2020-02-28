@@ -1,4 +1,8 @@
 ## Change Notes
+###### February 2020
+* Remove deprecated validictory library
+* Update validation schema to support JSON Schema Draft 3
+* Unit test updates to support new validation_provider.py
 ###### December 2019
 * Porting to Python 3
 * Remove support for Python 2
