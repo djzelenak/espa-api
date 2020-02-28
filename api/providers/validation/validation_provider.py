@@ -102,6 +102,7 @@ class ValidationProvider(object):
         self.validate_ps_rng(units='dd')      # validate the decimal degrees value for resize if present
         self.validate_ps_rng(units='meters')  # validate the meters value for resize if present
         self.validate_stats()             # validate a request for stats has valid products
+        self.validate_polar_stereographic_abs_rng()  # validate that the value falls within a range of absolute values
 
         if self._errors:
             raise MultipleValidationError(errors=self._errors)
@@ -205,6 +206,32 @@ class ValidationProvider(object):
                        .format(**cdict))
                 errors.append(msg)
         return errors
+
+    def validate_polar_stereographic_abs_rng(self):
+        """Validates that the absolute value of a field falls within a given range
+        Currently only used by the polar stereographic reprojection parameter latitude_true_scale
+        """
+        if not self.data_source.projection:
+            return
+        if not self.validate_type_object(self.data_source.projection):
+            return
+        if 'ps' not in list(self.data_source.projection.keys()):
+            return
+        if not self.validate_type_object(self.data_source.projection['ps']):
+            return
+        if 'latitude_true_scale' not in list(self.data_source.projection['ps'].keys()):
+            return
+        value = self.data_source.projection['ps']['latitude_true_scale']
+
+        if not self.validate_type_number(value):
+            return
+
+        val_range = self.schema.properties.projection.properties.ps.properties.latitude_true_scale.abs_rng
+        path = 'projection.ps.latitude_true_scale'
+
+        if not val_range[0] <= abs(value) <= val_range[1]:
+            msg = 'Absolute value of {} must fall between {} and {}'.format(path, val_range[0], val_range[1])
+            self._errors.append(msg)
 
     @staticmethod
     def is_utm_zone_nearby(inzone, east, west, zbuffer=3):

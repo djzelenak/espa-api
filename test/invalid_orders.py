@@ -491,6 +491,25 @@ class InvalidOrders(object):
                 results.append((self.update_dict(order, upd), p, msg))
         return results
 
+    def invalidate_abs_rng(self, bounds, mapping):
+        """
+        Test out of bounds around the min and max allowed values
+        """
+        order = copy.deepcopy(self.valid_order)
+        results = []
+
+        test_vals = [bounds[0] - 1, bounds[1] + 1, -bounds[0] + 1, -bounds[1] - 1]
+
+        for val in test_vals:
+            upd = self.build_update_dict(mapping, val)
+
+            msg = 'Absolute value of {} must fall between {} and {}'
+            msg = msg.format('.'.join(mapping), bounds[0], bounds[1])
+            results.append((self.update_dict(order, upd), 'abs_rng', msg))
+
+        return results
+
+
     @staticmethod
     def invalidate_restricted(restr, mapping):
         """
