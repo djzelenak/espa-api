@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-image: eroslab.cr.usgs.gov:4567/lsrd/espa-api:espa-api-ci_745dd27
-=======
 image: eroslab.cr.usgs.gov:4567/lsrd/espa-api:espa-api-ci_latest
->>>>>>> c6097934fcaf2a672f8486021826f52208c7ae17
 
 variables:
   GIT_STRATEGY: clone
